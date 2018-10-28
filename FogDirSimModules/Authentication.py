@@ -11,10 +11,16 @@ conn.commit()
 conn.close()
 
 class Authentication(Resource):
-
     @staticmethod
     def valid(token):
-        return True
+        conn = sqlite3.connect('FogDirSim.db')
+        c = conn.cursor()
+        c.execute('''SELECT expirytime FROM tokens WHERE token="%s"''' % token)
+        row = c.fetchall()
+        conn.close()
+        if len(row) > 0 and row[0] > int(time.time()):
+            return True
+        return False
 
     """
         If true: {"token":"822b6377-1366-4a3a-aca3-3a14c3c82608","expiryTime":1540462820079,"serverEpochTime":1540461020081}
@@ -53,4 +59,3 @@ class Authentication(Resource):
         else:
             return {"code":1703,"description":"Session is invalid or expired"}, 401, {"ContentType": "application/json"}
             
-        

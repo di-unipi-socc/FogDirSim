@@ -21,9 +21,20 @@ class Tags(Resource):
         args = parser.parse_args()
         data = request.json #{"name": "name_tag"}
         if self.valid(args["x-token-id"]):
+            try:
+                tagname = data["name"]
+            except KeyError:
+                return {
+                    "code": 1000,
+                    "description": "An unexpected error happened. Validation failed for classes [com.cisco.eng.ccm.model.device.Tag] during persist time for groups [javax.validation.groups.Default, ]\nList of constraint violations:[\n\tConstraintViolationImpl{interpolatedMessage='may not be null', propertyPath=name, rootBeanClass=class com.cisco.eng.ccm.model.device.Tag, messageTemplate='{javax.validation.constraints.NotNull.message}'}\n]"
+                }, 500, {"ContentType": "application/json"}
+            try:
+                tagdescription = data["description"]
+            except KeyError:
+                tagdescription = ""
             conn = sqlite3.connect('FogDirSim.db')
             c = conn.cursor()
-            c.execute('''INSERT INTO tags VALUES ("%s")''' % data["name"])
+            c.execute('''INSERT INTO tags VALUES ("%s", "%s")''' % (tagname, tagdescription))
             conn.commit()
             conn.close()
             return {

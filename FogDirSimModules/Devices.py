@@ -1,5 +1,6 @@
 from flask import Flask, request
 from flask_restful import Api, Resource, reqparse
+from FogDirSimModules.Authentication import Authentication
 import time, json
 
 import sqlite3
@@ -14,15 +15,11 @@ class Devices(Resource):
     devices = {}
 
     @staticmethod
-    def valid(token):
-        return True
-    @staticmethod
     def computeDeviceId(ip, port):
         return abs(hash(ip + str(port)))
 
     @staticmethod
     def createDeviceJSON(device):
-        print device
         return {
                     "port": device[1],
                     "username": device[2],
@@ -206,7 +203,7 @@ class Devices(Resource):
         args = parser.parse_args()
         data = request.json #{'port':'8888','ipAddress':device_ip,'username':'t','password':'t'}
         
-        if self.valid(args["x-token-id"]):
+        if Authentication.valid(args["x-token-id"]):
             if data == None or\
                 data["ipAddress"] == None or\
                 data["port"] == None or\
@@ -239,7 +236,7 @@ class Devices(Resource):
         parser.add_argument('x-token-id', location='headers')
         args = parser.parse_args()
         
-        if self.valid(args["x-token-id"]):
+        if Authentication.valid(args["x-token-id"]):
             data = {"data": []}
             conn = sqlite3.connect('FogDirSim.db')
             c = conn.cursor()
