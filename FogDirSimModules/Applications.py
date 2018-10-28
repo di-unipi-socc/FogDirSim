@@ -8,7 +8,8 @@ import sqlite3
 conn = sqlite3.connect('FogDirSim.db')
 c = conn.cursor()
 c.execute('''CREATE TABLE IF NOT EXISTS applications
-             (appname text, appID text, version int, proprieties text)''')
+             (appname text, appID text, version int, creationTime text, lastupdateTime text, proprieties text, cpuUsage int, memoryUsage int, published int, signed int)''')
+            # 0             1               2           3                   4                       5               6               7               8           9
 conn.commit()
 conn.close()
 
@@ -23,6 +24,7 @@ class Applications(Resource):
         return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in set(["gz", "tar"])
 
+    # /api/v1/appmgr/localapps/upload
     def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument('x-token-id', location='headers')
@@ -70,11 +72,13 @@ class Applications(Resource):
                 # Adding app to DB
                 conn = sqlite3.connect('FogDirSim.db')
                 c = conn.cursor()
-                c.execute('''INSERT INTO applications (appname, appID, proprieties, versione) \
-                            VALUES ('%s', '%s', '%s', '%s')''' % (app_data["info"]["name"],
+                c.execute('''INSERT INTO applications (appname, appID, proprieties, version, creationTime, lastupdateTime) \
+                            VALUES ('%s', '%s', '%s', '%s', '%s', '%s')''' % (app_data["info"]["name"],
                                                                                  appID,
                                                                                  json.dumps(app_data),
-                                                                                 app_data["info"]["version"]) )
+                                                                                 app_data["info"]["version"],
+                                                                                 int(time.time()),
+                                                                                 int(time.time()) ) )
                 conn.commit()
                 conn.close()
                 
@@ -143,6 +147,7 @@ class Applications(Resource):
                     </error>
                 """, 409, {"ContentType": "application/xml"}
     
+    # /api/v1/appmgr/localapps/<appid>:<appversion>
     def put(self, appid, appversion):
         parser = reqparse.RequestParser()
         parser.add_argument('x-token-id', location='headers')
@@ -153,15 +158,16 @@ class Applications(Resource):
             c = conn.cursor()
             c.execute("""
                 UPDATE application
-                SET proprieties=%s
+                SET proprieties=%s, lastupdateTime=%s
                 WHERE appID='%s' AND version=%s 
-            """, json.dumps(data), appid, appversion)
+            """ % (json.dumps(data), int(time.time()), appid, appversion) )
             conn.commit()
             conn.close()
         return {"VERIFICARE"}, 200, {"ContentType": "application/json"}
 
+    # /api/v1/appmgr/apps/<appid> <-- WTF? Why apps and not localapps?!!! CISCOOOOO!!!!
     def delete(self, appid):
-        # In order to delete the app, it must be unistalled from any devices
+        # TODO In order to delete the app, it must be unistalled from any devices
         parser = reqparse.RequestParser()
         parser.add_argument('x-token-id', location='headers')
         parser.add_argument('x-unpublish-on-delete', location='headers') # TODO manage this feature
@@ -175,4 +181,64 @@ class Applications(Resource):
             """, appid)
             conn.commit()
             conn.close()
+    
+    # /api/v1/appmgr/localapps/ Undocumented but works!
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('x-token-id', location='headers')
+        parser.add_argument("limit")
+        args = parser.parse_args()
+        if self.valid(args["x-token-id"]):
+            data = {"data": []}
+            conn = sqlite3.connect('FogDirSim.db')
+            c = conn.cursor()
+            c.execute('''SELECT * FROM applications LIMIT %s''' % (100 if args["limit"] == None else args["limit"]))
+            rows = c.fetchall()
+            conn.close()
+            for app in rows:
+                app_props = json.loads(app[5])
+                data["data"].append(
+                    {
+                        "icon": {
+                            "caption": "icon",
+                            "href": None
+                        }, 
+                        "images": [],
+                        "packages": [
+                            {
+                                "href": "api/v1/appmgr/localapps/%s:1/packages/e0c9d17e-05a5-4253-a0c9-55e8a6da12c6" % app[1]
+                            }
+                        ],
+                        "creationDate": app[3],
+                        "lastUpdatedDate": app[4],
+                        "descriptor": {
+                            "descriptor-schema-version": app_props["descriptor-schema-version"],
+                            "info": app_props["info"],
+                            "app": app_props["app"]
+                        },
+                        "signed": app[9],
+                        "localAppId": app[1],
+                        "version": app[2],
+                        "name": app[0],
+                        "description": {
+                            "contentType": "text",
+                            "content":  app_props["info"]["description"]
+                        },
+                        "releaseNotes": {
+                            "contentType": "text"
+                        },
+                        "appType": app_props["app"]["type"],
+                        "categories": [],
+                        "vendor": "",
+                        "published": False if app[8] == 0 else True,
+                        "services": [],
+                        "profileNeeded": app_props["app"]["resource"]["profile"],
+                        "cpuUsage": app[6],
+                        "memoryUsage": app[7],
+                        "classification": "APP",
+                        "properties": []
+                        }
+                )
+            return data, 200, {"ContentType": "application/json"}
+
         

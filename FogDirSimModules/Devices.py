@@ -6,7 +6,7 @@ import sqlite3
 conn = sqlite3.connect('FogDirSim.db')
 c = conn.cursor()
 c.execute('''CREATE TABLE IF NOT EXISTS devices
-             (ip text, port int, user text, psw text, devid text)''')
+             (ip text, port int, user text, psw text, devid text, lastHeardTime int, lostContact int)''')
 conn.commit()
 conn.close()
 
@@ -20,74 +20,22 @@ class Devices(Resource):
     def computeDeviceId(ip, port):
         return abs(hash(ip + str(port)))
 
-    def post(self):
-        parser = reqparse.RequestParser()
-        parser.add_argument('x-token-id', location='headers')
-        args = parser.parse_args()
-        data = request.json #{'port':'8888','ipAddress':device_ip,'username':'t','password':'t'}
-        if self.valid(args["x-token-id"]):
-            self.devices["iox-caf-%s" % (data["ipAddress"])] = ({"port": data["port"], "ipAddress": data["ipAddress"], 
-                                "username": data["username"], "password": data["password"],
-                                "status": "DISCOVERED", "tags": [{"tagId": str(time.time()) , "name": "iox2"}]})
-            conn = sqlite3.connect('FogDirSim.db')
-            c = conn.cursor()
-            query = "INSERT INTO devices VALUES('%s', %d, '%s', '%s', %d)" % (
-                        data["ipAddress"], data["port"], data["username"], data["password"], self.computeDeviceId(data["ipAddress"], data["port"]))
-            c.execute(query)
-            conn.commit()
-            conn.close()
-            return {"success":True}, 201, {'ContentType':'application/json'}
-        else:
-            return self.invalidToken()
-
-    def get(self):
-        parser = reqparse.RequestParser()
-        parser.add_argument("limit", type=int)
-        parser.add_argument("offset", type=int)
-        parser.add_argument("searchByTags")
-        parser.add_argument("searchByAnyMatch")
-        parser.add_argument('x-token-id', location='headers')
-        args = parser.parse_args()
-        
-        if self.valid(args["x-token-id"]):
-            data = {"data": []}
-            conn = sqlite3.connect('FogDirSim.db')
-            c = conn.cursor()
-            query = "SELECT rowid, * FROM devices LIMIT %s OFFSET %s" % (
-                    args["limit"] if args["limit"] != None else 1000, 
-                    args["offset"] if args["offset"] != None else 0)
-            c.execute(query)
-            
-            for device in c:
-                devid = device[5]
-
-                # Getting tags attached to this device
-                c1 = conn.cursor()
-                c1.execute("SELECT tags.name, devicetag.tagid FROM tags, devicetag WHERE deviceid='%s' and tags.rowid=devicetag.tagid" % devid)
-                tags = []
-                tagsIds = [] # [(tagname, tagid)]
-                for tag in c1:
-                    tags.append(tag[0])
-                    tagsIds.append((tag[0], tag[1])) # used to build output of getDevices
-                
-                if args["searchByTags"] != None:
-                    if args["searchByTags"] not in tags:
-                        continue
-                
-                data["data"].append(
-                {
-                    "port": device[2],
-                    "username": device[3],
-                    "ipAddress": device[1],
-                    "ne_id": "%s:%d" % (device[1], device[2]), # hash(ipportrowid)te
+    @staticmethod
+    def createDeviceJSON(device):
+        print device
+        return {
+                    "port": device[1],
+                    "username": device[2],
+                    "ipAddress": device[0],
+                    "ne_id": "%s:%d" % (device[0], device[1]), # hash(ipportrowid)te
                     "description": {
                         "contentType": "text",
                         "content": ""
                     },
                     "userProvidedSerialNumber": "",
-                    "deviceId": devid,
-                    "serialNumber": "UCS8e9c95bf-a5e0-4657-80c6-%s" % devid,
-                    "hostname": "iox-caf-%s" % (devid),
+                    "deviceId": device[4],
+                    "serialNumber": "UCS8e9c95bf-a5e0-4657-80c6-%s" % device[4],
+                    "hostname": "iox-caf-%s" % (device[4]),
                     "platformVersionDetails": {
                         "caf_version_info": {
                             "build_number": 7,
@@ -108,8 +56,8 @@ class Devices(Resource):
                     "status": "DISCOVERED", #self.devices["iox-caf-%s" % (device[0])]["status"],
                     "errorMessage": "",
                     "useLocalImages": False,
-                    "lastHeardTime":  int(time.time()) - 120,
-                    "lostContact": False,
+                    "lastHeardTime": device[5],
+                    "lostContact": device[6],
                     "tags": [
                     ],
                     "supportedFeature": [
@@ -250,7 +198,71 @@ class Devices(Resource):
                     },
                     "readonly": False,
                     "ipv6Supported": False
-                })
+                }
+    
+    def post(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('x-token-id', location='headers')
+        args = parser.parse_args()
+        data = request.json #{'port':'8888','ipAddress':device_ip,'username':'t','password':'t'}
+        
+        if self.valid(args["x-token-id"]):
+            if data == None or\
+                data["ipAddress"] == None or\
+                data["port"] == None or\
+                data["username"] == None or\
+                data["password"] == None:
+                return {}, 401, {"ContentType": "application/json"}
+
+            self.devices["iox-caf-%s" % (data["ipAddress"])] = ({"port": data["port"], "ipAddress": data["ipAddress"], 
+                                "username": data["username"], "password": data["password"],
+                                "status": "DISCOVERED", "tags": [{"tagId": str(time.time()) , "name": "iox2"}]})
+            conn = sqlite3.connect('FogDirSim.db')
+            c = conn.cursor()
+            query = "INSERT INTO devices VALUES('%s', %d, '%s', '%s', %d, -1, 1)" % (
+                        data["ipAddress"], int(data["port"]), data["username"], data["password"], self.computeDeviceId(data["ipAddress"], data["port"]))
+            c.execute(query)
+            conn.commit()
+            conn.close()
+            device = [data["ipAddress"], int(data["port"]), data["username"], data["password"], self.computeDeviceId(data["ipAddress"], data["port"]), -1, 1]
+            data = self.createDeviceJSON(device)
+            return data, 201, {'ContentType':'application/json'}
+        else:
+            return self.invalidToken()
+
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument("limit", type=int)
+        parser.add_argument("offset", type=int)
+        parser.add_argument("searchByTags")
+        parser.add_argument("searchByAnyMatch")
+        parser.add_argument('x-token-id', location='headers')
+        args = parser.parse_args()
+        
+        if self.valid(args["x-token-id"]):
+            data = {"data": []}
+            conn = sqlite3.connect('FogDirSim.db')
+            c = conn.cursor()
+            query = "SELECT rowid, * FROM devices LIMIT %s OFFSET %s" % (
+                    args["limit"] if args["limit"] != None else 1000, 
+                    args["offset"] if args["offset"] != None else 0)
+            c.execute(query)
+            
+            for device in c:
+                # Getting tags attached to this device
+                c1 = conn.cursor()
+                c1.execute("SELECT tags.name, devicetag.tagid FROM tags, devicetag WHERE deviceid='%s' and tags.rowid=devicetag.tagid" % device[4])
+                tags = []
+                tagsIds = [] # [(tagname, tagid)]
+                for tag in c1:
+                    tags.append(tag[0])
+                    tagsIds.append((tag[0], tag[1])) # used to build output of getDevices
+                
+                if args["searchByTags"] != None:
+                    if args["searchByTags"] not in tags:
+                        continue
+                
+                data["data"].append(self.createDeviceJSON(device[1:]))
                 
                 for tag in tagsIds:
                    data["data"][0]["tags"].append(

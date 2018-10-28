@@ -11,6 +11,11 @@ conn.commit()
 conn.close()
 
 class Authentication(Resource):
+
+    @staticmethod
+    def valid(token):
+        return True
+
     """
         If true: {"token":"822b6377-1366-4a3a-aca3-3a14c3c82608","expiryTime":1540462820079,"serverEpochTime":1540461020081}
         if False: {"code":1702,"description":"Incorrect username or password"}
@@ -22,7 +27,7 @@ class Authentication(Resource):
         if request.authorization["username"] == "admin" and request.authorization["password"] == "admin_123":
             epochTime = int(time.time())
             expiryTime = epochTime + 20000
-            token = "822b6377-1366-4a3a-aca3-3a14c3c82608"
+            token = "%d-1366-4a3a--%d" % (hash(time.time()), int(time.time()))
             userid = 0
             conn = sqlite3.connect('FogDirSim.db')
             c = conn.cursor()
@@ -32,3 +37,20 @@ class Authentication(Resource):
             conn.close()
             return {"token":token,"expiryTime":expiryTime,"serverEpochTime":epochTime}
         return {"code":1702,"description":"Incorrect username or password"}, 400, {'ContentType':'application/json'}
+
+    def delete(self, token):
+        parser = reqparse.RequestParser()
+        parser.add_argument('x-token-id', location='headers')
+        args = parser.parse_args()
+        if self.valid(args["x-token-id"]):
+            conn = sqlite3.connect('FogDirSim.db')
+            c = conn.cursor()
+            c.execute('''DELETE FROM tokens
+                        WHERE token="%s"''' % token)
+            conn.commit()
+            conn.close()
+            return {"token": token}, 200, {"ContentType": "application/json"}
+        else:
+            return {"code":1703,"description":"Session is invalid or expired"}, 401, {"ContentType": "application/json"}
+            
+        
