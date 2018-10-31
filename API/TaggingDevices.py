@@ -20,11 +20,13 @@ class TaggingDevices(Resource):
         parser.add_argument('x-token-id', location='headers')
         args = parser.parse_args()
         data = request.json #{"devices":[deviceids]}}
+        print data
         if self.valid(args["x-token-id"]):
             conn = sqlite3.connect('FogDirSim.db')
             c = conn.cursor()
             for dev in data["devices"]:
                 # Checking if there exist already this tag for this device
+                print tagid, dev
                 c.execute("SELECT * FROM devicetag WHERE tagid=%s AND deviceid=%s" % (tagid, dev))
                 data=c.fetchall()
                 if len(data)==0:

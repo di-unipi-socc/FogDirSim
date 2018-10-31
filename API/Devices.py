@@ -1,6 +1,6 @@
 from flask import Flask, request
 from flask_restful import Api, Resource, reqparse
-from FogDirSimModules.Authentication import Authentication
+from API.Authentication import Authentication
 import time, json
 
 import sqlite3
@@ -18,7 +18,7 @@ class Devices(Resource):
     def computeDeviceId(ip, port):
         return abs(hash(ip + str(port)))
 
-    @staticmethod
+    @staticmethod # This method ignore tags
     def createDeviceJSON(device):
         return {
                     "port": device[1],
@@ -209,7 +209,7 @@ class Devices(Resource):
                 data["port"] == None or\
                 data["username"] == None or\
                 data["password"] == None:
-                return {}, 401, {"ContentType": "application/json"}
+                return {"description": "ipAddress, port, username or password not defined"}, 401, {"ContentType": "application/json"}
 
             self.devices["iox-caf-%s" % (data["ipAddress"])] = ({"port": data["port"], "ipAddress": data["ipAddress"], 
                                 "username": data["username"], "password": data["password"],
@@ -259,16 +259,18 @@ class Devices(Resource):
                     if args["searchByTags"] not in tags:
                         continue
                 
-                data["data"].append(self.createDeviceJSON(device[1:]))
+                deviceDescr = self.createDeviceJSON(device[1:])
                 
                 for tag in tagsIds:
-                   data["data"][0]["tags"].append(
+                   deviceDescr["tags"].append( # TODO: Fix this code, tags are not added!
                         {
                             "tagId": tag[1],
                             "name": tag[0]
                             # TODO: create description
                         }
                    )
+                data["data"].append(deviceDescr)
+
             return data, 200, {'ContentType':'application/json'} 
         else:
             return self.invalidToken()

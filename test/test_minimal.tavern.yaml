@@ -87,19 +87,32 @@ stages:
   
   - name: tagging device {deviceid:s}
     request:
-      url: https://%s/api/v1/appmgr/tags/{tagid:d}/devices
+      url: http://localhost:5000/api/v1/appmgr/tags/{tagid:d}/devices
       method: POST
       headers:
         x-token-id: "{token:s}"
         content-type: application/json
       json:
-        devices: "[{deviceid:d}]"
+        devices: 
+          - "{deviceid:d}"
     response:
       status_code: 200
       headers:
         content-type: application/json
       body:
         tagId: "{tagid:d}"
+  
+  - name: getting tagged devices with tag {tagid:d}
+    request: 
+      url: http://localhost:5000/api/v1/appmgr/devices?searchByTags={tagid:d}
+      method: GET
+      headers:
+        x-token-id: "{token:s}"
+    response:
+      status_code: 200
+      headers:
+        content-type: application/json
+          
   
           
   
