@@ -1,0 +1,66 @@
+test_name: creating a tag
+stages:
+  - name: login
+    request:
+      url: http://localhost:5000/api/v1/appmgr/tokenservice
+      method: POST
+      auth:
+        - admin
+        - admin_123
+    response:
+      status_code: 200
+      headers:
+        content-type: application/json
+      save:
+        body:
+          token: token
+
+  - name: creating tag
+    request:
+      url: http://localhost:5000/api/v1/appmgr/tags
+      method: POST
+      headers:
+        x-token-id: "{token:s}"
+        content-type: application/json
+      json:
+        name: "new_tag"
+    response:
+      status_code: 200
+      headers: 
+        content-type: application/json
+      save:
+        body:
+          tagid: tagId
+
+---
+
+test_name: creating a tag with already existing name
+stages:
+  - name: login
+    request:
+      url: http://localhost:5000/api/v1/appmgr/tokenservice
+      method: POST
+      auth:
+        - admin
+        - admin_123
+    response:
+      status_code: 200
+      headers:
+        content-type: application/json
+      save:
+        body:
+          token: token
+
+  - name: creating tag
+    request:
+      url: http://localhost:5000/api/v1/appmgr/tags
+      method: POST
+      headers:
+        x-token-id: "{token:s}"
+        content-type: application/json
+      json:
+        name: "new_tag"
+    response:
+      status_code: 409
+      headers: 
+        content-type: application/json

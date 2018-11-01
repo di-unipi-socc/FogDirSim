@@ -3,16 +3,12 @@ from flask_restful import Api, Resource, reqparse
 from API.Authentication import Authentication
 import time, json
 
-import sqlite3
-conn = sqlite3.connect('FogDirSim.db')
-c = conn.cursor()
-c.execute('''CREATE TABLE IF NOT EXISTS devices
-             (ip text, port int, user text, psw text, devid text, lastHeardTime int, lostContact int)''')
-conn.commit()
-conn.close()
+#importing Database
+import os, sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import Database as db
 
 class Devices(Resource):
-    devices = {}
 
     @staticmethod
     def computeDeviceId(ip, port):
@@ -109,27 +105,27 @@ class Devices(Resource):
                                 "memoryShare": 64,
                                 "vCPU": 1
                             },
-                            "c1.tiny": {
+                            u"c1\uff0etiny": { # Thank you MongoDB for not managing dots in key name
                                 "cpuShare": 100,
                                 "memoryShare": 32,
                                 "vCPU": 1
                             },
-                            "c1.xlarge": {
+                            u"c1\uff0exlarge": {
                                 "cpuShare": 1200,
                                 "memoryShare": 256,
                                 "vCPU": 1
                             },
-                            "c1.medium": {
+                            u"c1\uff0emedium": {
                                 "cpuShare": 400,
                                 "memoryShare": 128,
                                 "vCPU": 1
                             },
-                            "c1.small": {
+                            u"c1\uff0esmall": {
                                 "cpuShare": 200,
                                 "memoryShare": 64,
                                 "vCPU": 1
                             },
-                            "c1.large": {
+                            u"c1\uff0elarge": {
                                 "cpuShare": 600,
                                 "memoryShare": 256,
                                 "vCPU": 1
@@ -203,7 +199,7 @@ class Devices(Resource):
         args = parser.parse_args()
         data = request.json #{'port':'8888','ipAddress':device_ip,'username':'t','password':'t'}
         
-        if Authentication.valid(args["x-token-id"]):
+        if db.checkToken(args["x-token-id"]):
             if data == None or\
                 data["ipAddress"] == None or\
                 data["port"] == None or\
@@ -211,19 +207,25 @@ class Devices(Resource):
                 data["password"] == None:
                 return {"description": "ipAddress, port, username or password not defined"}, 401, {"ContentType": "application/json"}
 
-            self.devices["iox-caf-%s" % (data["ipAddress"])] = ({"port": data["port"], "ipAddress": data["ipAddress"], 
-                                "username": data["username"], "password": data["password"],
-                                "status": "DISCOVERED", "tags": [{"tagId": str(time.time()) , "name": "iox2"}]})
-            conn = sqlite3.connect('FogDirSim.db')
-            c = conn.cursor()
-            query = "INSERT INTO devices VALUES('%s', %d, '%s', '%s', %d, -1, 1)" % (
-                        data["ipAddress"], int(data["port"]), data["username"], data["password"], self.computeDeviceId(data["ipAddress"], data["port"]))
-            c.execute(query)
-            conn.commit()
-            conn.close()
+            devid = self.computeDeviceId(data["ipAddress"], data["port"])
+
+            if db.deviceExists(devid):
+                return {
+                    "code": 1101,
+                    "description": "A device with IP address, 10.10.20.51, already exists in the inventory."
+                }, 409, {"ContentType": "application/json"}
+                
+            # Creating a device complete description using a dummy function
             device = [data["ipAddress"], int(data["port"]), data["username"], data["password"], self.computeDeviceId(data["ipAddress"], data["port"]), -1, 1]
-            data = self.createDeviceJSON(device)
-            return data, 201, {'ContentType':'application/json'}
+            deviceDescription = self.createDeviceJSON(device)
+            
+            # Adding a password
+            deviceDescription["password"] = data["password"] 
+            db.addDevice(devid, deviceDescription)
+            
+            # Removing password before return it to client
+            del deviceDescription["password"]
+            return deviceDescription, 201, {'ContentType':'application/json'}
         else:
             return self.invalidToken()
 
@@ -236,40 +238,16 @@ class Devices(Resource):
         parser.add_argument('x-token-id', location='headers')
         args = parser.parse_args()
         
-        if Authentication.valid(args["x-token-id"]):
+        if db.checkToken(args["x-token-id"]):
             data = {"data": []}
-            conn = sqlite3.connect('FogDirSim.db')
-            c = conn.cursor()
-            query = "SELECT rowid, * FROM devices LIMIT %s OFFSET %s" % (
-                    args["limit"] if args["limit"] != None else 1000, 
-                    args["offset"] if args["offset"] != None else 0)
-            c.execute(query)
+            devices = db.getDevices(args["limit"] if args["limit"] != None else 1000, 
+                                    args["offset"] if args["offset"] != None else 0,
+                                    args["searchByTags"],
+                                    args["searchByAnyMatch"])
             
-            for device in c:
-                # Getting tags attached to this device
-                c1 = conn.cursor()
-                c1.execute("SELECT tags.name, devicetag.tagid FROM tags, devicetag WHERE deviceid='%s' and tags.rowid=devicetag.tagid" % device[4])
-                tags = []
-                tagsIds = [] # [(tagname, tagid)]
-                for tag in c1:
-                    tags.append(tag[0])
-                    tagsIds.append((tag[0], tag[1])) # used to build output of getDevices
-                
-                if args["searchByTags"] != None:
-                    if args["searchByTags"] not in tags:
-                        continue
-                
-                deviceDescr = self.createDeviceJSON(device[1:])
-                
-                for tag in tagsIds:
-                   deviceDescr["tags"].append( # TODO: Fix this code, tags are not added!
-                        {
-                            "tagId": tag[1],
-                            "name": tag[0]
-                            # TODO: create description
-                        }
-                   )
-                data["data"].append(deviceDescr)
+            for device in devices:
+                del device["password"] # removing password from the returned HTTP API object
+                data["data"].append(device)
 
             return data, 200, {'ContentType':'application/json'} 
         else:

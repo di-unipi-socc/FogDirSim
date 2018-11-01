@@ -2,25 +2,19 @@ from flask import Flask, request
 from flask_restful import Api, Resource, reqparse
 import time, json
 
-import sqlite3
-conn = sqlite3.connect('FogDirSim.db')
-c = conn.cursor()
-c.execute('''CREATE TABLE IF NOT EXISTS tags
-             (name text, description text)''')
-conn.commit()
-conn.close()
+#importing Database
+import os, sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import Database as db
 
 class Tags(Resource):
-    @staticmethod
-    def valid(token):
-        return True
 
     def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument('x-token-id', location='headers')
         args = parser.parse_args()
         data = request.json #{"name": "name_tag"}
-        if self.valid(args["x-token-id"]):
+        if db.checkToken(args["x-token-id"]):
             try:
                 tagname = data["name"]
             except KeyError:
@@ -32,43 +26,54 @@ class Tags(Resource):
                 tagdescription = data["description"]
             except KeyError:
                 tagdescription = ""
-            conn = sqlite3.connect('FogDirSim.db')
-            c = conn.cursor()
-            c.execute('''INSERT INTO tags VALUES ("%s", "%s")''' % (tagname, tagdescription))
-            conn.commit()
-            conn.close()
+
+            if db.tagExists(tagname):
+                return {
+                    "code": 1402,
+                    "description": "Tag with name new_tag, already exist."
+                }, 409, {"ContentType": "application/json"}
+
+            tagid = str(db.addTag(tagname, tagdescription))
             return {
                 "_links": {
                     "device": {
-                        "href": "/api/v1/appmgr/tags/%d/devices" % c.lastrowid
+                        "href": "/api/v1/appmgr/tags/%s/devices" % tagid
                     },
                     "self": {
-                        "href": "/api/v1/appmgr/tags/%d" % c.lastrowid
+                        "href": "/api/v1/appmgr/tags/%s" % tagid
                     }
                 },
-                "tagId": c.lastrowid,
+                "tagId": tagid,
                 "name": "newtag"
             }, 200, {'ContentType':'application/json'} 
+        else:
+            return {"code":1703,"description":"Session is invalid or expired"}, 401, {'ContentType':'application/json'} 
     
     def get(self):
-        conn = sqlite3.connect('FogDirSim.db')
-        c = conn.cursor()
-        c.execute('''SELECT rowid, * FROM tags''')
-        tags = []
-        for tag in c:
-            tags.append({
-                "_links": {
-                    "device": {
-                        "href": "/api/v1/appmgr/tags/%d/devices" % tag[0]
+        parser = reqparse.RequestParser()
+        parser.add_argument('x-token-id', location='headers')
+        args = parser.parse_args()
+        data = request.json #{"name": "name_tag"}
+        if db.checkToken(args["x-token-id"]):
+            tags = db.getTags()
+            data = []
+            for tag in tags:
+                data.append({
+                    "_links": {
+                        "device": {
+                            "href": "/api/v1/appmgr/tags/%s/devices" % str(tag["_id"])
+                        },
+                        "self": {
+                            "href": "/api/v1/appmgr/%s/2714" % str(tag["_id"])
+                        }
                     },
-                    "self": {
-                        "href": "/api/v1/appmgr/%d/2714" % tag[0]
-                    }
-                },
-                "tagId": tag[0],
-                "name": tag[1],
-                "description": None
-            })
-        return {"data": tags}, 200, {'ContentType':'application/json'} 
+                    "tagId": str(tag["_id"]),
+                    "name": tag["name"],
+                    "description": tag["description"] 
+                })
+            return {"data": data}, 200, {'ContentType':'application/json'} 
+        else:
+            return {"code":1703,"description":"Session is invalid or expired"}, 401, {'ContentType':'application/json'} 
+    
     
     

@@ -1,11 +1,12 @@
 from flask import Flask
 from flask_restful import Api, Resource, reqparse
-from API.Authentication import Authentication
+
 from API.Devices import Devices
 from API.TaggingDevices import TaggingDevices
 from API.Tags import Tags
 from API.Applications import Applications
-
+from API.Authentication import Authentication
+import Database as db
 app = Flask(__name__)
 api = Api(app)
 
@@ -19,3 +20,4 @@ api.add_resource(Applications, "/api/v1/appmgr/localapps/upload",
                                "/api/v1/appmgr/localapps")
 
 app.run(debug=True)
+

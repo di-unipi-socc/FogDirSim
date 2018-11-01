@@ -4,20 +4,12 @@ import time, json, os, yaml, io
 from werkzeug.utils import secure_filename
 import tarfile
 
-import sqlite3
-conn = sqlite3.connect('FogDirSim.db')
-c = conn.cursor()
-c.execute('''CREATE TABLE IF NOT EXISTS applications
-             (appname text, appID text, version int, creationTime text, lastupdateTime text, proprieties text, cpuUsage int, memoryUsage int, published int, signed int)''')
-            # 0             1               2           3                   4                       5               6               7               8           9
-conn.commit()
-conn.close()
+#importing Database
+import os, sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import Database as db
 
 class Applications(Resource):
-
-    @staticmethod
-    def valid(token):
-        return True
 
     @staticmethod
     def allowed_file(filename):
@@ -29,15 +21,15 @@ class Applications(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument('x-token-id', location='headers')
         args = parser.parse_args()
-        if self.valid(args["x-token-id"]):
+        if db.checkToken(args["x-token-id"]):
             if 'file' not in request.files or request.files["file"].filename == '':
+                # Thank you CISCO for returning an XML here...
                 return  """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
                             <error>
                                 <code>1308</code>
                                 <description>Given app package file is invalid: Unsupported Format</description>
                             </error>""", 400, {"ContentType": "application/xml"}
             file = request.files['file']
-            print self.allowed_file(file.filename)
             if file and self.allowed_file(file.filename):
                 filename = secure_filename(file.filename)
                 uploadDir = "./fileApplication"
@@ -48,40 +40,31 @@ class Applications(Resource):
                 # Extracting file
                 os.chdir(uploadDir)
 
-                appID = str(hash(filename)) # hash became application ID and directory name of application file
-                if not os.path.exists(appID):
-                    os.makedirs(appID)
+                tmpDir = str(hash(filename)) 
+                if not os.path.exists(tmpDir):
+                    os.makedirs(tmpDir)
                 
                 if (filename.endswith("tar.gz")):
                     tar = tarfile.open(filename, "r:gz")
-                    os.chdir(appID)
+                    os.chdir(tmpDir)
                     tar.extractall()
                     tar.close()
                 elif (filename.endswith("tar")):
                     tar = tarfile.open(filename, "r:")
-                    os.chdir(appID)
+                    os.chdir(tmpDir)
                     tar.extractall()
                     tar.close()
                 
                 # Opening YAML Description of the application
                 with open("package.yaml", 'r') as stream:
                     app_data = yaml.load(stream)
+                os.chdir("../")
                 
-                os.chdir("../../")
+                appID = str(db.addLocalApplication(int(time.time()), int(time.time()), app_data))
+                os.rename(tmpDir, appID)
 
-                # Adding app to DB
-                conn = sqlite3.connect('FogDirSim.db')
-                c = conn.cursor()
-                c.execute('''INSERT INTO applications (appname, appID, proprieties, version, creationTime, lastupdateTime) \
-                            VALUES ('%s', '%s', '%s', '%s', '%s', '%s')''' % (app_data["info"]["name"],
-                                                                                 appID,
-                                                                                 json.dumps(app_data),
-                                                                                 app_data["info"]["version"],
-                                                                                 int(time.time()),
-                                                                                 int(time.time()) ) )
-                conn.commit()
-                conn.close()
-                
+                os.chdir("../")
+
                 return {
                     "icon": {
                         "caption": "icon",
@@ -146,41 +129,42 @@ class Applications(Resource):
                         <description>An app with the same deployId already exists. Please make sure that the first forty characters of the app do not match with any of the existing apps.</description>
                     </error>
                 """, 409, {"ContentType": "application/xml"}
-    
+        else:
+            return self.invalidToken()
+
     # /api/v1/appmgr/localapps/<appid>:<appversion>
     def put(self, appid, appversion):
         parser = reqparse.RequestParser()
         parser.add_argument('x-token-id', location='headers')
         args = parser.parse_args()
         data = request.json 
-        if self.valid(args["x-token-id"]):
-            conn = sqlite3.connect('FogDirSim.db')
-            c = conn.cursor()
-            c.execute("""
-                UPDATE application
-                SET proprieties=%s, lastupdateTime=%s
-                WHERE appID='%s' AND version=%s 
-            """ % (json.dumps(data), int(time.time()), appid, appversion) )
-            conn.commit()
-            conn.close()
+        if db.checkToken(args["x-token-id"]):
+            print "DA IMPLEMENTARE"
         return {"VERIFICARE"}, 200, {"ContentType": "application/json"}
 
     # /api/v1/appmgr/apps/<appid> <-- WTF? Why apps and not localapps?!!! CISCOOOOO!!!!
     def delete(self, appid):
-        # TODO In order to delete the app, it must be unistalled from any devices
         parser = reqparse.RequestParser()
         parser.add_argument('x-token-id', location='headers')
         parser.add_argument('x-unpublish-on-delete', location='headers') # TODO manage this feature
         args = parser.parse_args()
-        if self.valid(args["x-token-id"]):
-            conn = sqlite3.connect('FogDirSim.db')
-            c = conn.cursor()
-            c.execute("""
-               DELETE FROM applications 
-                WHERE appID='%s'
-            """, appid)
-            conn.commit()
-            conn.close()
+        if db.checkToken(args["x-token-id"]):
+            if args["x-unpublish-on-delete"] == None:
+                app = db.getLocalApplication(appid)
+                if app == None:
+                    return "", 200 # Yes, it returns 200 even if the application doesn't exists
+                if app["published"]:
+                    return """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+                                <error>
+                                    <code>1303</code>
+                                    <description>App NettestApp2 is in use: Unable to delete apps with name NettestApp2
+                                As app with name NettestApp2 and version1 is in published state</description>
+                            </error>""", 400, {"ContentType": "application/xml"}
+            db.deleteLocalApplication(appid)
+            return "", 200
+        else:
+            return self.invalidToken()
+
     
     # /api/v1/appmgr/localapps/ Undocumented but works!
     def get(self):
@@ -188,15 +172,11 @@ class Applications(Resource):
         parser.add_argument('x-token-id', location='headers')
         parser.add_argument("limit")
         args = parser.parse_args()
-        if self.valid(args["x-token-id"]):
+        if db.checkToken(args["x-token-id"]):
             data = {"data": []}
-            conn = sqlite3.connect('FogDirSim.db')
-            c = conn.cursor()
-            c.execute('''SELECT * FROM applications LIMIT %s''' % (100 if args["limit"] == None else args["limit"]))
-            rows = c.fetchall()
-            conn.close()
-            for app in rows:
-                app_props = json.loads(app[5])
+            apps = db.getLocalApplications()
+            for app in apps:
+                app_props = app["data"]
                 data["data"].append(
                     {
                         "icon": {
@@ -206,20 +186,20 @@ class Applications(Resource):
                         "images": [],
                         "packages": [
                             {
-                                "href": "api/v1/appmgr/localapps/%s:1/packages/e0c9d17e-05a5-4253-a0c9-55e8a6da12c6" % app[1]
+                                "href": "api/v1/appmgr/localapps/%s:1/packages/e0c9d17e-05a5-4253-a0c9-55e8a6da12c6" % str(app["_id"])
                             }
                         ],
-                        "creationDate": app[3],
-                        "lastUpdatedDate": app[4],
+                        "creationDate": app["creationDate"],
+                        "lastUpdatedDate": app["lastupdateTime"],
                         "descriptor": {
                             "descriptor-schema-version": app_props["descriptor-schema-version"],
                             "info": app_props["info"],
                             "app": app_props["app"]
                         },
-                        "signed": app[9],
-                        "localAppId": app[1],
-                        "version": app[2],
-                        "name": app[0],
+                        "signed": app["signed"],
+                        "localAppId": str(app["_id"]),
+                        "version": app_props["info"]["version"],
+                        "name": app_props["info"]["name"],
                         "description": {
                             "contentType": "text",
                             "content":  app_props["info"]["description"]
@@ -230,15 +210,17 @@ class Applications(Resource):
                         "appType": app_props["app"]["type"],
                         "categories": [],
                         "vendor": "",
-                        "published": False if app[8] == 0 else True,
+                        "published": app["published"],
                         "services": [],
-                        "profileNeeded": app_props["app"]["resource"]["profile"],
-                        "cpuUsage": app[6],
-                        "memoryUsage": app[7],
+                        "profileNeeded": app_props["app"]["resources"]["profile"],
+                        "cpuUsage": app["cpuUsage"],
+                        "memoryUsage": app["memoryUsage"],
                         "classification": "APP",
                         "properties": []
                         }
                 )
             return data, 200, {"ContentType": "application/json"}
 
-        
+    @staticmethod
+    def invalidToken():
+        return {"code":1703,"description":"Session is invalid or expired"}, 401, {'ContentType':'application/json'} 

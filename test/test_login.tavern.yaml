@@ -1,0 +1,30 @@
+test_name: Make login on server and then delete token
+
+stages:
+  - name: login
+    request:
+      url: http://localhost:5000/api/v1/appmgr/tokenservice
+      method: POST
+      auth:
+        - admin
+        - admin_123
+    response:
+      status_code: 200
+      headers:
+        content-type: application/json
+      save:
+        body:
+          token: token
+  - name: delete a token
+    request:
+      url: http://localhost:5000/api/v1/appmgr/tokenservice/{token:s}
+      method: DELETE
+      headers:
+        x-token-id: "{token:s}"
+    response:
+      status_code: 200
+      body:
+        token: "{token:s}"
+      headers:
+        content-type: application/json
+  

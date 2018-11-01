@@ -1,0 +1,109 @@
+test_name: adding a device
+
+stages:
+  - name: login
+    request:
+      url: http://localhost:5000/api/v1/appmgr/tokenservice
+      method: POST
+      auth:
+        - admin
+        - admin_123
+    response:
+      status_code: 200
+      headers:
+        content-type: application/json
+      save:
+        body:
+          token: token
+
+  - name: adding device
+    request:
+      url: http://localhost:5000/api/v1/appmgr/devices
+      method: POST
+      headers:
+        x-token-id: "{token:s}"
+        content-type: application/json
+      json:
+        ipAddress: "192.192.192.192"
+        port: 8888
+        username: "t"
+        password: "t"
+    response:
+      status_code: 201
+      headers:
+        content-type: application/json
+      save:
+        body:
+          deviceid: deviceId
+
+---
+
+test_name: insert an already inserted device
+
+stages:
+  - name: login
+    request:
+      url: http://localhost:5000/api/v1/appmgr/tokenservice
+      method: POST
+      auth:
+        - admin
+        - admin_123
+    response:
+      status_code: 200
+      headers:
+        content-type: application/json
+      save:
+        body:
+          token1: token
+
+  - name: adding device
+    request:
+      url: http://localhost:5000/api/v1/appmgr/devices
+      method: POST
+      headers:
+        x-token-id: "{token1:s}"
+        content-type: application/json
+      json:
+        ipAddress: "192.192.192.192"
+        port: 8888
+        username: "t"
+        password: "t"
+    response:
+      status_code: 409
+      headers: 
+        content-type: application/json
+
+---
+test_name: getting a device by ip
+
+stages:
+  - name: login
+    request:
+      url: http://localhost:5000/api/v1/appmgr/tokenservice
+      method: POST
+      auth:
+        - admin
+        - admin_123
+    response:
+      status_code: 200
+      headers:
+        content-type: application/json
+      save:
+        body:
+          token: token
+  
+  - name: getting device
+    request:
+      url: http://localhost:5000/api/v1/appmgr/devices?searchByAny=192.192.192.192
+      method: GET
+      headers:
+        x-token-id: "{token:s}"
+        content-type: application/text
+    response:
+      status_code: 200
+      headers: 
+        content-type: application/json
+      body:
+        data:
+          - ipAddress: "192.192.192.192"
+

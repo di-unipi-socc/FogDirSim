@@ -9,7 +9,11 @@ It simulates Fog Director giving the same [API of Fog Director](https://develope
 
 ###### Authentication
  - `POST /api/v1/appmgr/tokenservice` To get a new token
+    - Use this function to get a new token. A username and password have to be passed as basic HTTP Authentication. For the moment, these credential are hardcoded (admin, admin_123). 
  - `DELETE /api/v1/appmgr/tokenservice/<token>` To delete a valid token
+    - Delete the token passed in the URL from the valid tokens. This function needs `x-token-id` field in the header to be executed
+
+###### Devices
  - `POST /api/v1/appmgr/devices` To add a new device
  - `GET /api/v1/appmgr/devices?limit=100&offset=0&searchByTags=ciccio&searchByAnyMatch=123.12.1.2` To get devices from the database (all parameters are optionals)
  - `POST /api/v1/appmgr/tags` - To add a new tag to tag library

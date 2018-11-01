@@ -1,36 +1,4 @@
-test_name: Make login on server and then delete token
-
-stages:
-  - name: login
-    request:
-      url: http://localhost:5000/api/v1/appmgr/tokenservice
-      method: POST
-      auth:
-        - admin
-        - admin_123
-    response:
-      status_code: 200
-      headers:
-        content-type: application/json
-      save:
-        body:
-          token: token
-  - name: delete a token
-    request:
-      url: http://localhost:5000/api/v1/appmgr/tokenservice/{token:s}
-      method: DELETE
-      headers:
-        x-token-id: "{token:s}"
-    response:
-      status_code: 200
-      body:
-        token: "{token:s}"
-      headers:
-        content-type: application/json
-  
----
-
-test_name: adding and taggind a device
+test_name: adding and tagging a device
 
 stages:
   - name: login
@@ -56,10 +24,10 @@ stages:
         x-token-id: "{token:s}"
         content-type: application/json
       json:
-        ipAddress: "192.192.192.192"
-        port: "8888"
-        username: t
-        password: t
+        ipAddress: "192.15.1.2"
+        port: 4055
+        username: "t"
+        password: "t"
     response:
       status_code: 201
       headers:
@@ -76,18 +44,18 @@ stages:
         x-token-id: "{token:s}"
         content-type: application/json
       json:
-        name: "new_tag"
+        name: "new_testag"
     response:
       status_code: 200
       headers: 
         content-type: application/json
       save:
         body:
-          tagid: tagId
+          new_testag_id: tagId
   
   - name: tagging device {deviceid:s}
     request:
-      url: http://localhost:5000/api/v1/appmgr/tags/{tagid:d}/devices
+      url: http://localhost:5000/api/v1/appmgr/tags/{new_testag_id:s}/devices
       method: POST
       headers:
         x-token-id: "{token:s}"
@@ -100,23 +68,21 @@ stages:
       headers:
         content-type: application/json
       body:
-        tagId: "{tagid:d}"
+        tagId: "{new_testag_id:s}"
   
-  - name: getting tagged devices with tag {tagid:d}
-    request: 
-      url: http://localhost:5000/api/v1/appmgr/devices?searchByTags={tagid:d}
+  - name: getting device {deviceid:s} by tag
+    request:
+      url: http://localhost:5000/api/v1/appmgr/devices?searchByTags={new_testag_id:s}
       method: GET
       headers:
         x-token-id: "{token:s}"
+        content-type: application/text # used to avoid json error in tavern
     response:
       status_code: 200
       headers:
         content-type: application/json
-          
-  
-          
-  
-  
-
-
-
+      body:
+        data: 
+          - tags:
+            - "{new_testag_id:s}" 
+      
