@@ -6,6 +6,7 @@ These lines try to simulate Fog Director in order to prevent you to put in produ
 It simulates Fog Director giving the same [API of Fog Director](https://developer.cisco.com/docs/iox/#!fog-director-api-documentation/cisco-fog-director-rest-api) but executing all the operation only on a Database instead of on your infrastructure.
 
 #### Available API (in progress)
+A better (incomplete in this moment) documentation can be found [here](https://documenter.getpostman.com/view/2935895/RzZ4p2B7)
 
 ###### Authentication
  - `POST /api/v1/appmgr/tokenservice` To get a new token
