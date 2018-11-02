@@ -5,7 +5,7 @@ __pycache__/
 SECRETS.py
 # C extensions
 *.so
-
+fileApplication/*
 # Distribution / packaging
 .Python
 build/
