@@ -69,4 +69,65 @@ stages:
       body:
         data: []
 
+---
+
+test_name: publishing an application
+stages:
+  - name: login
+    request:
+      url: http://localhost:5000/api/v1/appmgr/tokenservice
+      method: POST
+      auth:
+        - admin
+        - admin_123
+    response:
+      status_code: 200
+      headers:
+        content-type: application/json
+      save:
+        body:
+          token: token
+  - name: upload application
+    request:
+      url: http://localhost:5000/api/v1/appmgr/localapps/upload
+      method: POST
+      headers:
+        x-token-id: "{token:s}"
+      files:
+        file: "test/NettestApp2V1_lxc.tar.gz"
+    response:
+      status_code: 200
+      headers:
+        content-type: application/json
+      body:
+        $ext:
+          function: utils:test_notpublish
+      save:
+        body:
+          localAppId: localAppId
+
+  - name: get uploaded application
+    request:
+      url: http://localhost:5000/api/v1/appmgr/localapps
+      method: GET
+      headers:
+        content-type: application/text
+        x-token-id: "{token:s}"
+    response:
+      status_code: 200
+      save:
+        $ext:
+          function: utils:test_publish_function
+
+  - name: publish application
+    request:
+      url: http://localhost:5000/api/v1/appmgr/localapps/{localAppId:s}:{localAppVersion:s}
+      method: PUT
+      headers:
+        content-type: application/json
+        x-token-id: "{token:s}"
+      data: "{app_data:s}"
+    response:
+      status_code: 200
+      
   

@@ -77,6 +77,7 @@ class Applications(Resource):
     def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument('x-token-id', location='headers')
+        parser.add_argument("x-publish-on-upload", location="headers")
         args = parser.parse_args()
         if db.checkToken(args["x-token-id"]):
             if 'file' not in request.files or request.files["file"].filename == '':
@@ -134,7 +135,8 @@ class Applications(Resource):
                                                 memoryUsage=0)
 
                 appID = str(db.addLocalApplication(appJson))
-                
+                if(args["x-publish-on-upload"] == True):
+                    appJson["published"] = True
                 appJson["localAppId"] = appID
                 db.updateLocalApplication(appID, {"localAppId": appID})
                 os.rename(tmpDir, appID)
@@ -142,33 +144,58 @@ class Applications(Resource):
                 os.chdir("../")
                 appReturn = db.getLocalApplication(appID)
                 appReturn["_id"] = str(appReturn["_id"])
-                return appReturn, 200, {"ContentType": "application/json"}
+                return appReturn, 200, {"Content-Type": "application/json"}
 
             #if application already exists
             return '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
                     <error>
                         <code>1316</code>
                         <description>An app with the same deployId already exists. Please make sure that the first forty characters of the app do not match with any of the existing apps.</description>
-                    </error>''', 409, {"ContentType": "application/xml"}
+                    </error>''', 409, {"Content-Type": "application/xml"}
         else:
             return self.invalidToken()
 
     # /api/v1/appmgr/localapps/<appid>:<appversion>
-    def put(self, appid, appversion):
+    def put(self, appURL):
         parser = reqparse.RequestParser()
         parser.add_argument('x-token-id', location='headers')
         args = parser.parse_args()
         data = request.json 
         if db.checkToken(args["x-token-id"]):
-            print "DA IMPLEMENTARE"
-        return {"VERIFICARE"}, 200, {"ContentType": "application/json"}
+            tmp = appURL.split(":")
+            appid = tmp[0]
+            if len(tmp) > 1:
+                appversion = tmp[1]
+            else:
+                appversion = 1 # default value
+            if(not db.localApplicationExists(appid, appversion)):
+                return self.notFoundApp(appid)
+            if(appversion == None):
+                return self.notFoundApp(appid) # this error is returned even if the application exists, but no version is specified
+            db.updateLocalApplication(appid, data)
+            # Another error should be returned if the data passed is not completed as stored in DB. All the field
+            # have to be passed, also the unchanged ones. I ignore this error.
+            app = db.getLocalApplication(appid)
+            del app["_id"]
+            return app, 200, {"Content-Type": "application/json"}
+        else:
+            return self.invalidToken()
+
 
     # /api/v1/appmgr/apps/<appid> <-- WTF? Why apps and not localapps?!!! CISCOOOOO!!!!
-    def delete(self, appid):
+    def delete(self, appURL):
         parser = reqparse.RequestParser()
         parser.add_argument('x-token-id', location='headers')
         parser.add_argument('x-unpublish-on-delete', location='headers') # TODO manage this feature
         args = parser.parse_args()
+
+        tmp = appURL.split(":")
+        appid = tmp[0]
+        if len(tmp) > 1:
+            appversion = tmp[1]
+        else:
+            appversion = 1 # default value
+
         if db.checkToken(args["x-token-id"]):
             if args["x-unpublish-on-delete"] == None:
                 app = db.getLocalApplication(appid)
@@ -180,7 +207,7 @@ class Applications(Resource):
                                     <code>1303</code>
                                     <description>App %s is in use: Unable to delete apps with name %s
                                 As app with name %s and version%d is in published state</description>
-                            </error>""" % (app["name"], app["name"], app["name"], app["name"]), 400, {"ContentType": "application/xml"} # TODO: customize returned error name
+                            </error>""" % (app["name"], app["name"], app["name"], app["name"]), 400, {"Content-Type": "application/xml"} # TODO: customize returned error name
             db.deleteLocalApplication(appid)
             return "", 200
         else:
@@ -197,9 +224,18 @@ class Applications(Resource):
             data = {"data": []}
             apps = db.getLocalApplications()
             for app in apps:
+                del app["_id"] # removing internal ID, not JSON serializable object
                 data["data"].append(app)
-            return data, 200, {"ContentType": "application/json"}
+            return data, 200, {"Content-Type": "application/json"}
 
     @staticmethod
     def invalidToken():
-        return {"code":1703,"description":"Session is invalid or expired"}, 401, {'ContentType':'application/json'} 
+        return {"code":1703,"description":"Session is invalid or expired"}, 401, {'Content-Type':'application/json'} 
+
+    @staticmethod
+    def notFoundApp(appid):
+        return """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+                <error>
+                    <code>1301</code>
+                    <description>An app with given id %s cannot be found.</description>
+                </error>""" % appid, 404, {"Content-Type": "application/xml"}

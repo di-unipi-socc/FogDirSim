@@ -73,7 +73,8 @@ def tagDevice(deviceid, tag):
 
 def addLocalApplication(appdata):
     return db.applications.insert_one(appdata).inserted_id
-    
+def localApplicationExists(appid, version=1):
+    return db.applications.count_documents({"localAppId": appid, "version": version}) > 0
 def getLocalApplications():
     return db.applications.find()
 def getLocalApplication(appid):
