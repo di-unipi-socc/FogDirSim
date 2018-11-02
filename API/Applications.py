@@ -15,6 +15,63 @@ class Applications(Resource):
     def allowed_file(filename):
         return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in set(["gz", "tar"])
+    
+    @staticmethod
+    def createApplicationJSON(creationDate,
+                              lastupdateTime,
+                              descriptorSchemaVersion,
+                              info,
+                              app,
+                              signed,
+                              appid,
+                              version,
+                              name,
+                              description,
+                              apptype,
+                              published,
+                              resources,
+                              cpuUsage,
+                              memoryUsage):
+        return {
+                    "icon": {
+                        "caption": "icon",
+                        "href": None
+                    }, 
+                    "images": [],
+                    "packages": [
+                        {
+                            "href": "api/v1/appmgr/localapps/%s:1/packages/e0c9d17e-05a5-4253-a0c9-55e8a6da12c6" % appid
+                        }
+                    ],
+                    "creationDate": creationDate,
+                    "lastUpdatedDate": lastupdateTime,
+                    "descriptor": {
+                        "descriptor-schema-version": descriptorSchemaVersion,
+                        "info": info,
+                        "app": app
+                    },
+                    "signed": signed,
+                    "localAppId": appid,
+                    "version": version,
+                    "name": name,
+                    "description": {
+                        "contentType": "text",
+                        "content":  description
+                    },
+                    "releaseNotes": {
+                        "contentType": "text"
+                    },
+                    "appType": apptype,
+                    "categories": [],
+                    "vendor": "",
+                    "published": published,
+                    "services": [],
+                    "profileNeeded": resources["profile"],
+                    "cpuUsage": cpuUsage,
+                    "memoryUsage": memoryUsage,
+                    "classification": "APP",
+                    "properties": []
+                }
 
     # /api/v1/appmgr/localapps/upload
     def post(self):
@@ -28,7 +85,7 @@ class Applications(Resource):
                             <error>
                                 <code>1308</code>
                                 <description>Given app package file is invalid: Unsupported Format</description>
-                            </error>""", 400, {"ContentType": "application/xml"}
+                            </error>""", 400, {"Content-Type": "application/xml"}
             file = request.files['file']
             if file and self.allowed_file(file.filename):
                 filename = secure_filename(file.filename)
@@ -60,75 +117,39 @@ class Applications(Resource):
                     app_data = yaml.load(stream)
                 os.chdir("../")
                 
-                appID = str(db.addLocalApplication(int(time.time()), int(time.time()), app_data))
+                appJson = self.createApplicationJSON(creationDate=int(time.time()),
+                                                lastupdateTime=int(time.time()),
+                                                descriptorSchemaVersion=app_data["descriptor-schema-version"],
+                                                info=app_data["info"],
+                                                app=app_data["app"],
+                                                signed=False,
+                                                appid=-1,
+                                                version=app_data["info"]["version"],
+                                                name=app_data["info"]["name"],
+                                                description=app_data["info"]["description"],
+                                                apptype=app_data["app"]["type"],
+                                                published=False,
+                                                resources=app_data["app"]["resources"],
+                                                cpuUsage=0,
+                                                memoryUsage=0)
+
+                appID = str(db.addLocalApplication(appJson))
+                
+                appJson["localAppId"] = appID
+                db.updateLocalApplication(appID, {"localAppId": appID})
                 os.rename(tmpDir, appID)
 
                 os.chdir("../")
-
-                return {
-                    "icon": {
-                        "caption": "icon",
-                        "href": "api/v1/appmgr/localapps/"+str(appID)+":1/icon"
-                    },
-                    "images": [],
-                    "packages": [
-                        {
-                            # TODO: What is the second ID?
-                            "href": "api/v1/appmgr/localapps/"+str(appID)+":1/packages/5ee94405-ae7b-4dcf-abc8-5e35813a993b"
-                        }
-                    ],
-                    "creationDate": int(time.time()),
-                    "descriptor": {
-                        "descriptor-schema-version": app_data["descriptor-schema-version"],
-                        "info": app_data["info"],
-                        "app": app_data["app"]
-                    },
-                    "signed": False,
-                    "_links": {
-                        "icon": {
-                            "href": "api/v1/appmgr/localapps/"+appID+":1/icon"
-                        },
-                        "images": {
-                            "href": "api/v1/appmgr/localapps/"+appID+":1/images"
-                        },
-                        "packages": {
-                            "href": "api/v1/appmgr/localapps/"+appID+":1/packages"
-                        },
-                        "configuration": {
-                            "href": "api/v1/appmgr/localapps/"+appID+":1/config"
-                        },
-                        "self": {
-                            "href": "api/v1/appmgr/localapps/"+appID+":1"
-                        }
-                    },
-                    "localAppId": appID,
-                    "version": app_data["info"]["version"],
-                    "name": app_data["info"]["name"],
-                    "description": {
-                        "contentType": "text",
-                        "content": app_data["info"]["description"]
-                    },
-                    "releaseNotes": {
-                        "contentType": "text"
-                    },
-                    "appType": app_data["app"]["type"],
-                    "categories": [],
-                    "published": False,
-                    "services": [],
-                    "profileNeeded": app_data["app"]["resources"]["profile"],
-                    "cpuUsage": 0,
-                    "memoryUsage": 0,
-                    "classification": "APP",
-                    "properties": []
-                }, 200, {"ContentType": "application/json"}
+                appReturn = db.getLocalApplication(appID)
+                appReturn["_id"] = str(appReturn["_id"])
+                return appReturn, 200, {"ContentType": "application/json"}
 
             #if application already exists
-            return """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+            return '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
                     <error>
                         <code>1316</code>
                         <description>An app with the same deployId already exists. Please make sure that the first forty characters of the app do not match with any of the existing apps.</description>
-                    </error>
-                """, 409, {"ContentType": "application/xml"}
+                    </error>''', 409, {"ContentType": "application/xml"}
         else:
             return self.invalidToken()
 
@@ -154,12 +175,12 @@ class Applications(Resource):
                 if app == None:
                     return "", 200 # Yes, it returns 200 even if the application doesn't exists
                 if app["published"]:
-                    return """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+                    return """<?xml version="1.0" encoding="UTF-8" standalone="yes"?> 
                                 <error>
                                     <code>1303</code>
-                                    <description>App NettestApp2 is in use: Unable to delete apps with name NettestApp2
-                                As app with name NettestApp2 and version1 is in published state</description>
-                            </error>""", 400, {"ContentType": "application/xml"}
+                                    <description>App %s is in use: Unable to delete apps with name %s
+                                As app with name %s and version%d is in published state</description>
+                            </error>""" % (app["name"], app["name"], app["name"], app["name"]), 400, {"ContentType": "application/xml"} # TODO: customize returned error name
             db.deleteLocalApplication(appid)
             return "", 200
         else:
@@ -176,49 +197,7 @@ class Applications(Resource):
             data = {"data": []}
             apps = db.getLocalApplications()
             for app in apps:
-                app_props = app["data"]
-                data["data"].append(
-                    {
-                        "icon": {
-                            "caption": "icon",
-                            "href": None
-                        }, 
-                        "images": [],
-                        "packages": [
-                            {
-                                "href": "api/v1/appmgr/localapps/%s:1/packages/e0c9d17e-05a5-4253-a0c9-55e8a6da12c6" % str(app["_id"])
-                            }
-                        ],
-                        "creationDate": app["creationDate"],
-                        "lastUpdatedDate": app["lastupdateTime"],
-                        "descriptor": {
-                            "descriptor-schema-version": app_props["descriptor-schema-version"],
-                            "info": app_props["info"],
-                            "app": app_props["app"]
-                        },
-                        "signed": app["signed"],
-                        "localAppId": str(app["_id"]),
-                        "version": app_props["info"]["version"],
-                        "name": app_props["info"]["name"],
-                        "description": {
-                            "contentType": "text",
-                            "content":  app_props["info"]["description"]
-                        },
-                        "releaseNotes": {
-                            "contentType": "text"
-                        },
-                        "appType": app_props["app"]["type"],
-                        "categories": [],
-                        "vendor": "",
-                        "published": app["published"],
-                        "services": [],
-                        "profileNeeded": app_props["app"]["resources"]["profile"],
-                        "cpuUsage": app["cpuUsage"],
-                        "memoryUsage": app["memoryUsage"],
-                        "classification": "APP",
-                        "properties": []
-                        }
-                )
+                data["data"].append(app)
             return data, 200, {"ContentType": "application/json"}
 
     @staticmethod

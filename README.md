@@ -31,3 +31,6 @@ A better (incomplete in this moment) documentation can be found [here](https://d
 
 ## In progress
 This is the first project where I use MongoDB. Please, report any mistake on the NoSQL paradigm!
+
+## Limitations
+ - The simulator not manages multiversion application. Each application is identified by an ID that is unique among all others application:versions.

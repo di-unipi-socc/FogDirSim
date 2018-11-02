@@ -71,21 +71,20 @@ def tagDevice(deviceid, tag):
         {"$addToSet": {"tags": tag}}
     )
 
-def addLocalApplication(creationTime, lastupdateTime, appdata):
-    return db.applications.insert_one({
-        "creationDate": creationTime,
-        "lastupdateTime": lastupdateTime,
-        "data": appdata,
-        "cpuUsage":0,
-        "memoryUsage": 0,
-        "published": False,
-        "signed": False
-    }).inserted_id
+def addLocalApplication(appdata):
+    return db.applications.insert_one(appdata).inserted_id
     
 def getLocalApplications():
     return db.applications.find()
 def getLocalApplication(appid):
     return db.applications.find_one({"_id": ObjectId(appid)})
+
+def updateLocalApplication(appid, newValues):
+    _id = appid if type(appid) == int else ObjectId(appid)
+    db.applications.update_one(
+        {"_id": _id},
+        {"$set": newValues}
+    )
 
 def deleteLocalApplication(appid):
     db.applications.find_one_and_delete({"_id": ObjectId(appid)})
