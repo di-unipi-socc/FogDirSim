@@ -45,7 +45,7 @@ class Tags(Resource):
                 },
                 "tagId": tagid,
                 "name": "newtag"
-            }, 200, {'ContentType':'application/json'} 
+            }, 201, {'ContentType':'application/json'} 
         else:
             return {"code":1703,"description":"Session is invalid or expired"}, 401, {'ContentType':'application/json'} 
     

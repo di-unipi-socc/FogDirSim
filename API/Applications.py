@@ -144,7 +144,7 @@ class Applications(Resource):
                 os.chdir("../")
                 appReturn = db.getLocalApplication(appID)
                 appReturn["_id"] = str(appReturn["_id"])
-                return appReturn, 200, {"Content-Type": "application/json"}
+                return appReturn, 202, {"Content-Type": "application/json;charset=UTF-8"} # and finally yes, it returns also the charset here!
 
             #if application already exists
             return '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>

@@ -10,7 +10,7 @@ import Database as db
 app = Flask(__name__)
 api = Api(app)
 
-api.add_resource(Devices, "/api/v1/appmgr/devices")
+api.add_resource(Devices, "/api/v1/appmgr/devices", "/api/v1/appmgr/devices/<deviceid>")
 api.add_resource(Authentication, "/api/v1/appmgr/tokenservice","/api/v1/appmgr/tokenservice/<token>")
 api.add_resource(Tags, "/api/v1/appmgr/tags")
 api.add_resource(TaggingDevices, "/api/v1/appmgr/tags/<tagid>/devices")

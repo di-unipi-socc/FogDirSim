@@ -37,10 +37,24 @@ A better (incomplete in this moment) documentation can be found [here](https://d
     - Delete an application passing its `<appid>` in the URL. This API accepts the following headers: `x-unpublish-on-delete`. If `x-unpublish-on-delete` is not specified, its values is `false`.
  - `GET /api/v1/appmgr/localapps/` - Get all the app (published and unpublished)
 
-
-## In progress
-This is the first project where I use MongoDB. Please, report any mistake on the NoSQL paradigm!
+## Tested scenario 
+All the tests are run over the Simulator AND Fog Director. They success on both systems.
+ - Simple login and logout
+ - Add a device
+ - Try to add an already inserted device
+ - Delete a device
+ - Get a device by its IP address
+ - Upload, then delete an application
+ - Upload, then publish an application
+ - Get the applications present in the system
+ - Add a tag
+ - Try to add an already inserted tag
+ - Tag a device
 
 ## Limitations / Main difference from Fog Director
  - The simulator doesn't manage multiversions applications. Each application is identified by an ID that is unique among all others application and versions (then in `/api/v1/appmgr/localapps/<appid>:<appversion>` the version is ignored).
  - In the PUT `/api/v1/appmgr/localapps/<appid>:<appversion>` API, also not completed description of application is accepted. In Fog Director this "partial body" returns an error.
+ 
+## In progress
+This is the first project where I use MongoDB. Please, report any mistake on the NoSQL paradigm!
+

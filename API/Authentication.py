@@ -28,8 +28,8 @@ class Authentication(Resource):
             token = "%d-1366-4a3a--%d" % (hash(time.time()), int(time.time()))
             userid = 0
             db.addToken(expiryTime, token, userid)
-            return {"token":token,"expiryTime":expiryTime,"serverEpochTime":epochTime}
-        return {"code":1702,"description":"Incorrect username or password"}, 400, {'ContentType':'application/json'}
+            return {"token":token,"expiryTime":expiryTime,"serverEpochTime":epochTime}, 202, {"Content-Type": "application/json"}
+        return {"code":1702,"description":"Incorrect username or password"}, 400, {'Content-Type':'application/json'}
 
     def delete(self, token):
         parser = reqparse.RequestParser()

@@ -42,6 +42,12 @@ def addDevice(deviceid, device):
 def deviceExists(devid):
     return db.devices.count_documents({"deviceId": devid}) > 0
 
+def getDevice(devid):
+    return db.devices.find_one({"deviceId": devid})
+
+def deleteDevice(devid):
+    db.devices.find_one_and_delete({"deviceId": devid})
+
 def getDevices(limit=100, offset=0, searchByTag=None, searchByAnyMatch=None):
     if searchByTag != None:
         return db.devices.find({"tags": searchByTag}).skip(offset).limit(limit)

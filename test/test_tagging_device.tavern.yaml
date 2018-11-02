@@ -1,15 +1,19 @@
 test_name: adding and tagging a device
 
+includes:
+  - !include serverconfig.yaml
+
 stages:
   - name: login
     request:
-      url: http://localhost:5000/api/v1/appmgr/tokenservice
+      verify: false
+      url: "{host:s}/api/v1/appmgr/tokenservice"
       method: POST
       auth:
         - admin
         - admin_123
     response:
-      status_code: 200
+      status_code: 202
       headers:
         content-type: application/json
       save:
@@ -18,16 +22,17 @@ stages:
 
   - name: adding device
     request:
-      url: http://localhost:5000/api/v1/appmgr/devices
+      verify: false
+      url: "{host:s}/api/v1/appmgr/devices"
       method: POST
       headers:
         x-token-id: "{token:s}"
         content-type: application/json
       json:
-        ipAddress: "192.15.1.2"
-        port: 4055
-        username: "t"
-        password: "t"
+        ipAddress: "10.10.20.51"
+        port: 8443
+        username: "cisco"
+        password: "cisco"
     response:
       status_code: 201
       headers:
@@ -38,15 +43,16 @@ stages:
   
   - name: creating tag
     request:
-      url: http://localhost:5000/api/v1/appmgr/tags
+      verify: false
+      url: "{host:s}/api/v1/appmgr/tags"
       method: POST
       headers:
         x-token-id: "{token:s}"
         content-type: application/json
       json:
-        name: "new_testag"
+        name: "tag_device5"
     response:
-      status_code: 200
+      status_code: 201
       headers: 
         content-type: application/json
       save:
@@ -55,24 +61,29 @@ stages:
   
   - name: tagging device {deviceid:s}
     request:
-      url: http://localhost:5000/api/v1/appmgr/tags/{new_testag_id:s}/devices
+      verify: false
+      url: "{host:s}/api/v1/appmgr/tags/{new_testag_id:s}/devices"
       method: POST
       headers:
         x-token-id: "{token:s}"
         content-type: application/json
       json:
         devices: 
-          - "{deviceid:d}"
+          - "{deviceid:s}"
     response:
       status_code: 200
       headers:
         content-type: application/json
       body:
         tagId: "{new_testag_id:s}"
+      save:
+        body:
+          tagName: name
   
   - name: getting device {deviceid:s} by tag
     request:
-      url: http://localhost:5000/api/v1/appmgr/devices?searchByTags={new_testag_id:s}
+      verify: false
+      url: "{host:s}/api/v1/appmgr/devices?searchByTags={tagName:s}"
       method: GET
       headers:
         x-token-id: "{token:s}"
@@ -84,5 +95,21 @@ stages:
       body:
         data: 
           - tags:
-            - "{new_testag_id:s}" 
+            - {tagId: "{new_testag_id:s}", name: "{tagName:s}"}
+  
+  - name: delete a device
+    request:
+      verify: false
+      url: "{host:s}/api/v1/appmgr/devices/{deviceid:s}"
+      method: DELETE
+      headers:
+        x-token-id: "{token:s}"
+        content-type: application/text
+    response:
+      status_code: 200
+      headers:
+        content-type: application/json
+      body:
+        $ext:
+          function: utils:checkIp10102051nodata
       

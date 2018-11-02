@@ -1,14 +1,17 @@
 test_name: creating a tag
+includes:
+  - !include serverconfig.yaml
 stages:
   - name: login
     request:
-      url: http://localhost:5000/api/v1/appmgr/tokenservice
+      verify: false
+      url: "{host:s}/api/v1/appmgr/tokenservice"
       method: POST
       auth:
         - admin
         - admin_123
     response:
-      status_code: 200
+      status_code: 202
       headers:
         content-type: application/json
       save:
@@ -17,15 +20,16 @@ stages:
 
   - name: creating tag
     request:
-      url: http://localhost:5000/api/v1/appmgr/tags
+      verify: false
+      url: "{host:s}/api/v1/appmgr/tags"
       method: POST
       headers:
         x-token-id: "{token:s}"
         content-type: application/json
       json:
-        name: "new_tag"
+        name: "new_tag3"
     response:
-      status_code: 200
+      status_code: 201
       headers: 
         content-type: application/json
       save:
@@ -35,16 +39,19 @@ stages:
 ---
 
 test_name: creating a tag with already existing name
+includes:
+  - !include serverconfig.yaml
 stages:
   - name: login
     request:
-      url: http://localhost:5000/api/v1/appmgr/tokenservice
+      verify: false
+      url: "{host:s}/api/v1/appmgr/tokenservice"
       method: POST
       auth:
         - admin
         - admin_123
     response:
-      status_code: 200
+      status_code: 202
       headers:
         content-type: application/json
       save:
@@ -53,13 +60,14 @@ stages:
 
   - name: creating tag
     request:
-      url: http://localhost:5000/api/v1/appmgr/tags
+      verify: false
+      url: "{host:s}/api/v1/appmgr/tags"
       method: POST
       headers:
         x-token-id: "{token:s}"
         content-type: application/json
       json:
-        name: "new_tag"
+        name: "new_tag2"
     response:
       status_code: 409
       headers: 

@@ -1,15 +1,19 @@
 test_name: uploading and deleting an application
 
+includes:
+  - !include serverconfig.yaml
+
 stages:
   - name: login
     request:
-      url: http://localhost:5000/api/v1/appmgr/tokenservice
+      verify: false
+      url: "{host:s}/api/v1/appmgr/tokenservice"
       method: POST
       auth:
         - admin
         - admin_123
     response:
-      status_code: 200
+      status_code: 202
       headers:
         content-type: application/json
       save:
@@ -18,16 +22,17 @@ stages:
 
   - name: upload application
     request:
-      url: http://localhost:5000/api/v1/appmgr/localapps/upload
+      verify: false
+      url: "{host:s}/api/v1/appmgr/localapps/upload"
       method: POST
       headers:
         x-token-id: "{token:s}"
       files:
         file: "test/NettestApp2V1_lxc.tar.gz"
     response:
-      status_code: 200
+      status_code: 201
       headers:
-        content-type: application/json
+        content-type: application/json;charset=UTF-8
       body:
         published: false
       save:
@@ -36,7 +41,8 @@ stages:
 
   - name: get uploaded application
     request:
-      url: http://localhost:5000/api/v1/appmgr/localapps
+      verify: false
+      url: "{host:s}/api/v1/appmgr/localapps"
       method: GET
       headers:
         content-type: application/text
@@ -49,7 +55,8 @@ stages:
 
   - name: delete application
     request:
-      url: http://localhost:5000/api/v1/appmgr/apps/{localAppId:s}
+      verify: false
+      url: "{host:s}/api/v1/appmgr/apps/{localAppId:s}"
       method: DELETE
       headers:
         content-type: application/text
@@ -59,7 +66,8 @@ stages:
   
   - name: get uploaded application
     request:
-      url: http://localhost:5000/api/v1/appmgr/localapps
+      verify: false
+      url: "{host:s}/api/v1/appmgr/localapps"
       method: GET
       headers:
         content-type: application/text
@@ -72,16 +80,21 @@ stages:
 ---
 
 test_name: publishing an application
+
+includes:
+  - !include serverconfig.yaml
+
 stages:
   - name: login
     request:
-      url: http://localhost:5000/api/v1/appmgr/tokenservice
+      verify: false
+      url: "{host:s}/api/v1/appmgr/tokenservice"
       method: POST
       auth:
         - admin
         - admin_123
     response:
-      status_code: 200
+      status_code: 202
       headers:
         content-type: application/json
       save:
@@ -89,16 +102,17 @@ stages:
           token: token
   - name: upload application
     request:
-      url: http://localhost:5000/api/v1/appmgr/localapps/upload
+      verify: false
+      url: "{host:s}/api/v1/appmgr/localapps/upload"
       method: POST
       headers:
         x-token-id: "{token:s}"
       files:
         file: "test/NettestApp2V1_lxc.tar.gz"
     response:
-      status_code: 200
+      status_code: 201
       headers:
-        content-type: application/json
+        content-type: application/json;charset=UTF-8
       body:
         $ext:
           function: utils:test_notpublish
@@ -108,7 +122,8 @@ stages:
 
   - name: get uploaded application
     request:
-      url: http://localhost:5000/api/v1/appmgr/localapps
+      verify: false
+      url: "{host:s}/api/v1/appmgr/localapps"
       method: GET
       headers:
         content-type: application/text
@@ -121,7 +136,8 @@ stages:
 
   - name: publish application
     request:
-      url: http://localhost:5000/api/v1/appmgr/localapps/{localAppId:s}:{localAppVersion:s}
+      verify: false
+      url: "{host:s}/api/v1/appmgr/localapps/{localAppId:s}:{localAppVersion:s}"
       method: PUT
       headers:
         content-type: application/json

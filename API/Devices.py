@@ -12,7 +12,7 @@ class Devices(Resource):
 
     @staticmethod
     def computeDeviceId(ip, port):
-        return abs(hash(ip + str(port)))
+        return str(abs(hash(ip + str(port))))
 
     @staticmethod # This method ignore tags
     def createDeviceJSON(device):
@@ -207,7 +207,7 @@ class Devices(Resource):
                 data["password"] == None:
                 return {"description": "ipAddress, port, username or password not defined"}, 401, {"ContentType": "application/json"}
 
-            devid = self.computeDeviceId(data["ipAddress"], data["port"])
+            devid = str(self.computeDeviceId(data["ipAddress"], data["port"]))
 
             if db.deviceExists(devid):
                 return {
@@ -228,6 +228,16 @@ class Devices(Resource):
             return deviceDescription, 201, {'ContentType':'application/json'}
         else:
             return self.invalidToken()
+
+    def delete(self, deviceid):
+        parser = reqparse.RequestParser()
+        parser.add_argument('x-token-id', location='headers')
+        args = parser.parse_args()
+        if db.checkToken(args["x-token-id"]):
+            dev = db.getDevice(deviceid)
+            db.deleteDevice(deviceid)
+            del dev["_id"]
+            return dev, 200, {"Content-Type": "application/json"}
 
     def get(self):
         parser = reqparse.RequestParser()
