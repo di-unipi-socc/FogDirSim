@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, make_response, Response
 from flask_restful import Api, Resource, reqparse
 import time, json, os, yaml, io
 from werkzeug.utils import secure_filename
@@ -143,8 +143,10 @@ class Applications(Resource):
 
                 os.chdir("../")
                 appReturn = db.getLocalApplication(appID)
-                appReturn["_id"] = str(appReturn["_id"])
-                return appReturn, 202, {"Content-Type": "application/json;charset=UTF-8"} # and finally yes, it returns also the charset here!
+                del appReturn["_id"]
+                response = Response(json.dumps(appReturn), 201, mimetype="application/json;charset=UTF-8")
+                #response.headers["content-type"] = "application/json;charset=UTF-8"
+                return response #appReturn, 201, {"content-type": "application/json; charset=UTF-8"} # and finally yes, it returns also the charset here!
 
             #if application already exists
             return '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>

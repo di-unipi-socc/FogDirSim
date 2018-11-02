@@ -29,3 +29,11 @@ def getdeviceid(response):
         if dev["ipAddress"] == "10.10.20.51":
             print dev
             return {"deviceId": str(dev["deviceId"])}
+
+def getAppdetails(response):
+    app = response.json()
+    return {"appname": app["name"], "sourceAppName": app["localAppId"]+":"+app["version"], "version": app["version"], "appSourceType": "LOCAL_APPSTORE"}
+
+def getdevicedetails(response):
+    data = response.json()
+    dev = data["data"][0]

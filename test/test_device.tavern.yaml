@@ -122,7 +122,6 @@ stages:
         $ext:
           function: utils:getdeviceid
 
-  
   - name: delete a device
     request:
       verify: false

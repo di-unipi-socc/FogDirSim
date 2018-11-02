@@ -98,3 +98,38 @@ def deleteLocalApplication(appid):
 
 def getDeviceWithApplication(appid):
     return []
+
+def createMyApp(data):
+    myappappid = db.myapps.insert_one(data).inserted_id
+    return db.myapps.find_one_and_update({"_id": myappappid}, 
+                                            {"$set": {
+                                                "myappId": myappappid,
+                                                "configurations": {
+                                                    "href": "/api/v1/appmgr/myapps/%s/configurations" % myappappid
+                                                },
+                                                "summaryState": {
+                                                    "href": "/api/v1/appmgr/myapps/%s/summaryState" % myappappid
+                                                },
+                                                "aggregatedStats": {
+                                                    "href": "/api/v1/appmgr/myapps/%s/aggregatedStats" % myappappid
+                                                },
+                                                "tags": {
+                                                    "href": "/api/v1/appmgr/myapps/%s/tags" % myappappid
+                                                },
+                                                "action": {
+                                                    "href": "/api/v1/appmgr/myapps/%s/action" % myappappid
+                                                },
+                                                "notifications": {
+                                                    "href": "/api/v1/appmgr/myapps/%s/notifications" % myappappid
+                                                },
+                                                "self": {
+                                                    "href": "/api/v1/appmgr/myapps/%s" % myappappid
+                                                }
+                                            }
+                                        }, return_document=pm.ReturnDocument.AFTER)
+
+def deleteMyApp(appid):
+    return db.myapps.find_one_and_delete({"_id": ObjectId(appid)})
+
+def myAppExists(sourceAppName):
+    return db.myapps.count_documents({"sourceAppName": sourceAppName}) > 0

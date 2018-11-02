@@ -6,7 +6,7 @@ These lines try to simulate Fog Director in order to prevent you to put in produ
 It simulates Fog Director giving the same [API of Fog Director](https://developer.cisco.com/docs/iox/#!fog-director-api-documentation/cisco-fog-director-rest-api) but executing all the operation only on a Database instead of on your infrastructure.
 
 #### Available API (in progress)
-A better (incomplete in this moment) documentation can be found [here](https://documenter.getpostman.com/view/2935895/RzZ4p2B7)
+All the API not reported here, are not available yet.
 
 ###### Authentication
  - `POST /api/v1/appmgr/tokenservice` To create a new token
@@ -47,6 +47,7 @@ All the tests are run over the Simulator AND Fog Director. They success on both 
  - Upload, then delete an application
  - Upload, then publish an application
  - Get the applications present in the system
+ - Delete a local application (with and without `x-unpublish-on-delete`)
  - Add a tag
  - Try to add an already inserted tag
  - Tag a device
@@ -54,7 +55,7 @@ All the tests are run over the Simulator AND Fog Director. They success on both 
 ## Limitations / Main difference from Fog Director
  - The simulator doesn't manage multiversions applications. Each application is identified by an ID that is unique among all others application and versions (then in `/api/v1/appmgr/localapps/<appid>:<appversion>` the version is ignored).
  - In the PUT `/api/v1/appmgr/localapps/<appid>:<appversion>` API, also not completed description of application is accepted. In Fog Director this "partial body" returns an error.
- 
+ - When new device is added, all the information on the device are returned (the discovery phase is not simulated)
 ## In progress
 This is the first project where I use MongoDB. Please, report any mistake on the NoSQL paradigm!
 

@@ -100,6 +100,7 @@ stages:
       save:
         body:
           token: token
+
   - name: upload application
     request:
       verify: false
@@ -145,5 +146,16 @@ stages:
       data: "{app_data:s}"
     response:
       status_code: 200
-      
+  
+  - name: delete application
+    request:
+      verify: false
+      url: "{host:s}/api/v1/appmgr/apps/{localAppId:s}"
+      method: DELETE
+      headers:
+        content-type: application/text
+        x-token-id: "{token:s}"
+        x-unpublish-on-delete: "true"
+    response:
+      status_code: 200
   

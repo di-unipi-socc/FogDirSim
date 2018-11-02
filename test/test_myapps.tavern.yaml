@@ -1,0 +1,96 @@
+test_name: Installing a localapp
+includes:
+  - !include serverconfig.yaml
+
+stages:
+  - name: login
+    request:
+      verify: false
+      url: "{host:s}/api/v1/appmgr/tokenservice"
+      method: POST
+      auth:
+        - admin
+        - admin_123
+    response:
+      status_code: 202
+      headers:
+        content-type: application/json
+      save:
+        body:
+          token: token
+          
+  - name: upload application
+    request:
+      verify: false
+      url: "{host:s}/api/v1/appmgr/localapps/upload"
+      method: POST
+      headers:
+        x-token-id: "{token:s}"
+      files:
+        file: "test/NettestApp2V1_lxc.tar.gz"
+    response:
+      status_code: 201
+      headers:
+        content-type: application/json;charset=UTF-8
+      body:
+        $ext:
+          function: utils:test_notpublish
+      save:
+        $ext:
+          function: utils:getAppdetails
+
+  - name: adding device
+    request:
+      verify: false
+      url: "{host:s}/api/v1/appmgr/devices"
+      method: POST
+      headers:
+        x-token-id: "{token:s}"
+        content-type: application/json
+      json:
+        ipAddress: "10.10.20.51"
+        port: 8443
+        username: "cisco"
+        password: "cisco"
+    response:
+      status_code: 201
+      headers: 
+        content-type: application/json
+
+  - name: getting device
+    request:
+      verify: false
+      url: "{host:s}/api/v1/appmgr/devices?searchByAny=10.10.20.51"
+      method: GET
+      headers:
+        x-token-id: "{token:s}"
+        content-type: application/text
+    response:
+      status_code: 200
+      headers: 
+        content-type: application/json
+      body:
+        $ext:
+          function: utils:checkIp10102051
+      save:
+        $ext:
+          function: utils:getdevicedetails
+          
+  - name: creating myapp endpoint
+    request:
+      verify: false
+      url: "{host:s}/api/v1/appmgr/myapps"
+      method: POST
+      headers:
+        content-type: application/json
+        x-token-id: "{token:s}"
+      json:
+        name: "{appname:s}"
+        sourceAppName: "{sourceAppName:s}"
+        version: "{version:s}"
+        appSourceType: "{appSourceType:s}"
+    response:
+      status_code: 201
+  
+      
+  
