@@ -37,7 +37,7 @@ All the API not reported here, are not available yet.
     - Delete an application passing its `<appid>` in the URL. This API accepts the following headers: `x-unpublish-on-delete`. If `x-unpublish-on-delete` is not specified, its values is `false`.
  - `GET /api/v1/appmgr/localapps/` - Get all the app (published and unpublished)
 
-## Tested scenario 
+## Tested functions
 All the tests are run over the Simulator AND Fog Director. They success on both systems.
  - Simple login and logout
  - Add a device
