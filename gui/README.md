@@ -1,6 +1,6 @@
 This is a GUI to use FogDirSimulator (a.k.a. Fog Director Simulator). It is inspired by Fog Director but it does not include many of the features of the FogDirSimulator yet.
 
-## !! NONE OF THE API CALLS IS ACTUALLY EXECUTED. THESE PART OF THE REPO ONLY CONTAINS PLAIN HTML FILES.
+## !! NONE OF THE API CALLS IS ACTUALLY EXECUTED. THIS PART OF THE REPO ONLY CONTAINS PLAIN HTML FILES.
 
 ## Screenshots (Mock-ups)
 
