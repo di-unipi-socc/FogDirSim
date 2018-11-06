@@ -1,6 +1,7 @@
 import pymongo as pm 
 import time, json
 import SECRETS as config
+import RealDatabase as rdb
 from bson.objectid import ObjectId
 
 client = pm.MongoClient("mongodb://%s:%s@%s:%d" % (config.db_username, 
@@ -35,12 +36,19 @@ def deleteToken(token):
         "token": token
     })
 
-def addDevice(deviceid, device):
-    device["_id"] = deviceid
-    db.devices.insert_one(device)
+def addDevice(ipAddress, port, user, pasw):
+    devSpecs = rdb.getDevice(ipAddress, port)
+    if devSpecs == None:
+        raise LookupError("The device you are adding is not present in the RealDatabase")
+    if "deviceId" not in devSpecs.keys():
+        devSpecs["deviceId"] = hash(devSpecs["ipAddress"]+":"+devSpecs["port"])
+    devSpecs["username"] = user
+    devSpecs["password"] = pasw
+    db.devices.insert_one(devSpecs)
+    return devSpecs
 
-def deviceExists(devid):
-    return db.devices.count_documents({"deviceId": devid}) > 0
+def deviceExists(ipAddress, port):
+    return db.devices.count_documents({"ipAddress": ipAddress, "port": port}) > 0
 
 def getDevice(devid):
     return db.devices.find_one({"deviceId": devid})
