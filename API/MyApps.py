@@ -9,6 +9,7 @@ import Database as db
 class MyApps(Resource):
     
     def post(self):
+        print "MYAPPS1"
         parser = reqparse.RequestParser()
         parser.add_argument('x-token-id', location='headers')
         args = parser.parse_args()
@@ -18,50 +19,24 @@ class MyApps(Resource):
                 appname = data["name"]
                 sourceAppName = data["sourceAppName"]
                 version = data["version"]
-                appSourceType = data["appSourceType"]
+                appType = data["appSourceType"]
             except KeyError:
                 return {
                         "code": 1001,
                         "description": "Given request is not valid: {0}"
                     }, 400, {"Content-Type": "application/json"}
             if db.myAppExists(sourceAppName):
-                return """{
+                return {
                         "code": 1304,
-                        "description": "An app with name %s already exists."
-                    }""" % (sourceAppName), 409, {"content-type": "application/json"}
-            myapp = {"myappId": -1,
-                    "name": appname,
-                    "_links": {
-                        "sourceApp": {
-                            "href": "/api/v1/appmgr/apps/%s" % sourceAppName
-                        },
-                        "icon": {
-                            "href": "/api/v1/appmgr/localapps/%s/icon" % sourceAppName
-                        },
-                        "configurations": {
-                            "href": "/api/v1/appmgr/myapps/%s/configurations" % myappappid
-                        },
-                        "summaryState": {
-                            "href": "/api/v1/appmgr/myapps/%s/summaryState" % myappappid
-                        },
-                        "aggregatedStats": {
-                            "href": "/api/v1/appmgr/myapps/%s/aggregatedStats" % myappappid
-                        },
-                        "tags": {
-                            "href": "/api/v1/appmgr/myapps/%s/tags" % myappappid
-                        },
-                        "action": {
-                            "href": "/api/v1/appmgr/myapps/%s/action" % myappappid
-                        },
-                        "notifications": {
-                            "href": "/api/v1/appmgr/myapps/%s/notifications" % myappappid
-                        },
-                        "self": {
-                            "href": "/api/v1/appmgr/myapps/%s" % myappappid
-                        }
-                    }
-                }
-            myapp = db.createMyApp(myapp)
+                        "description": "An app with name %s already exists." % sourceAppName
+                    }, 409, {"content-type": "application/json"}
+            if appType != "LOCAL_APPSTORE":
+                {
+                    "code": -1,
+                    "description": "This simulator is not able to manage not LOCAL_APPSTORE applications"
+                }, 400, {"Content-Type": "application/json"}
+            myapp = db.createMyApp(appname, sourceAppName, version, appType)
+            del myapp["_id"]
             return myapp, 201, {"content-type": "application/json"}
         else:
             return self.invalidToken()

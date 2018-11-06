@@ -5,6 +5,8 @@ These lines try to simulate Fog Director in order to prevent you to put in produ
 ## How it works?
 It simulates Fog Director giving the same [API of Fog Director](https://developer.cisco.com/docs/iox/#!fog-director-api-documentation/cisco-fog-director-rest-api) but executing all the operation only on a Database instead of on your infrastructure.
 
+This simulator loads the infrastructure from a given Database (a.k.a. RealDatabase). 
+
 #### Available API (in progress)
 All the API not reported here, are not available yet.
 
@@ -38,6 +40,7 @@ All the API not reported here, are not available yet.
  - `GET /api/v1/appmgr/localapps/` - Get all the app (published and unpublished)
 
 ## Tested functions
+In order to run the tests, execute `PYTHONPATH=$PYTHONPATH:test py.test`
 All the tests are run over the Simulator AND Fog Director. They success on both systems.
  - Simple login and logout
  - Add a device

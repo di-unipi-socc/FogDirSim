@@ -32,7 +32,7 @@ def getdeviceid(response):
 
 def getAppdetails(response):
     app = response.json()
-    return {"appname": app["name"], "sourceAppName": app["localAppId"]+":"+app["version"], "version": app["version"], "appSourceType": "LOCAL_APPSTORE"}
+    return {"appname": app["name"], "localAppId": app["localAppId"], "sourceAppName": app["localAppId"]+":"+app["version"], "version": app["version"], "appSourceType": "LOCAL_APPSTORE"}
 
 def getdevicedetails(response):
     data = response.json()

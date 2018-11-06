@@ -1,4 +1,4 @@
-test_name: Creating a myapp endpoing
+test_name: Installing a localapp on a device
 includes:
   - !include serverconfig.yaml
 
@@ -61,6 +61,70 @@ stages:
       save:
         body:
           myappId: myappId
+  
+  - name: adding device
+    request:
+      verify: false
+      url: "{host:s}/api/v1/appmgr/devices"
+      method: POST
+      headers:
+        x-token-id: "{token:s}"
+        content-type: application/json
+      json:
+        ipAddress: "10.10.20.51"
+        port: 8443
+        username: "cisco"
+        password: "cisco"
+    response:
+      status_code: 201
+      headers:
+        content-type: application/json
+      save:
+        body:
+          deviceId: deviceId
+
+  - name: installing application
+    request:
+      url: "{host:s}/api/v1/appmgr/myapps/{myappId:s}/action"
+      verify: false
+      method: POST
+      headers:
+        x-token-id: "{token:s}"
+        content-type: application/json
+      json:
+        deploy:
+          config: {}
+          metricsPollingFrequency: "3600000"
+          startApp: true
+          devices:
+            - deviceId: "{deviceId:d}"
+              resourceAsk: 
+                resources: 
+                  profile: "c1.tiny"
+                  cpu: 100
+                  memory: 32
+                  network:
+                    - interface-name: "eth0"
+                      network-name: "iox-bridge0"
+    response:
+      status_code: 200
+              
+
+  - name: deleting device
+    request:
+      verify: false
+      url: "{host:s}/api/v1/appmgr/devices/{deviceId:s}"
+      method: DELETE
+      headers:
+        x-token-id: "{token:s}"
+        content-type: application/text
+    response:
+      status_code: 200
+      headers:
+        content-type: application/json
+      body:
+        $ext:
+          function: utils:checkIp10102051nodata  
   
   - name: deleting myapps
     request:

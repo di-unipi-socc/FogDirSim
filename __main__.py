@@ -20,7 +20,8 @@ api.add_resource(Applications, "/api/v1/appmgr/localapps/upload", # POST
                                "/api/v1/appmgr/localapps/<appURL>", # PUT
                                "/api/v1/appmgr/apps/<appURL>", # DELETE
                                "/api/v1/appmgr/localapps") # GET
-api.add_resource(MyApps, "/api/v1/appmgr/myapps", "/api/v1/appmgr/myapps/<myappid>")
+api.add_resource(MyApps, "/api/v1/appmgr/myapps",
+                         "/api/v1/appmgr/myapps/<myappid>") # DELETE
 api.add_resource(MyAppsAction, "/api/v1/appmgr/myapps/<appid>/action")
 app.run(debug=True)
 

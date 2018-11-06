@@ -28,7 +28,7 @@ def getDevice(ip = None, port = None, deviceId = None):
     if ip == None and port == None and deviceId == None:
         return None
     if ip != None and port != None:
-        return db.Rdevices.find_one({"ip": ip, "port": port})
+        return  db.Rdevices.find_one({"ipAddress": ip, "port": port})
     if deviceId != None:
         return db.Rdevices.find_one({"deviceId": deviceId})
     

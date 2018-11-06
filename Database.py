@@ -12,6 +12,7 @@ client.drop_database("fogdirector")
 db = client.fogdirector
 db.devices.create_index([('$**', pm.TEXT)], name='TextIndex', default_language='english')
 
+# Authentication
 def addToken(expiryTime, token, user):
     db.tokens.insert_one({
         "expiryTime": expiryTime,
@@ -36,12 +37,13 @@ def deleteToken(token):
         "token": token
     })
 
+# Devices
 def addDevice(ipAddress, port, user, pasw):
     devSpecs = rdb.getDevice(ipAddress, port)
     if devSpecs == None:
         raise LookupError("The device you are adding is not present in the RealDatabase")
     if "deviceId" not in devSpecs.keys():
-        devSpecs["deviceId"] = hash(devSpecs["ipAddress"]+":"+devSpecs["port"])
+        devSpecs["deviceId"] = hash(devSpecs["ipAddress"]+":"+str(devSpecs["port"]))
     devSpecs["username"] = user
     devSpecs["password"] = pasw
     db.devices.insert_one(devSpecs)
@@ -63,6 +65,7 @@ def getDevices(limit=100, offset=0, searchByTag=None, searchByAnyMatch=None):
         return db.devices.find({ "$text": { "$search": searchByAnyMatch } })
     return db.devices.find().skip(offset).limit(limit)
 
+# Tags
 def addTag(tagname, tagdescription):
     tagid = db.tags.insert_one({
         "name": tagname,
@@ -85,15 +88,19 @@ def tagDevice(deviceid, tag):
         {"$addToSet": {"tags": tag}}
     )
 
+# Local Application
 def addLocalApplication(appdata):
     return db.applications.insert_one(appdata).inserted_id
+    
 def localApplicationExists(appid, version=1):
     return db.applications.count_documents({"localAppId": appid, "version": version}) > 0
+
 def getLocalApplications():
     return db.applications.find()
+
 def getLocalApplication(appid):
     return db.applications.find_one({"_id": ObjectId(appid)})
-
+    
 def updateLocalApplication(appid, newValues):
     _id = appid if type(appid) == int else ObjectId(appid)
     db.applications.update_one(
@@ -104,35 +111,17 @@ def updateLocalApplication(appid, newValues):
 def deleteLocalApplication(appid):
     db.applications.find_one_and_delete({"_id": ObjectId(appid)})
 
-def getDeviceWithApplication(appid):
-    return []
-
-def createMyApp(data):
-    myappappid = db.myapps.insert_one(data).inserted_id
+# My apps
+def createMyApp(appname, sourceAppName, version, apptype):
+    myappappid = db.myapps.insert_one({
+        "name": appname,
+        "sourceAppName": sourceAppName,
+        "version": version,
+        "type": apptype
+    }).inserted_id
     return db.myapps.find_one_and_update({"_id": myappappid}, 
                                             {"$set": {
-                                                "myappId": myappappid,
-                                                "configurations": {
-                                                    "href": "/api/v1/appmgr/myapps/%s/configurations" % myappappid
-                                                },
-                                                "summaryState": {
-                                                    "href": "/api/v1/appmgr/myapps/%s/summaryState" % myappappid
-                                                },
-                                                "aggregatedStats": {
-                                                    "href": "/api/v1/appmgr/myapps/%s/aggregatedStats" % myappappid
-                                                },
-                                                "tags": {
-                                                    "href": "/api/v1/appmgr/myapps/%s/tags" % myappappid
-                                                },
-                                                "action": {
-                                                    "href": "/api/v1/appmgr/myapps/%s/action" % myappappid
-                                                },
-                                                "notifications": {
-                                                    "href": "/api/v1/appmgr/myapps/%s/notifications" % myappappid
-                                                },
-                                                "self": {
-                                                    "href": "/api/v1/appmgr/myapps/%s" % myappappid
-                                                }
+                                                "myappId": str(myappappid)
                                             }
                                         }, return_document=pm.ReturnDocument.AFTER)
 
@@ -141,3 +130,7 @@ def deleteMyApp(appid):
 
 def myAppExists(sourceAppName):
     return db.myapps.count_documents({"sourceAppName": sourceAppName}) > 0
+
+# Installed App
+def getDeviceWithApplication(appid):
+    return []

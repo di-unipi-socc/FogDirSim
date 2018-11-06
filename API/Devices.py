@@ -31,10 +31,14 @@ class Devices(Resource):
             if db.deviceExists(data["ipAddress"], data["port"]):
                 return {
                     "code": 1101,
-                    "description": "A device with IP address, 10.10.20.51, already exists in the inventory."
+                    "description": "A device with IP address, %s, already exists in the inventory." % data["ipAddress"]
                 }, 409, {"ContentType": "application/json"}
 
-            devSpecs = db.addDevice(data["ipAddress"], data["port"])
+            try:
+                devSpecs = db.addDevice(data["ipAddress"], data["port"], data["username"], data["password"])
+            except LookupError:
+                return {"error": "LookupError: The device you are adding is not present in the RealDatabase"}, 400, {'ContentType':'application/json'}
+            del devSpecs["_id"]
             return devSpecs, 201, {'ContentType':'application/json'}
         else:
             return self.invalidToken()
@@ -67,6 +71,7 @@ class Devices(Resource):
             
             for device in devices:
                 del device["password"] # removing password from the returned HTTP API object
+                del device["_id"]
                 data["data"].append(device)
 
             return data, 200, {'ContentType':'application/json'} 
