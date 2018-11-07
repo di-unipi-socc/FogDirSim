@@ -67,31 +67,31 @@ The infrastracture is composed by:
 
     JSON rappresentation of a generic device:
     ```json
-{
-    "ipAddress": "10.10.20.51",
-    "port": 8443,
-    "totalCPU": 1000,
-    "totalMEM": 128,
-    "distribution": { 
-        "CPU": [
-            {
-                "timeStart": 0,
-                "timeEnd": 24,
-                "median": 2.4,
-                "deviation": 3 
+        {
+            "ipAddress": "10.10.20.51",
+            "port": 8443,
+            "totalCPU": 1000,
+            "totalMEM": 128,
+            "distribution": { 
+                "CPU": [
+                    {
+                        "timeStart": 0,
+                        "timeEnd": 24,
+                        "median": 2.4,
+                        "deviation": 3 
+                    }
+                ],
+                "MEM": [
+                    {
+                        "timeStart": 0,
+                        "timeEnd": 24,
+                        "median": 45,
+                        "deviation":  
+                    }
+                ]
             }
-        ],
-        "MEM": [
-            {
-                "timeStart": 0,
-                "timeEnd": 24,
-                "median": 45,
-                "deviation":  
-            }
-        ]
-    }
-}
-      ```
+        }
+    ```
 
 ## Limitations / Main differences from Fog Director
  - The simulator doesn't manage multiversions applications. Each application is identified by an ID that is unique among all others application and versions (then in `/api/v1/appmgr/localapps/<appid>:<appversion>` the version is ignored).
