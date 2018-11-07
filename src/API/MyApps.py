@@ -1,6 +1,6 @@
 from flask import Flask, request
 from flask_restful import Api, Resource, reqparse
-
+from modules.Exceptions import MyAppInstalledOnDeviceError
 #importing Database
 import os, sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -45,7 +45,10 @@ class MyApps(Resource):
         parser.add_argument('x-token-id', location='headers')
         args = parser.parse_args()
         if db.checkToken(args["x-token-id"]):
-            app = db.deleteMyApp(myappid)
+            try:
+                app = db.deleteMyApp(myappid)
+            except MyAppInstalledOnDeviceError, e:
+                return {"Error": str(e)}, 400, {"Content-type": "application/json"} # TODO: this response is not compared with FogDirector
             del app["_id"]
             return 
         else:

@@ -72,12 +72,12 @@ The Infrastructure is composed by:
             "port": 8443,
             "totalCPU": 1000,
             "totalMEM": 128,
-            "distribution": { 
+            "distributions": { 
                 "CPU": [
                     {
                         "timeStart": 0,
                         "timeEnd": 24,
-                        "median": 2.4,
+                        "mean": 2.4,
                         "deviation": 3 
                     }
                 ],
@@ -85,8 +85,8 @@ The Infrastructure is composed by:
                     {
                         "timeStart": 0,
                         "timeEnd": 24,
-                        "median": 45,
-                        "deviation":  
+                        "mean": 45,
+                        "deviation": 2
                     }
                 ]
             }

@@ -4,6 +4,9 @@ import SECRETS as config
 import RealDatabase as rdb
 from bson.objectid import ObjectId
 from bson.int64 import Int64
+import modules.ResourceSampling as sampling
+import threading
+from  modules.Exceptions import NoResourceError, MyAppInstalledOnDeviceError
 
 client = pm.MongoClient("mongodb://%s:%s@%s:%d" % (config.db_username, 
                                                    config.db_password, 
@@ -47,6 +50,9 @@ def addDevice(ipAddress, port, user, pasw):
         devSpecs["deviceId"] = hash(devSpecs["ipAddress"]+":"+str(devSpecs["port"]))
     devSpecs["username"] = user
     devSpecs["password"] = pasw
+    devSpecs["usedCPU"] = 0 # these two variables are computed only with apps installed by the simulator
+    devSpecs["usedMEM"] = 0 
+    devSpecs["installedApps"] = []
     db.devices.insert_one(devSpecs)
     return devSpecs
 
@@ -66,11 +72,27 @@ def getDevices(limit=100, offset=0, searchByTag=None, searchByAnyMatch=None):
         return db.devices.find({ "$text": { "$search": searchByAnyMatch } })
     return db.devices.find().skip(offset).limit(limit)
 
-def getAvailableResources(devid):
-    dev = db.devices.find_one({"deviceId": Int64(devid)})
+lock = threading.Lock()
+def checkAndAllocateResource(devid, cpu, mem):
+    sampledCPU = sampling.sampleCPU(devid)
+    sampledMEM = sampling.sampleMEM(devid)
+    with lock: # Syncronized version of python
+        device = getDevice(devid)
+        availableCPU = device["totalCPU"] - device["usedCPU"] - sampledCPU
+        availableMEM = device["totalMEM"] - device["usedMEM"] - sampledMEM
+        if cpu > availableCPU or mem > availableMEM:
+            raise NoResourceError("CPU (available/requested): %d/%d, MEM: %d/%d" % (availableCPU, cpu, availableMEM, mem))
+        db.devices.find_one_and_update(
+            {"deviceId": devid},
+            { "$inc": {"usedCPU": cpu, "usedMEM": mem} }
+        )
 
-
-
+def addMyAppToDevice(myappid, devid):
+    db.devices.find_one_and_update({
+        "deviceId": devid
+    }, {
+        "$addToSet": {"installedApps": myappid}
+    })
 # Tags
 def addTag(tagname, tagdescription):
     tagid = db.tags.insert_one({
@@ -132,11 +154,22 @@ def createMyApp(appname, sourceAppName, version, apptype):
                                         }, return_document=pm.ReturnDocument.AFTER)
 
 def deleteMyApp(appid):
+    if db.devices.count_documents({"installedApps": appid}) > 0:
+        raise MyAppInstalledOnDeviceError("Myapps is installed on some device")
     return db.myapps.find_one_and_delete({"_id": ObjectId(appid)})
 
 def myAppExists(sourceAppName):
     return db.myapps.count_documents({"sourceAppName": sourceAppName}) > 0
 
-# Installed App
-def getDeviceWithApplication(appid):
-    return []
+# Jobs App
+def addJobs(appid, devices, status="DEPLOY"):
+    return db.jobs.insert_one({
+        "myappid": appid,
+        "status": status,
+        "devices": devices
+    }).inserted_id
+
+def updateJobsStatus(myappid, status):
+    return db.jobs.find_and_modify({
+        "myappid": myappid
+    }, {"$set": {"status": status} } ) 
