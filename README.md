@@ -55,9 +55,9 @@ All the tests are run over the Simulator AND Fog Director. They success on both 
  - Try to add an already inserted tag
  - Tag a device
 
-## Infrastracture
+## Infrastructure
 In order to be executed, this simulator requires the infrastructure on which the operation have to be simulated.
-The infrastracture is composed by:
+The Infrastructure is composed by:
  - Devices
     The collection `devices` describes the devices of the infrastructure, identified by `IP` and `PORT`. Addictional information required are: 
     - `totalCPU`: the maximum CPU available on the device
