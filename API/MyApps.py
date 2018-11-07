@@ -9,7 +9,6 @@ import Database as db
 class MyApps(Resource):
     
     def post(self):
-        print "MYAPPS1"
         parser = reqparse.RequestParser()
         parser.add_argument('x-token-id', location='headers')
         args = parser.parse_args()

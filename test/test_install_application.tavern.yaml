@@ -59,8 +59,8 @@ stages:
       body:
         name: "{appname:s}"
       save:
-        body:
-          myappId: myappId
+        $ext:
+          function: utils:getMyAppId
   
   - name: adding device
     request:
@@ -80,12 +80,12 @@ stages:
       headers:
         content-type: application/json
       save:
-        body:
-          deviceId: deviceId
+        $ext:
+          function: utils:getDeviceId
 
   - name: installing application
     request:
-      url: "{host:s}/api/v1/appmgr/myapps/{myappId:s}/action"
+      url: "{host:s}/api/v1/appmgr/myapps/{myAppId:s}/action"
       verify: false
       method: POST
       headers:
@@ -97,7 +97,7 @@ stages:
           metricsPollingFrequency: "3600000"
           startApp: true
           devices:
-            - deviceId: "{deviceId:d}"
+            - deviceId: "{deviceId:s}"
               resourceAsk: 
                 resources: 
                   profile: "c1.tiny"
@@ -129,7 +129,7 @@ stages:
   - name: deleting myapps
     request:
       verify: false
-      url: "{host:s}/api/v1/appmgr/myapps/{myappId:s}"
+      url: "{host:s}/api/v1/appmgr/myapps/{myAppId:s}"
       method: DELETE
       headers:
         content-type: application/txt

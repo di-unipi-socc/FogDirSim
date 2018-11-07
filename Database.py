@@ -3,6 +3,7 @@ import time, json
 import SECRETS as config
 import RealDatabase as rdb
 from bson.objectid import ObjectId
+from bson.int64 import Int64
 
 client = pm.MongoClient("mongodb://%s:%s@%s:%d" % (config.db_username, 
                                                    config.db_password, 
@@ -53,10 +54,10 @@ def deviceExists(ipAddress, port):
     return db.devices.count_documents({"ipAddress": ipAddress, "port": port}) > 0
 
 def getDevice(devid):
-    return db.devices.find_one({"deviceId": devid})
+    return db.devices.find_one({"deviceId": Int64(devid)})
 
 def deleteDevice(devid):
-    db.devices.find_one_and_delete({"deviceId": devid})
+    db.devices.find_one_and_delete({"deviceId": Int64(devid)})
 
 def getDevices(limit=100, offset=0, searchByTag=None, searchByAnyMatch=None):
     if searchByTag != None:
@@ -64,6 +65,11 @@ def getDevices(limit=100, offset=0, searchByTag=None, searchByAnyMatch=None):
     if searchByAnyMatch != None:
         return db.devices.find({ "$text": { "$search": searchByAnyMatch } })
     return db.devices.find().skip(offset).limit(limit)
+
+def getAvailableResources(devid):
+    dev = db.devices.find_one({"deviceId": Int64(devid)})
+
+
 
 # Tags
 def addTag(tagname, tagdescription):

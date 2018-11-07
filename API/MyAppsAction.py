@@ -13,15 +13,15 @@ class MyAppsAction(Resource):
         args = parser.parse_args()
         if db.checkToken(args["x-token-id"]):
             data = request.json
-            print data
             try:
                 action = data.keys()[0]
                 if action == "deploy":
                     data = data[action]
                     devices = data["devices"]
-                for device in devices:
-                    devid = device["deviceId"]
-                    resourceAsk = device["resourceAsk"]
+                    for device in devices:
+                        devid = device["deviceId"]
+                        resourceAsk = device["resourceAsk"]
+                        
             except KeyError:
                 return 
             return

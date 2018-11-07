@@ -55,7 +55,45 @@ All the tests are run over the Simulator AND Fog Director. They success on both 
  - Try to add an already inserted tag
  - Tag a device
 
-## Limitations / Main difference from Fog Director
+## Infrastracture
+In order to be executed, this simulator requires the infrastructure on which the operation have to be simulated.
+The infrastracture is composed by:
+ - Devices
+    The collection `devices` describes the devices of the infrastructure, identified by `IP` and `PORT`. Addictional information required are: 
+    - `totalCPU`: the maximum CPU available on the device
+    - `totalMEM`: the maximum Memory available on the device
+    - `distribution.CPU`: an array that contains the distribution of CPU used with time references (`timeStart`-`timeEnd` identify the time when this distribution have to be consider valid. The interval `0-24` have to be covered adding all the time slices) 
+    - `distribution.MEM`: an array that contains the distribution of MEM used with time references 
+
+    JSON rappresentation of a generic device:
+    ```json
+{
+    "ipAddress": "10.10.20.51",
+    "port": 8443,
+    "totalCPU": 1000,
+    "totalMEM": 128,
+    "distribution": { 
+        "CPU": [
+            {
+                "timeStart": 0,
+                "timeEnd": 24,
+                "median": 2.4,
+                "deviation": 3 
+            }
+        ],
+        "MEM": [
+            {
+                "timeStart": 0,
+                "timeEnd": 24,
+                "median": 45,
+                "deviation":  
+            }
+        ]
+    }
+}
+      ```
+
+## Limitations / Main differences from Fog Director
  - The simulator doesn't manage multiversions applications. Each application is identified by an ID that is unique among all others application and versions (then in `/api/v1/appmgr/localapps/<appid>:<appversion>` the version is ignored).
  - In the PUT `/api/v1/appmgr/localapps/<appid>:<appversion>` API, also not completed description of application is accepted. In Fog Director this "partial body" returns an error.
  - When new device is added, all the information on the device are returned (the discovery phase is not simulated)

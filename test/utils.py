@@ -27,7 +27,6 @@ def getdeviceid(response):
     devices = data["data"]
     for dev in devices:
         if dev["ipAddress"] == "10.10.20.51":
-            print dev
             return {"deviceId": str(dev["deviceId"])}
 
 def getAppdetails(response):
@@ -37,3 +36,11 @@ def getAppdetails(response):
 def getdevicedetails(response):
     data = response.json()
     dev = data["data"][0]
+
+def getMyAppId(response):
+    data = response.json()
+    return {"myAppId": str(data["myappId"])}
+
+def getDeviceId(response):
+    data = response.json()
+    return {"deviceId": str(data["deviceId"])}
