@@ -1,6 +1,6 @@
 from flask import Flask, request
 from flask_restful import Api, Resource, reqparse
-from API.Authentication import Authentication
+from Authentication import invalidToken
 import time, json
 
 #importing Database
@@ -41,7 +41,7 @@ class Devices(Resource):
             del devSpecs["_id"]
             return devSpecs, 201, {'ContentType':'application/json'}
         else:
-            return self.invalidToken()
+            return invalidToken()
 
     def delete(self, deviceid):
         parser = reqparse.RequestParser()
@@ -52,6 +52,8 @@ class Devices(Resource):
             db.deleteDevice(deviceid)
             del dev["_id"]
             return dev, 200, {"Content-Type": "application/json"}
+        else:
+            return invalidToken()
 
     def get(self):
         parser = reqparse.RequestParser()
@@ -76,9 +78,5 @@ class Devices(Resource):
 
             return data, 200, {'ContentType':'application/json'} 
         else:
-            return self.invalidToken()
+            return invalidToken()
         
-
-    @staticmethod
-    def invalidToken():
-        return {"code":1703,"description":"Session is invalid or expired"}, 401, {'ContentType':'application/json'} 

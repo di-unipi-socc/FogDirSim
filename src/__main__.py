@@ -8,6 +8,8 @@ from API.Applications import Applications
 from API.Authentication import Authentication
 from API.MyApps import MyApps
 from API.MyAppsAction import MyAppsAction
+from API.Audit import Audit
+from API.DevicesEvents import DeviceEvents
 import Database as db
 app = Flask(__name__)
 api = Api(app)
@@ -22,6 +24,8 @@ api.add_resource(Applications, "/api/v1/appmgr/localapps/upload", # POST
                                "/api/v1/appmgr/localapps") # GET
 api.add_resource(MyApps, "/api/v1/appmgr/myapps",
                          "/api/v1/appmgr/myapps/<myappid>") # DELETE
-api.add_resource(MyAppsAction, "/api/v1/appmgr/myapps/<appid>/action")
+api.add_resource(MyAppsAction, "/api/v1/appmgr/myapps/<myappid>/action")
+api.add_resource(DeviceEvents, "/api/v1/appmgr/devices/<devid>/events/")
+api.add_resource(Audit, "/api/v1/appmgr/audit/")
 app.run(debug=True)
 

@@ -1,6 +1,7 @@
 from flask import Flask, request
 from flask_restful import Api, Resource, reqparse
 import time, json
+from Authentication import invalidToken
 
 import os, sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -23,7 +24,7 @@ class TaggingDevices(Resource):
             for deviceid in deviceIds:
                 db.tagDevice(int(deviceid), tagid)
         else:
-            return self.invalidToken()
+            return invalidToken()
         
         # You can destroy the server but the only information returned is the tag itself. Cisco, REALLY??
         return {
@@ -39,7 +40,3 @@ class TaggingDevices(Resource):
             "name": tag["name"],
             "description": tag["description"]
         }, 200, {"ContentType": "application/json"}
-
-    @staticmethod
-    def invalidToken():
-        return {"code":1703,"description":"Session is invalid or expired"}, 401, {'ContentType':'application/json'} 

@@ -1,6 +1,7 @@
 from flask import Flask, request
 from flask_restful import Api, Resource, reqparse
 import time, json
+from Authentication import invalidToken
 
 #importing Database
 import os, sys
@@ -47,8 +48,8 @@ class Tags(Resource):
                 "name": "newtag"
             }, 201, {'ContentType':'application/json'} 
         else:
-            return {"code":1703,"description":"Session is invalid or expired"}, 401, {'ContentType':'application/json'} 
-    
+            return invalidToken()
+            
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('x-token-id', location='headers')
@@ -73,7 +74,6 @@ class Tags(Resource):
                 })
             return {"data": data}, 200, {'ContentType':'application/json'} 
         else:
-            return {"code":1703,"description":"Session is invalid or expired"}, 401, {'ContentType':'application/json'} 
-    
+            return invalidToken()
     
     

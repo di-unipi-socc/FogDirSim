@@ -40,4 +40,6 @@ class Authentication(Resource):
             return {"token": token}, 200, {"ContentType": "application/json"}
         else:
             return {"code":1703,"description":"Session is invalid or expired"}, 401, {"ContentType": "application/json"}
-            
+
+def invalidToken():
+    return {"code":1703,"description":"Session is invalid or expired"}, 401, {'Content-Type':'application/json'} 

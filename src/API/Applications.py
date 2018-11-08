@@ -2,6 +2,7 @@ from flask import Flask, request, make_response, Response
 from flask_restful import Api, Resource, reqparse
 import time, json, os, yaml, io
 from werkzeug.utils import secure_filename
+from Authentication import invalidToken
 import tarfile
 
 #importing Database
@@ -155,7 +156,7 @@ class Applications(Resource):
                         <description>An app with the same deployId already exists. Please make sure that the first forty characters of the app do not match with any of the existing apps.</description>
                     </error>''', 409, {"Content-Type": "application/xml"}
         else:
-            return self.invalidToken()
+            return invalidToken()
 
     # /api/v1/appmgr/localapps/<appid>:<appversion>
     def put(self, appURL):
@@ -181,7 +182,7 @@ class Applications(Resource):
             del app["_id"]
             return app, 200, {"Content-Type": "application/json"}
         else:
-            return self.invalidToken()
+            return invalidToken()
 
 
     # /api/v1/appmgr/apps/<appid> <-- WTF? Why apps and not localapps?!!! CISCOOOOO!!!!
@@ -213,7 +214,7 @@ class Applications(Resource):
             db.deleteLocalApplication(appid)
             return "", 200
         else:
-            return self.invalidToken()
+            return invalidToken()
 
     
     # /api/v1/appmgr/localapps/ Undocumented but works!
@@ -229,11 +230,9 @@ class Applications(Resource):
                 del app["_id"] # removing internal ID, not JSON serializable object
                 data["data"].append(app)
             return data, 200, {"Content-Type": "application/json"}
-
-    @staticmethod
-    def invalidToken():
-        return {"code":1703,"description":"Session is invalid or expired"}, 401, {'Content-Type':'application/json'} 
-
+        else:
+            return invalidToken()
+            
     @staticmethod
     def notFoundApp(appid):
         return """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>

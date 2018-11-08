@@ -86,13 +86,27 @@ def checkAndAllocateResource(devid, cpu, mem):
             {"deviceId": devid},
             { "$inc": {"usedCPU": cpu, "usedMEM": mem} }
         )
-
+def deallocateResource(devid, cpu, mem):
+    with lock:
+        device = getDevice(devid)
+        db.devices.find_one_and_update(
+            {"deviceId": devid},
+            { "$inc": {"usedCPU": -cpu, "usedMEM": -mem} }
+        )
+        
 def addMyAppToDevice(myappid, devid):
     db.devices.find_one_and_update({
         "deviceId": devid
     }, {
         "$addToSet": {"installedApps": myappid}
     })
+def removeMyAppsFromDevice(myappid, devid):
+    db.devices.find_one_and_update({
+        "deviceId": devid
+    }, {
+        "$pull": {"installedApps": myappid}
+    })
+
 # Tags
 def addTag(tagname, tagdescription):
     tagid = db.tags.insert_one({
@@ -127,8 +141,9 @@ def getLocalApplications():
     return db.applications.find()
 
 def getLocalApplication(appid):
-    return db.applications.find_one({"_id": ObjectId(appid)})
-    
+    appid = appid if type(appid) == int else ObjectId(appid)
+    return db.applications.find_one({"_id": appid})
+
 def updateLocalApplication(appid, newValues):
     _id = appid if type(appid) == int else ObjectId(appid)
     db.applications.update_one(
@@ -138,6 +153,14 @@ def updateLocalApplication(appid, newValues):
 
 def deleteLocalApplication(appid):
     db.applications.find_one_and_delete({"_id": ObjectId(appid)})
+
+def getLocalApplicationBySourceName(sourceAppName):
+    appid = sourceAppName.split(":")[0]
+    appid = appid if type(appid) == int else ObjectId(appid)
+    return db.applications.find_one({
+        "_id": appid,
+        "version": sourceAppName.split(":")[1]
+    })
 
 # My apps
 def createMyApp(appname, sourceAppName, version, apptype):
@@ -161,15 +184,28 @@ def deleteMyApp(appid):
 def myAppExists(sourceAppName):
     return db.myapps.count_documents({"sourceAppName": sourceAppName}) > 0
 
+def getMyApp(myappid):
+    return db.myapps.find_one({"myappId": myappid})
+    
 # Jobs App
-def addJobs(appid, devices, status="DEPLOY"):
+def addJobs(myappid, devices, status="DEPLOY", payload={}):
     return db.jobs.insert_one({
-        "myappid": appid,
+        "myappid": myappid,
         "status": status,
-        "devices": devices
+        "devices": devices,
+        "payload": payload
     }).inserted_id
 
 def updateJobsStatus(myappid, status):
     return db.jobs.find_and_modify({
         "myappid": myappid
     }, {"$set": {"status": status} } ) 
+
+def getJob(myappid):
+    return db.jobs.find_one({"myappdid": myappid})
+
+# Logs
+def addMyAppLog(log):
+    db.myappsLogs.insert_one(log)
+def getMyAppsLog():
+    return db.myappsLogs.find()

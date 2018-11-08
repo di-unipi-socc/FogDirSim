@@ -1,6 +1,7 @@
 from flask import Flask, request
 from flask_restful import Api, Resource, reqparse
 from modules.Exceptions import MyAppInstalledOnDeviceError
+from Authentication import invalidToken
 #importing Database
 import os, sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -38,7 +39,7 @@ class MyApps(Resource):
             del myapp["_id"]
             return myapp, 201, {"content-type": "application/json"}
         else:
-            return self.invalidToken()
+            return invalidToken()
         
     def delete(self, myappid):
         parser = reqparse.RequestParser()
@@ -52,13 +53,10 @@ class MyApps(Resource):
             del app["_id"]
             return 
         else:
-            return self.invalidToken()
+            return invalidToken()
 
-    @staticmethod
-    def invalidToken():
-        return {"code":1703,"description":"Session is invalid or expired"}, 401, {'Content-Type':'application/json'} 
-
-
+    def get(self):
+        return "" # TODO Implement
 """
 GET ?searchByName SE TROVA
 {
