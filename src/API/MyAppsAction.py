@@ -22,7 +22,7 @@ class MyAppsAction(Resource):
                     devices = data["devices"]
                     myapp = db.getMyApp(myappid)
                     app = db.getLocalApplicationBySourceName(myapp["sourceAppName"])
-                    if not app["published"]: # This is not true in FogDirector
+                    if not app["published"]: # This is not checked in FogDirector
                         return {"error": "the app have to be published"}, 400, {"content-type": "application/json"}
                     
                     for device in devices:

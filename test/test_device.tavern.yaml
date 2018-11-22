@@ -110,14 +110,15 @@ stages:
       method: GET
       headers:
         x-token-id: "{token:s}"
-        content-type: application/text
+
     response:
       status_code: 200
       headers: 
         content-type: application/json
       body:
-        $ext:
-          function: utils:checkIp10102051
+        data:
+          - ipAddress: 10.10.20.51
+            username: cisco
       save:
         $ext:
           function: utils:getdeviceid
