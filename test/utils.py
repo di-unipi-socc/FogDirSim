@@ -44,3 +44,7 @@ def getMyAppId(response):
 def getDeviceId(response):
     data = response.json()
     return {"deviceId": str(data["deviceId"])}
+
+def print_(response):
+    print response
+    return {}

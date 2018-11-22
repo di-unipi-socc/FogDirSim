@@ -80,7 +80,19 @@ All the API not reported here, are not available yet.
  ```json
  {"start":{}}
  ```
- 
+###### Device Events
+ - `GET /api/v1/appmgr/devices/<devid>/events/`
+
+###### Application Events (Audit)
+ - `GET /api/v1/appmgr/audit` - provides information about app state change events, who performed them, when they were performed and what the operation was. These audit information can be filtered by device serial id, by app and version or even by the user who performed it (but the official documentation doesn't report the exact name to use this filters then the filters are not implemented).
+ This API supports the following URL parameter:
+    - `limit`
+    - `offset`
+    - `searchByAction`
+
+###### NOT YET IMPLEMENTED
+ - `/api/v1/appmgr/devices/<devid>/apps/<myappdid>/logs` 
+ - `/api/v1/appmgr/alerts`
 
 ## Tested functions
 In order to run the tests, execute `PYTHONPATH=$PYTHONPATH:test py.test`
@@ -140,6 +152,8 @@ The Infrastructure is composed by:
  - The simulator doesn't manage multiversions applications. Each application is identified by an ID that is unique among all others application and versions (then in `/api/v1/appmgr/localapps/<appid>:<appversion>` the version is ignored).
  - In the PUT `/api/v1/appmgr/localapps/<appid>:<appversion>` API, also not completed description of application is accepted. In Fog Director this "partial body" returns an error.
  - When new device is added, all the information on the device are returned (the discovery phase is not simulated)
-## In progress
-This is the first project where I use MongoDB. Please, report any mistake on the NoSQL paradigm!
+## Known Bugs
+The `GET device?searchByAne` returns all elements. It depends on MongoDB invokation. I have to chech it...
 
+## FogDirector Bugs
+In the undocumented `GET /api/v1/appmgr/myapps/` only the empty array is returned if no myapp is created. If you have already created a myapp, then the server never reply to the request.

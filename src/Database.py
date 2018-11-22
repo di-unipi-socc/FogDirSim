@@ -27,7 +27,6 @@ def addToken(expiryTime, token, user):
     db.tokens.delete_many({
         "expiryTime": {"$lt": int(time.time())}
     })
-
 def checkToken(token):
     return True
     count = db.tokens.count_documents({
@@ -35,7 +34,6 @@ def checkToken(token):
         "expiryTime": {"$gt": int(time.time())}
     })
     return count > 0
-
 def deleteToken(token):
     db.tokens.delete_many({
         "token": token
@@ -55,16 +53,12 @@ def addDevice(ipAddress, port, user, pasw):
     devSpecs["installedApps"] = []
     db.devices.insert_one(devSpecs)
     return devSpecs
-
 def deviceExists(ipAddress, port):
     return db.devices.count_documents({"ipAddress": ipAddress, "port": port}) > 0
-
 def getDevice(devid):
     return db.devices.find_one({"deviceId": Int64(devid)})
-
 def deleteDevice(devid):
     db.devices.find_one_and_delete({"deviceId": Int64(devid)})
-
 def getDevices(limit=100, offset=0, searchByTag=None, searchByAnyMatch=None):
     if searchByTag != None:
         return db.devices.find({"tags": searchByTag}).skip(offset).limit(limit)
@@ -92,8 +86,7 @@ def deallocateResource(devid, cpu, mem):
         db.devices.find_one_and_update(
             {"deviceId": devid},
             { "$inc": {"usedCPU": -cpu, "usedMEM": -mem} }
-        )
-        
+        )     
 def addMyAppToDevice(myappid, devid):
     db.devices.find_one_and_update({
         "deviceId": devid
@@ -114,16 +107,12 @@ def addTag(tagname, tagdescription):
         "description": tagdescription
     }).inserted_id
     return tagid
-
 def tagExists(tagname):
     return db.tags.count_documents({"name": tagname}) > 0
-
 def getTags():
     return db.tags.find()
-
 def getTag(tagid):
     return db.tags.find_one({"_id":  ObjectId(tagid)})
-
 def tagDevice(deviceid, tag):
     db.devices.update_one(
         {"_id": deviceid},
@@ -133,27 +122,21 @@ def tagDevice(deviceid, tag):
 # Local Application
 def addLocalApplication(appdata):
     return db.applications.insert_one(appdata).inserted_id
-    
 def localApplicationExists(appid, version=1):
     return db.applications.count_documents({"localAppId": appid, "version": version}) > 0
-
 def getLocalApplications():
     return db.applications.find()
-
 def getLocalApplication(appid):
     appid = appid if type(appid) == int else ObjectId(appid)
     return db.applications.find_one({"_id": appid})
-
 def updateLocalApplication(appid, newValues):
     _id = appid if type(appid) == int else ObjectId(appid)
     db.applications.update_one(
         {"_id": _id},
         {"$set": newValues}
     )
-
 def deleteLocalApplication(appid):
     db.applications.find_one_and_delete({"_id": ObjectId(appid)})
-
 def getLocalApplicationBySourceName(sourceAppName):
     appid = sourceAppName.split(":")[0]
     appid = appid if type(appid) == int else ObjectId(appid)
@@ -175,17 +158,18 @@ def createMyApp(appname, sourceAppName, version, apptype):
                                                 "myappId": str(myappappid)
                                             }
                                         }, return_document=pm.ReturnDocument.AFTER)
-
 def deleteMyApp(appid):
     if db.devices.count_documents({"installedApps": appid}) > 0:
         raise MyAppInstalledOnDeviceError("Myapps is installed on some device")
     return db.myapps.find_one_and_delete({"_id": ObjectId(appid)})
-
 def myAppExists(sourceAppName):
     return db.myapps.count_documents({"sourceAppName": sourceAppName}) > 0
-
 def getMyApp(myappid):
     return db.myapps.find_one({"myappId": myappid})
+def getMyApps(searchByName=None):
+    if searchByName != None:
+        return db.myapps.find_one({"name": searchByName})
+    return db.myapps.find()
     
 # Jobs App
 def addJobs(myappid, devices, status="DEPLOY", payload={}):
@@ -195,12 +179,10 @@ def addJobs(myappid, devices, status="DEPLOY", payload={}):
         "devices": devices,
         "payload": payload
     }).inserted_id
-
 def updateJobsStatus(myappid, status):
     return db.jobs.find_and_modify({
         "myappid": myappid
     }, {"$set": {"status": status} } ) 
-
 def getJob(myappid):
     return db.jobs.find_one({"myappdid": myappid})
 
