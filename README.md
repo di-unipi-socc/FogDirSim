@@ -39,6 +39,49 @@ All the API not reported here, are not available yet.
     - Delete an application passing its `<appid>` in the URL. This API accepts the following headers: `x-unpublish-on-delete`. If `x-unpublish-on-delete` is not specified, its values is `false`.
  - `GET /api/v1/appmgr/localapps/` - Get all the app (published and unpublished)
 
+###### MyApps (deployments)
+ - `POST /api/v1/appmgr/myapps` - Before you can install an unpublished app on a device by using the API, you must create a myapp endpoint for the app. This API requires the following data: `{"name":appname,"sourceAppName":"c36d727c-e9c5-46ed-bc7e-cbdd5cf49786:1.0","version":"1.0","appSourceType":"LOCAL_APPSTORE"}` (in this simulator only `LOCAL_APPSTORE` type is supported)
+ - `DELETE /api/v1/appmgr/myapps/<myappid>` - Delete the myapp endpoint. If the myapp is installed on some device, an error is returned.
+ - `GET /api/v1/appmgr/myapps?searchByName=name` - Returns a JSON object that contains the `myappId` given the `myappName` (Not yet implemented) 
+
+###### MyApps actions
+ - `POST /api/v1/appmgr/myapps/<myappid>/action` - Use this API to modify the state of the `<myappid>` myapp. 
+ For example, in order to deploy the app, you have to use the following JSON in the request data field:
+ ```json
+{
+  "deploy": {
+    "config": {
+      
+    },
+    "metricsPollingFrequency": "3600000",
+    "startApp": true,
+    "devices": [
+      {
+        "deviceId": "DEVICE_TO_INSTALL",
+        "resourceAsk": {
+          "resources": {
+            "profile": "c1.tiny",
+            "cpu": 100,
+            "memory": 32,
+            "network": [
+              {
+                "interface-name": "eth0",
+                "network-name": "iox-bridge0"
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}
+ ```
+ or, in order to *start* (respectivily, *stop*) myapp, you have to use the following Json object in the data field:
+ ```json
+ {"start":{}}
+ ```
+ 
+
 ## Tested functions
 In order to run the tests, execute `PYTHONPATH=$PYTHONPATH:test py.test`
 All the tests are run over the Simulator AND Fog Director. They success on both systems.
