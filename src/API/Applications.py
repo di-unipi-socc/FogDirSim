@@ -134,10 +134,9 @@ class Applications(Resource):
                                                 resources=app_data["app"]["resources"],
                                                 cpuUsage=0,
                                                 memoryUsage=0)
-
-                appID = str(db.addLocalApplication(appJson))
-                if(args["x-publish-on-upload"] == True):
+                if(args["x-publish-on-upload"] == "true"):
                     appJson["published"] = True
+                appID = str(db.addLocalApplication(appJson))
                 appJson["localAppId"] = appID
                 db.updateLocalApplication(appID, {"localAppId": appID})
                 os.rename(tmpDir, appID)

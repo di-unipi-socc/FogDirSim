@@ -32,7 +32,7 @@ api.add_resource(MyApps, "/api/v1/appmgr/myapps", "/api/v1/appmgr/myapps/",
 api.add_resource(MyAppsAction, "/api/v1/appmgr/myapps/<myappid>/action")
 api.add_resource(DeviceEvents, "/api/v1/appmgr/devices/<devid>/events/")
 api.add_resource(Audit, "/api/v1/appmgr/audit/")
-api.add_resource(Jobs, "api/v1/appmgr/jobs", "api/v1/appmgr/jobs/")
+api.add_resource(Jobs, "/pi/v1/appmgr/jobs", "/api/v1/appmgr/jobs/")
 
 def service_shutdown(signum, frame):
     print('Caught signal %d' % signum)
