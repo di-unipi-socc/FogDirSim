@@ -81,7 +81,7 @@ All the API not reported here, are not available yet.
  {"start":{}}
  ```
 ###### Device Events
- - `GET /api/v1/appmgr/devices/<devid>/events/`
+ - `GET /api/v1/appmgr/devices/<devid>/events/` - Since FogDirector doesn't have a properly documented API, we assume some events type taken from the FogDirector Manual.
 
 ###### Application Events (Audit)
  - `GET /api/v1/appmgr/audit` - provides information about app state change events, who performed them, when they were performed and what the operation was. These audit information can be filtered by device serial id, by app and version or even by the user who performed it (but the official documentation doesn't report the exact name to use this filters then the filters are not implemented).
@@ -109,6 +109,7 @@ All the tests are run over the Simulator AND Fog Director. They success on both 
  - Add a tag
  - Try to add an already inserted tag
  - Tag a device
+ - Published LocalApp
 
 ## Infrastructure
 In order to be executed, this simulator requires the infrastructure on which the operation have to be simulated.
@@ -152,6 +153,7 @@ The Infrastructure is composed by:
  - The simulator doesn't manage multiversions applications. Each application is identified by an ID that is unique among all others application and versions (then in `/api/v1/appmgr/localapps/<appid>:<appversion>` the version is ignored).
  - In the PUT `/api/v1/appmgr/localapps/<appid>:<appversion>` API, also not completed description of application is accepted. In Fog Director this "partial body" returns an error.
  - When new device is added, all the information on the device are returned (the discovery phase is not simulated)
+ - The device events name type are assumed from the manual and they should not be as FogDirector types
 ## Known Bugs
 The `GET device?searchByAne` returns all elements. It depends on MongoDB invokation. I have to chech it...
 

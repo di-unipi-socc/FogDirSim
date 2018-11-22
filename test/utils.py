@@ -32,6 +32,9 @@ def getdeviceid(response):
 def getAppdetails(response):
     app = response.json()
     return {"appname": app["name"], "localAppId": app["localAppId"], "sourceAppName": app["localAppId"]+":"+app["version"], "version": app["version"], "appSourceType": "LOCAL_APPSTORE"}
+def getFirstAppdetails(response):
+    app = response.json()["data"][0]
+    return {"appname": app["name"], "localAppId": app["localAppId"], "sourceAppName": app["localAppId"]+":"+app["version"], "version": app["version"], "appSourceType": "LOCAL_APPSTORE"}
 
 def getdevicedetails(response):
     data = response.json()
@@ -48,3 +51,8 @@ def getDeviceId(response):
 def print_(response):
     print response
     return {}
+
+def getFirstAppAndPublish(response):
+    app = (response.json())["data"][0]
+    app["published"] = True
+    return {"jsonapp": app, "appid": app["localAppId"]}

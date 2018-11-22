@@ -5,7 +5,7 @@ __pycache__/
 SECRETS.py
 # C extensions
 *.so
-fileApplication/*
+src/fileApplication/*
 # Distribution / packaging
 .Python
 build/
@@ -24,7 +24,7 @@ wheels/
 .installed.cfg
 *.egg
 MANIFEST
-
+.vscode/*
 # PyInstaller
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
