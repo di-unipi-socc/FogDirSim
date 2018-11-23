@@ -1,6 +1,6 @@
 from flask import Flask, request
 from flask_restful import Api, Resource, reqparse
-import time
+import time, traceback
 from Authentication import invalidToken
 from modules.Exceptions import NoResourceError
 #importing Database
@@ -68,12 +68,13 @@ class MyAppsAction(Resource):
                         db.deallocateResource(devid,cpu, mem)
                         db.removeMyAppsFromDevice(myappid, devid)
                 return {
-                    "jobId": jobid
+                    "jobId": str(jobid)
                 }, 200, {"content-type": "application/json"}   
-            except KeyError:
+            except KeyError, e:
+                traceback.print_exc()
                 return {
                         "code": 1001,
-                        "description": "Given request is not valid: {0}"
+                        "description": "Given request is not valid: "+str(e)
                     }, 400, {"content-type": "application/json"}
             return
         else:

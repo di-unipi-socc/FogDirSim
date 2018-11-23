@@ -88,8 +88,8 @@ def deallocateResource(devid, cpu, mem):
             { "$inc": {"usedCPU": -cpu, "usedMEM": -mem} }
         )     
 def addMyAppToDevice(myappid, devid):
-    db.devices.find_one_and_update({
-        "deviceId": devid
+    r = db.devices.find_one_and_update({
+        "deviceId": Int64(devid)
     }, {
         "$addToSet": {"installedApps": myappid}
     })
@@ -141,8 +141,8 @@ def getLocalApplicationBySourceName(sourceAppName):
     appid = sourceAppName.split(":")[0]
     appid = appid if type(appid) == int else ObjectId(appid)
     return db.applications.find_one({
-        "_id": appid,
-        "version": sourceAppName.split(":")[1]
+        "_id": appid#,
+        #"version": sourceAppName.split(":")[1]
     })
 
 # My apps
@@ -184,7 +184,7 @@ def updateJobsStatus(myappid, status):
         "myappid": myappid
     }, {"$set": {"status": status} } ) 
 def getJob(myappid):
-    return db.jobs.find_one({"myappdid": myappid})
+    return db.jobs.find_one({"myappid": myappid})
 
 # Logs
 def addMyAppLog(log):

@@ -154,8 +154,7 @@ The Infrastructure is composed by:
  - In the PUT `/api/v1/appmgr/localapps/<appid>:<appversion>` API, also not completed description of application is accepted. In Fog Director this "partial body" returns an error.
  - When new device is added, all the information on the device are returned (the discovery phase is not simulated)
  - The device events name type are assumed from the manual and they should not be as FogDirector types
-## Known Bugs
-The `GET device?searchByAne` returns all elements. It depends on MongoDB invokation. I have to chech it...
+ - Some IDs that are interger in FogDirector, in the simulator are strings.
 
-## FogDirector Bugs
-In the undocumented `GET /api/v1/appmgr/myapps/` only the empty array is returned if no myapp is created. If you have already created a myapp, then the server never reply to the request.
+## Known Bugs
+The `GET device?searchByAny` returns all elements. It depends on MongoDB invokation. I have to chech it...

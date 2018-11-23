@@ -83,11 +83,11 @@ class Applications(Resource):
         if db.checkToken(args["x-token-id"]):
             if 'file' not in request.files or request.files["file"].filename == '':
                 # Thank you CISCO for returning an XML here...
-                return  """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+                return  '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
                             <error>
                                 <code>1308</code>
                                 <description>Given app package file is invalid: Unsupported Format</description>
-                            </error>""", 400, {"Content-Type": "application/xml"}
+                            </error>''', 400, {"Content-Type": "application/xml"} # TOOD: resolve output, not XML but string now
             file = request.files['file']
             if file and self.allowed_file(file.filename):
                 filename = secure_filename(file.filename)
@@ -134,7 +134,9 @@ class Applications(Resource):
                                                 resources=app_data["app"]["resources"],
                                                 cpuUsage=0,
                                                 memoryUsage=0)
-                if(args["x-publish-on-upload"] == "true"):
+                if(args["x-publish-on-upload"] == "true" or 
+                   args["x-publish-on-upload"] == "True" or 
+                   args["x-publish-on-upload"] == True):
                     appJson["published"] = True
                 appID = str(db.addLocalApplication(appJson))
                 appJson["localAppId"] = appID

@@ -7,6 +7,7 @@ import pymongo as pm
 import time, json
 import SECRETS as config
 from bson.objectid import ObjectId
+import Database
 
 client = pm.MongoClient("mongodb://%s:%s@%s:%d" % (config.db_username, 
                                                    config.db_password, 
@@ -71,5 +72,6 @@ def getDevice(ip = None, port = None, deviceId = None):
     if ip != None and port != None:
         return  db.Rdevices.find_one({"ipAddress": ip, "port": port})
     if deviceId != None:
-        return db.Rdevices.find_one({"deviceId": deviceId})
+        return Database.getDevice(deviceId)
+
     

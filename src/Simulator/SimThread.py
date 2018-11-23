@@ -15,4 +15,6 @@ class SimThread(Thread):
             for dev in devices:
                 for installedApp in dev["installedApps"]:
                     job = db.getJob(installedApp)
-                    print job
+                    
+                    # Check if the jobs is health
+                    for device in jobs[""]
