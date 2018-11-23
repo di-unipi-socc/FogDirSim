@@ -191,3 +191,10 @@ def addMyAppLog(log):
     db.myappsLogs.insert_one(log)
 def getMyAppsLog():
     return db.myappsLogs.find()
+
+# Alerts
+def addAlert(alert):
+    db.alerts.insert_one(alert)
+
+def getAlerts():
+    return db.alerts.find()

@@ -156,5 +156,6 @@ The Infrastructure is composed by:
  - The device events name type are assumed from the manual and they should not be as FogDirector types
  - Some IDs that are interger in FogDirector, in the simulator are strings.
  - Only one user is admitted (`admin` user)
+ - This simulator not manages Network Interfaces Resources
 ## Known Bugs
 The `GET device?searchByAny` returns all elements. It depends on MongoDB invokation. I have to chech it...

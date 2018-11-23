@@ -11,6 +11,7 @@ from API.MyAppsAction import MyAppsAction
 from API.Audit import Audit
 from API.DevicesEvents import DeviceEvents
 from API.Jobs import Jobs
+from API.Alerts import Alerts
 import Database as db
 from Simulator.SimThread import SimThread
 import signal, threading, time
@@ -33,6 +34,7 @@ api.add_resource(MyAppsAction, "/api/v1/appmgr/myapps/<myappid>/action")
 api.add_resource(DeviceEvents, "/api/v1/appmgr/devices/<devid>/events/")
 api.add_resource(Audit, "/api/v1/appmgr/audit/")
 api.add_resource(Jobs, "/pi/v1/appmgr/jobs", "/api/v1/appmgr/jobs/")
+api.add_resource(Alerts, "/pi/v1/appmgr/alerts", "/api/v1/appmgr/alerts/")
 
 def service_shutdown(signum, frame):
     print('Caught signal %d' % signum)

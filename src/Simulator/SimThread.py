@@ -1,9 +1,10 @@
 from threading import Thread, Event
 
 #importing Database
-import os, sys
+import os, sys, time
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import Database as db
+from modules.ResourceSampling import sampleMyAppStatus
 
 class SimThread(Thread):
     def __init__(self):
@@ -15,9 +16,25 @@ class SimThread(Thread):
             for dev in devices:
                 for installedApp in dev["installedApps"]:
                     job = db.getJob(installedApp)
-                    
                     # Check if the jobs is health
-                    for device in jobs["devices"]:
-                        # check = Check device resources
-                        if check == False:
-                            
+                    for device in job["devices"]:
+                        devid = device["deviceId"]
+
+                        sampled = sampleMyAppStatus(devid, device["resourcesAsk"]["resources"]["cpu"], 
+                                                           device["resourcesAsk"]["resources"]["memory"])
+                        if sampled["hasCPU"] == False:
+                            db.addAlert({
+                                "myAppId": job["myappid"],
+                                "severity": "HIGH",
+                                "message": "unsufficient resource CPU on device "+devid,
+                                "deviceId": devid,
+                                "time": int(time.time())
+                            })
+                        if sampled["hasMEM"] == False:
+                            db.addAlert({
+                                "myAppId": job["myappid"],
+                                "severity": "HIGH",
+                                "message": "unsufficient resource MEM on device "+devid,
+                                "deviceId": devid,
+                                "time": int(time.time())
+                            })

@@ -46,17 +46,16 @@ class MyAppsAction(Resource):
                                 "code": 1000,
                                 "description": str(e)
                             }, 400, {"content-type": "application/json"}
-                    
-                    db.addMyAppLog({
-                        "time": int(time.time()),
-                        "action": action,
-                        "deviceSerialNo": devid,
-                        "appName": myapp["name"],
-                        "appVersion": "1",
-                        "severity": "info",
-                        "user": "admin",
-                        "message": action+" operation succeeded"
-                    })
+                        db.addMyAppLog({
+                            "time": int(time.time()),
+                            "action": action,
+                            "deviceSerialNo": devid,
+                            "appName": myapp["name"],
+                            "appVersion": "1",
+                            "severity": "info",
+                            "user": "admin",
+                            "message": action+" operation succeeded"
+                        })
                     jobid = db.addJobs(myappid, data["devices"], payload=request.json)
                 elif action == "start" or action == "stop":
                     db.addMyAppLog({
