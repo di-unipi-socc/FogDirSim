@@ -155,6 +155,6 @@ The Infrastructure is composed by:
  - When new device is added, all the information on the device are returned (the discovery phase is not simulated)
  - The device events name type are assumed from the manual and they should not be as FogDirector types
  - Some IDs that are interger in FogDirector, in the simulator are strings.
-
+ - Only one user is admitted (`admin` user)
 ## Known Bugs
 The `GET device?searchByAny` returns all elements. It depends on MongoDB invokation. I have to chech it...

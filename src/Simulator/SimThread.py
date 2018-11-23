@@ -17,4 +17,7 @@ class SimThread(Thread):
                     job = db.getJob(installedApp)
                     
                     # Check if the jobs is health
-                    for device in jobs[""]
+                    for device in jobs["devices"]:
+                        # check = Check device resources
+                        if check == False:
+                            

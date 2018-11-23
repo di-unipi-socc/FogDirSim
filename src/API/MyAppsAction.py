@@ -32,6 +32,16 @@ class MyAppsAction(Resource):
                             db.checkAndAllocateResource(devid, resourceAsked["cpu"], resourceAsked["memory"])
                             db.addMyAppToDevice(myappid, devid)
                         except NoResourceError, e:
+                            db.addMyAppLog({
+                                "time": int(time.time()),
+                                "action": action,
+                                "deviceSerialNo": devid,
+                                "appName": myapp["name"],
+                                "appVersion": "1",
+                                "severity": "info",
+                                "user": "admin",
+                                "message": action+" operation failed, no sufficient resources"
+                            })
                             return {
                                 "code": 1000,
                                 "description": str(e)
@@ -49,6 +59,15 @@ class MyAppsAction(Resource):
                     })
                     jobid = db.addJobs(myappid, data["devices"], payload=request.json)
                 elif action == "start" or action == "stop":
+                    db.addMyAppLog({
+                        "time": int(time.time()),
+                        "action": action,
+                        "appName": myapp["name"],
+                        "appVersion": "1",
+                        "severity": "info",
+                        "user": "admin",
+                        "message": action+" operation succeeded"
+                    })
                     jobid = db.updateJobsStatus(myappid, action)
                 elif action == "undeploy":
                     data = data[action]
@@ -67,6 +86,16 @@ class MyAppsAction(Resource):
                                 mem = dev["resourceAsk"]["resources"]["mem"]
                         db.deallocateResource(devid,cpu, mem)
                         db.removeMyAppsFromDevice(myappid, devid)
+                        db.addMyAppLog({
+                            "time": int(time.time()),
+                            "action": action,
+                            "deviceSerialNo": devid,
+                            "appName": myapp["name"],
+                            "appVersion": "1",
+                            "severity": "info",
+                            "user": "admin",
+                            "message": action+" operation succeeded"
+                        })
                 return {
                     "jobId": str(jobid)
                 }, 200, {"content-type": "application/json"}   
