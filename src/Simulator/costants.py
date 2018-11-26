@@ -1,0 +1,2 @@
+FEW_CPU = 1
+FEW_MEM = 2

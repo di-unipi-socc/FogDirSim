@@ -51,6 +51,7 @@ def addDevice(ipAddress, port, user, pasw):
     devSpecs["usedCPU"] = 0 # these two variables are computed only with apps installed by the simulator
     devSpecs["usedMEM"] = 0 
     devSpecs["installedApps"] = []
+    devSpecs["tags"] = []
     db.devices.insert_one(devSpecs)
     return devSpecs
 def deviceExists(ipAddress, port):
@@ -61,7 +62,11 @@ def deleteDevice(devid):
     db.devices.find_one_and_delete({"deviceId": Int64(devid)})
 def getDevices(limit=100, offset=0, searchByTag=None, searchByAnyMatch=None):
     if searchByTag != None:
-        return db.devices.find({"tags": searchByTag}).skip(offset).limit(limit)
+        tag = db.tags.find_one({"name": searchByTag})
+        try:
+            return db.devices.find({"tags": str(tag["_id"])}).skip(offset).limit(limit)
+        except KeyError:
+            return []
     if searchByAnyMatch != None:
         return db.devices.find({ "$text": { "$search": searchByAnyMatch } })
     return db.devices.find().skip(offset).limit(limit)
@@ -72,12 +77,12 @@ def checkAndAllocateResource(devid, cpu, mem):
     sampledMEM = sampling.sampleMEM(devid)
     with lock: # Syncronized version of python
         device = getDevice(devid)
-        availableCPU = device["totalCPU"] - device["usedCPU"] - sampledCPU
-        availableMEM = device["totalMEM"] - device["usedMEM"] - sampledMEM
+        availableCPU = sampledCPU - device["usedCPU"]
+        availableMEM = sampledMEM - device["usedMEM"]
         if cpu > availableCPU or mem > availableMEM:
-            raise NoResourceError("CPU (available/requested): %d/%d, MEM: %d/%d" % (availableCPU, cpu, availableMEM, mem))
+            raise NoResourceError("CPU (available/requested): %d/%d, MEM: %d/%d" % (int(availableCPU), cpu, int(availableMEM), mem))
         db.devices.find_one_and_update(
-            {"deviceId": devid},
+            {"deviceId": Int64(devid)},
             { "$inc": {"usedCPU": cpu, "usedMEM": mem} }
         )
 def deallocateResource(devid, cpu, mem):
@@ -115,7 +120,7 @@ def getTag(tagid):
     return db.tags.find_one({"_id":  ObjectId(tagid)})
 def tagDevice(deviceid, tag):
     db.devices.update_one(
-        {"_id": deviceid},
+        {"deviceId": deviceid},
         {"$addToSet": {"tags": tag}}
     )
 
@@ -184,6 +189,7 @@ def updateJobsStatus(myappid, status):
         "myappid": myappid
     }, {"$set": {"status": status} } ) 
 def getJob(myappid):
+    jobs = db.jobs.find()
     return db.jobs.find_one({"myappid": myappid})
 
 # Logs
@@ -195,6 +201,17 @@ def getMyAppsLog():
 # Alerts
 def addAlert(alert):
     db.alerts.insert_one(alert)
-
 def getAlerts():
     return db.alerts.find()
+
+#Simulation
+def addSimulationValues(values):
+    """{
+        "myAppId": job["myappid"],
+        "deviceId": devid,
+        "time": int(time.time()),
+        "type": costants.FEW_CPU
+    }"""
+    db.simulation.insert_one(values)
+def getSimulationValues():
+    return db.simulation.find()

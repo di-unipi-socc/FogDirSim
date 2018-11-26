@@ -25,34 +25,33 @@ def sampleMEM(devid, time=0):
         Sampling considering only the distribution variables
     """
     device = db.getDevice(devid)
-    print device
     mean = device["distributions"]["MEM"][time]["mean"]
     deviation = device["distributions"]["MEM"][time]["deviation"]
-    maxCPU = device["totalMEM"]
-    return get_truncated_normal(mean=mean, sd=deviation, low=0, upp=maxCPU).rvs()
+    maxMEM = device["totalMEM"]
+    return get_truncated_normal(mean=mean, sd=deviation, low=0, upp=maxMEM).rvs()
 
-def sampleFreeCPU(devid, time=0):
+def sampleBusyCPU(devid, time=0):
     """
         Sampling considering the distribution and the used cpu by myapps
     """
     sampled = sampleCPU(devid, time)
     dev = db.getDevice(devid)
-    return dev["usedCPU"] + sampled
+    return sampled - dev["usedCPU"] 
 
-def sampleFreeMEM(devid, time=0):
+def sampleBusyMEM(devid, time=0):
     """
         Sampling considering the distribution and the used mem by myapps
     """
     sampled = sampleMEM(devid, time)
     dev = db.getDevice(devid)
-    return dev["usedMEM"] + sampled
+    return sampled - dev["usedMEM"] 
 
 def sampleMyAppStatus(devid, requestedCPU, requestedMEM, time=0):
     dev = db.getDevice(devid)
-    sampledFreeCPU = sampleFreeCPU(devid, time)
-    sampledFreeMEM = sampleFreeMEM(devid, time)
+    sampledBusyCPU = sampleBusyCPU(devid, time)
+    sampledBusyMEM = sampleBusyMEM(devid, time)
     # Computing the freeCPU as total-(sampled - myapp_itself) since myapp cpu is included in the "usedCPU from sampleFreeCPU"
-    freeCPU = dev["totalCPU"] - (sampledFreeCPU - requestedCPU)
-    freeMEM = dev["totalMEM"] - (sampledFreeMEM - requestedMEM)
+    freeCPU = dev["totalCPU"] - (sampledBusyCPU - requestedCPU)
+    freeMEM = dev["totalMEM"] - (sampledBusyMEM - requestedMEM)
     return {"hasCPU": freeCPU > requestedCPU, 
             "hasMEM": freeMEM > requestedMEM}

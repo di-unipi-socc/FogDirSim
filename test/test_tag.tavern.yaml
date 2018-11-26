@@ -67,7 +67,7 @@ stages:
         x-token-id: "{token:s}"
         content-type: application/json
       json:
-        name: "new_tag2"
+        name: "new_tag3"
     response:
       status_code: 409
       headers: 

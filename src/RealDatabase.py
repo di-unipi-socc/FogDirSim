@@ -26,15 +26,15 @@ db.Rdevices.insert_one({
                     {
                         "timeStart": 0,
                         "timeEnd": 24,
-                        "mean": 2.4,
-                        "deviation": 3 
+                        "mean": 980,
+                        "deviation": 5
                     }
                 ],
                 "MEM": [
                     {
                         "timeStart": 0,
                         "timeEnd": 24,
-                        "mean": 45,
+                        "mean": 110,
                         "deviation": 2
                     }
                 ]
@@ -50,8 +50,8 @@ db.Rdevices.insert_one({
                     {
                         "timeStart": 0,
                         "timeEnd": 24,
-                        "mean": 2.4,
-                        "deviation": 3 
+                        "mean": 950,
+                        "deviation": 700
                     }
                 ],
                 "MEM": [

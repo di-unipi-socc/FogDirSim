@@ -109,6 +109,7 @@ stages:
       url: "{host:s}/api/v1/appmgr/devices?searchByAny=10.10.20.51"
       method: GET
       headers:
+        content-type: application/txt
         x-token-id: "{token:s}"
 
     response:

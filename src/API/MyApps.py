@@ -64,6 +64,7 @@ class MyApps(Resource):
             data = {"data": []}
             myapps = db.getMyApps(args["searchByName"])
             for myapp in myapps:
+                del myapp["_id"]
                 data["data"].append(myapp)
                 if args["searchByName"] != None:
                     return myapp, 200, {'ContentType':'application/json'} 

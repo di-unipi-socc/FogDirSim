@@ -26,6 +26,7 @@ stages:
       method: POST
       headers:
         x-token-id: "{token:s}"
+        x-publish-on-upload: "true"
       files:
         file: "test/NettestApp2V1_lxc.tar.gz"
     response:

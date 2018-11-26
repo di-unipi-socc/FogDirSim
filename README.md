@@ -118,7 +118,7 @@ The Infrastructure is composed by:
     The collection `devices` describes the devices of the infrastructure, identified by `IP` and `PORT`. Addictional information required are: 
     - `totalCPU`: the maximum CPU available on the device
     - `totalMEM`: the maximum Memory available on the device
-    - `distribution.CPU`: an array that contains the distribution of CPU used with time references (`timeStart`-`timeEnd` identify the time when this distribution have to be consider valid. The interval `0-24` have to be covered adding all the time slices) 
+    - `distribution.CPU`: an array that contains the distribution of *free* CPU used with time references (`timeStart`-`timeEnd` identify the time when this distribution have to be consider valid. The interval `0-24` have to be covered adding all the time slices) 
     - `distribution.MEM`: an array that contains the distribution of MEM used with time references 
 
     JSON rappresentation of a generic device:
@@ -129,7 +129,7 @@ The Infrastructure is composed by:
             "totalCPU": 1000,
             "totalMEM": 128,
             "distributions": { 
-                "CPU": [
+                "CPU": [ 
                     {
                         "timeStart": 0,
                         "timeEnd": 24,

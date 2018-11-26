@@ -24,13 +24,24 @@ class MyAppsAction(Resource):
                     app = db.getLocalApplicationBySourceName(myapp["sourceAppName"])
                     if not app["published"]: # This is not checked in FogDirector
                         return {"error": "the app have to be published"}, 400, {"content-type": "application/json"}
-                    
+                    deviceSuccessful = []
                     for device in devices:
                         devid = device["deviceId"]
                         resourceAsked = device["resourceAsk"]["resources"]
                         try:
                             db.checkAndAllocateResource(devid, resourceAsked["cpu"], resourceAsked["memory"])
                             db.addMyAppToDevice(myappid, devid)
+                            db.addMyAppLog({
+                                "time": int(time.time()),
+                                "action": action,
+                                "deviceSerialNo": devid,
+                                "appName": myapp["name"],
+                                "appVersion": "1",
+                                "severity": "info",
+                                "user": "admin",
+                                "message": action+" operation succeeded"
+                            })
+                            deviceSuccessful.append(device)
                         except NoResourceError, e:
                             db.addMyAppLog({
                                 "time": int(time.time()),
@@ -46,17 +57,9 @@ class MyAppsAction(Resource):
                                 "code": 1000,
                                 "description": str(e)
                             }, 400, {"content-type": "application/json"}
-                        db.addMyAppLog({
-                            "time": int(time.time()),
-                            "action": action,
-                            "deviceSerialNo": devid,
-                            "appName": myapp["name"],
-                            "appVersion": "1",
-                            "severity": "info",
-                            "user": "admin",
-                            "message": action+" operation succeeded"
-                        })
-                    jobid = db.addJobs(myappid, data["devices"], payload=request.json)
+                            
+                    jobid = db.addJobs(myappid, deviceSuccessful, payload=request.json)
+                    
                 elif action == "start" or action == "stop":
                     db.addMyAppLog({
                         "time": int(time.time()),

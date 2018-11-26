@@ -74,8 +74,17 @@ class Devices(Resource):
             for device in devices:
                 del device["password"] # removing password from the returned HTTP API object
                 del device["_id"]
+                # formatting tags as API expects
+                tags = []
+                for tagid in device["tags"]:
+                    tag = db.getTag(tagid)
+                    tag["tagId"] = str(tag["_id"])
+                    del tag["_id"]
+                    if tag["description"] == "":
+                        del tag["description"]
+                    tags.append(tag)
+                device["tags"] = tags
                 data["data"].append(device)
-
             return data, 200, {'ContentType':'application/json'} 
         else:
             return invalidToken()

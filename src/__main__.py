@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template
 from flask_restful import Api, Resource, reqparse
 
 from API.Devices import Devices
@@ -13,7 +13,7 @@ from API.DevicesEvents import DeviceEvents
 from API.Jobs import Jobs
 from API.Alerts import Alerts
 import Database as db
-from Simulator.SimThread import SimThread
+from Simulator.SimThread import SimThread, getSimulationValues
 import signal, threading, time
 
 
@@ -45,5 +45,10 @@ print "Creating Simulation Thread"
 simulatorThread = SimThread()
 signal.signal(signal.SIGINT, service_shutdown)
 simulatorThread.start()
+
+@app.route("/result")
+def simulator_result():
+    values = getSimulationValues()
+    return render_template("result.html", values=values)
 app.run(debug=True, use_reloader=False)
 

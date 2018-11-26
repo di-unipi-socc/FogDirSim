@@ -26,15 +26,13 @@ stages:
       method: POST
       headers:
         x-token-id: "{token:s}"
+        x-publish-on-upload: "true"
       files:
         file: "test/NettestApp2V1_lxc.tar.gz"
     response:
       status_code: 201
       headers:
         content-type: application/json;charset=UTF-8
-      body:
-        $ext:
-          function: utils:test_notpublish
       save:
         $ext:
           function: utils:getAppdetails
@@ -108,6 +106,4 @@ stages:
                       network-name: "iox-bridge0"
     response:
       status_code: 200
-      save:
-        $ext:
-          function: utils:print_
+              
