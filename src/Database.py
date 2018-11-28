@@ -173,7 +173,7 @@ def getMyApp(myappid):
     return db.myapps.find_one({"myappId": myappid})
 def getMyApps(searchByName=None):
     if searchByName != None:
-        return db.myapps.find_one({"name": searchByName})
+        return db.myapps.find({"name": searchByName})
     return db.myapps.find()
     
 # Jobs App

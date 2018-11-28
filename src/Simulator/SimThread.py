@@ -5,7 +5,8 @@ import os, sys, time
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import Database as db
 from modules.ResourceSampling import sampleMyAppStatus
-import costants, modules
+import modules
+from modules import costants
 iter_count = 0
 
 class SimThread(Thread):

@@ -3,7 +3,7 @@ from flask_restful import Api, Resource, reqparse
 from Authentication import invalidToken
 import time, json
 from modules.ResourceSampling import sampleMyAppStatus
-from Simulator import costants
+from modules import costants
 
 #importing Database
 import os, sys
@@ -41,7 +41,8 @@ class Alerts(Resource):
                                 "myAppId": job["myappid"],
                                 "deviceId": devid,
                                 "time": int(time.time()),
-                                "type": "Application "+appname+" has too few MEM to run well."
+                                "type": costants.FEW_MEM,
+                                "message": "Application "+appname+" has too few MEM to run well."
                             })
                 for alert in alerts:
                     data.append(alert)
