@@ -179,18 +179,19 @@ def getMyApps(searchByName=None):
 # Jobs App
 def addJobs(myappid, devices, status="DEPLOY", payload={}):
     return db.jobs.insert_one({
-        "myappid": myappid,
+        "myappId": myappid,
         "status": status,
         "devices": devices,
         "payload": payload
     }).inserted_id
 def updateJobsStatus(myappid, status):
     return db.jobs.find_and_modify({
-        "myappid": myappid
+        "myappId": myappid
     }, {"$set": {"status": status} } ) 
 def getJob(myappid):
-    jobs = db.jobs.find()
-    return db.jobs.find_one({"myappid": myappid})
+    return db.jobs.find_one({"myappId": myappid})
+def getJobs():
+    return db.jobs.find()
 
 # Logs
 def addMyAppLog(log):
@@ -199,19 +200,19 @@ def getMyAppsLog():
     return db.myappsLogs.find()
 
 # Alerts
-def addAlert(alert):
-    db.alerts.insert_one(alert)
+def addAlert(alert, from_sampling=False):
+    db.alerts.insert_one({"alert": alert, "from_sampling": from_sampling})
+def deleteFromSamplingAlerts():
+    db.alerts.delete_many({"from_sampling": True})
 def getAlerts():
-    return db.alerts.find()
+    return db.alerts.aggregate([
+        {
+            "$replaceRoot": { "newRoot": "$alert" }
+        }
+    ])
 
 #Simulation
 def addSimulationValues(values):
-    """{
-        "myAppId": job["myappid"],
-        "deviceId": devid,
-        "time": int(time.time()),
-        "type": costants.FEW_CPU
-    }"""
     db.simulation.insert_one(values)
-def getSimulationValues():
-    return db.simulation.find()
+def getSimulationValues(_filter):
+    return db.simulation.find(_filter)

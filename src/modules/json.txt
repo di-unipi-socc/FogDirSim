@@ -1,0 +1,81 @@
+{
+  "data": [
+    {
+      "id": 2770,
+      "ipAddress": "10.10.20.51",
+      "hostname": "iox-caf-1",
+      "appName": "alessandro308/forkbomb",
+      "severity": "critical",
+      "type": "status",
+      "message": "Uninstallation of the app on this device has failed", # in realtà ha fallito lo start, non l'uninstall... 
+      "time": 1543489762700,
+      "source": "Device periodic report",
+      "action": "",
+      "status": "ACTIVE"
+    }
+  ]
+} FORKBOMB ON DEVICE
+
+{
+      "id": 2797,
+      "ipAddress": "10.10.20.52",
+      "hostname": "iox-caf-2",
+      "appName": "ubuntu",
+      "severity": "critical",
+      "type": "status",
+      "message": "The desired state of the app on this device was \"running\" but the actual state is \"stopped\"",
+      "time": 1543489985567,
+      "source": "Device periodic report",
+      "action": "",
+      "status": "ACTIVE"
+}
+
+
+MYAPP
+{
+  "data": [
+    {
+      "myappId": "2709",
+      "name": "alessandro308/forkbomb",
+      "appId": "9f67bb94-20a1-4016-a221-8aa6a8ff7eac:1",
+      "version": "1",
+      "appType": "docker",
+      "icon": {
+        "caption": "icon",
+        "href": "api/v1/appmgr/localapps/9f67bb94-20a1-4016-a221-8aa6a8ff7eac:1/icon"
+      },
+      "creationDate": 1543503819663,
+      "lastUpdatedDate": 1543503831124,
+      "classification": "APP",
+      "_links": {
+        "sourceApp": {
+          "href": "/api/v1/appmgr/apps/9f67bb94-20a1-4016-a221-8aa6a8ff7eac:1"
+        },
+        "icon": {
+          "href": "/api/v1/appmgr/localapps/9f67bb94-20a1-4016-a221-8aa6a8ff7eac:1/icon"
+        },
+        "configurations": {
+          "href": "/api/v1/appmgr/myapps/2709/configurations"
+        },
+        "summaryState": {
+          "href": "/api/v1/appmgr/myapps/2709/summaryState"
+        },
+        "aggregatedStats": {
+          "href": "/api/v1/appmgr/myapps/2709/aggregatedStats"
+        },
+        "tags": {
+          "href": "/api/v1/appmgr/myapps/2709/tags"
+        },
+        "action": {
+          "href": "/api/v1/appmgr/myapps/2709/action"
+        },
+        "notifications": {
+          "href": "/api/v1/appmgr/myapps/2709/notifications"
+        },
+        "self": {
+          "href": "/api/v1/appmgr/myapps/2709"
+        }
+      }
+    }
+  ]
+}

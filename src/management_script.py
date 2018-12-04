@@ -26,7 +26,7 @@ while code == 400:
 fg.start_app(myappname)
 _, alerts = fg.get_alerts()
 for alert in alerts:
-    if alert["type"]== costants.FEW_CPU or alert["type"] == costants.FEW_MEM:
+    if alert["type"] == .FEW_CPU or alert["type"] == costants.FEW_MEM:
         # There is a QOS violation for the application alert["myAppId"]
         _, myapp = fg.get_myapp_details(myappId=alert["myappId"])
         fg.stop_app(myappname)

@@ -13,7 +13,7 @@ from API.DevicesEvents import DeviceEvents
 from API.Jobs import Jobs
 from API.Alerts import Alerts
 import Database as db
-from Simulator.SimThread import SimThread, getSimulationValues
+from Simulator.SimThread import SimThread
 import signal, threading, time
 
 def main():
@@ -46,7 +46,7 @@ def main():
     signal.signal(signal.SIGINT, service_shutdown)
     simulatorThread.start()
 
-    @app.route("/result")
+    @app.route("/result/")
     def simulator_result():
         values = getSimulationValues()
         return render_template("result.html", values=values)

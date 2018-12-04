@@ -41,13 +41,13 @@ class MyApps(Resource):
         else:
             return invalidToken()
         
-    def delete(self, myappid):
+    def delete(self, myappId):
         parser = reqparse.RequestParser()
         parser.add_argument('x-token-id', location='headers')
         args = parser.parse_args()
         if db.checkToken(args["x-token-id"]):
             try:
-                app = db.deleteMyApp(myappid)
+                app = db.deleteMyApp(myappId)
             except MyAppInstalledOnDeviceError, e:
                 return {"Error": str(e)}, 400, {"Content-type": "application/json"} # TODO: this response is not compared with FogDirector
             del app["_id"]
