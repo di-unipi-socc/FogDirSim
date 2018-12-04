@@ -1,5 +1,5 @@
 import pymongo as pm 
-import time, json
+import time, json, sys
 import SECRETS as config
 import RealDatabase as rdb
 from bson.objectid import ObjectId
@@ -45,7 +45,7 @@ def addDevice(ipAddress, port, user, pasw):
     if devSpecs == None:
         raise LookupError("The device you are adding is not present in the RealDatabase")
     if "deviceId" not in devSpecs.keys():
-        devSpecs["deviceId"] = hash(devSpecs["ipAddress"]+":"+str(devSpecs["port"]))
+        devSpecs["deviceId"] = abs(hash(devSpecs["ipAddress"]+":"+str(devSpecs["port"])))
     devSpecs["username"] = user
     devSpecs["password"] = pasw
     devSpecs["usedCPU"] = 0 # these two variables are computed only with apps installed by the simulator
@@ -68,7 +68,23 @@ def getDevices(limit=100, offset=0, searchByTag=None, searchByAnyMatch=None):
         except KeyError:
             return []
     if searchByAnyMatch != None:
-        return db.devices.find({ "$text": { "$search": searchByAnyMatch } })
+        func = """function() {
+                    var deepIterate = function  (obj, value) {
+                        for (var field in obj) {
+                            if (obj[field] == value){
+                                return true;
+                            }
+                            var found = false;
+                            if ( typeof obj[field] === 'object') {
+                                found = deepIterate(obj[field], value)
+                                if (found) { return true; }
+                            }
+                        }
+                        return false;
+                    };
+                    return deepIterate(this, "%s")}""" % str(searchByAnyMatch)
+        devs = db.devices.find({"$where": func }).skip(offset).limit(limit)
+        return devs
     return db.devices.find().skip(offset).limit(limit)
 
 lock = threading.Lock()
@@ -151,30 +167,36 @@ def getLocalApplicationBySourceName(sourceAppName):
     })
 
 # My apps
+myapp_lock = threading.Lock()
 def createMyApp(appname, sourceAppName, version, apptype):
-    myappappid = db.myapps.insert_one({
-        "name": appname,
-        "sourceAppName": sourceAppName,
-        "version": version,
-        "type": apptype
-    }).inserted_id
-    return db.myapps.find_one_and_update({"_id": myappappid}, 
-                                            {"$set": {
-                                                "myappId": str(myappappid)
-                                            }
-                                        }, return_document=pm.ReturnDocument.AFTER)
+    with myapp_lock:
+        myappappid = db.myapps.insert_one({
+            "name": appname,
+            "sourceAppName": sourceAppName,
+            "version": version,
+            "type": apptype
+        }).inserted_id
+        return db.myapps.find_one_and_update({"_id": myappappid}, 
+                                                {"$set": {
+                                                    "myappId": str(myappappid)
+                                                }
+                                            }, return_document=pm.ReturnDocument.AFTER)
 def deleteMyApp(appid):
-    if db.devices.count_documents({"installedApps": appid}) > 0:
-        raise MyAppInstalledOnDeviceError("Myapps is installed on some device")
-    return db.myapps.find_one_and_delete({"_id": ObjectId(appid)})
+    with myapp_lock:
+        if db.devices.count_documents({"installedApps": appid}) > 0:
+            raise MyAppInstalledOnDeviceError("Myapps is installed on some device")
+        return db.myapps.find_one_and_delete({"_id": ObjectId(appid)})
 def myAppExists(sourceAppName):
-    return db.myapps.count_documents({"sourceAppName": sourceAppName}) > 0
+    with myapp_lock:
+        return db.myapps.count_documents({"sourceAppName": sourceAppName}) > 0
 def getMyApp(myappid):
-    return db.myapps.find_one({"myappId": myappid})
+    with myapp_lock:
+        return db.myapps.find_one({"myappId": myappid})
 def getMyApps(searchByName=None):
-    if searchByName != None:
-        return db.myapps.find({"name": searchByName})
-    return db.myapps.find()
+    with myapp_lock:
+        if searchByName != None:
+            return db.myapps.find({"name": searchByName})
+        return db.myapps.find()
     
 # Jobs App
 def addJobs(myappid, devices, status="DEPLOY", payload={}):
@@ -189,7 +211,8 @@ def updateJobsStatus(myappid, status):
         "myappId": myappid
     }, {"$set": {"status": status} } ) 
 def getJob(myappid):
-    return db.jobs.find_one({"myappId": myappid})
+    return db.jobs.find_one({"myappId": str(myappid)})
+    
 def getJobs():
     return db.jobs.find()
 

@@ -57,8 +57,8 @@ class FogDirector():
         return (200, r.json())
 
     def get_device_details(self, deviceip):
-        code, device = self.get_devices(searchByAnyMatch=deviceip)
-        return (code, device['data'][0])
+        code, devices = self.get_devices(searchByAnyMatch=deviceip)
+        return (code, devices['data'][0])
 
     def delete_all_devices(self, limit=10000, offset = 0):
         devices = self.get_devices()

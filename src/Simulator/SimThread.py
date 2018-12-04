@@ -20,8 +20,8 @@ class SimThread(Thread):
             iter_count += 1
             device_sampled_values = {}
             for dev in db.getDevices():   
-                sampled_free_cpu = sampleCPU(dev["deviceId"], time) - dev["usedCPU"] 
-                sampled_free_mem = sampleMEM(dev["deviceId"], time) - dev["usedMEM"]
+                sampled_free_cpu = sampleCPU(dev["deviceId"]) - dev["usedCPU"] 
+                sampled_free_mem = sampleMEM(dev["deviceId"]) - dev["usedMEM"]
                 device_sampled_values[dev["deviceId"]] = {"free_cpu": sampled_free_cpu, "free_mem": sampled_free_mem}
                 if sampled_free_cpu <= 0:
                     db.addSimulationValues({
@@ -39,7 +39,7 @@ class SimThread(Thread):
                     })
             for myapp in db.getMyApps():
                 # If exists a job with mypp => it is installed
-                job = db.getJob(myapp)
+                job = db.getJob(myapp["myappId"])
                 if job == None:
                     db.addSimulationValues({
                         "myappId": myapp["myappId"],
@@ -107,31 +107,31 @@ def getDeviceSampling():
 def getMyAppsSampling():
     myapps = db.getMyApps()
     result = []
-    fix_iter = iter_count
+    fix_iter = float(iter_count)
     for myapp in myapps:
         tmp = {}
         tmp["myappId"] = myapp["myappId"]
-        tmp["UNINSTALLED_TIME_PERCENTAGE"] = ( db.getSimulationValues({"type": costants.MYAPP_STATUS,
-                                                                       "value": costants.MYAPP_UNINSTALLED}).count() ) / fix_iter
-        tmp["INSTALLED_TIME_PERCENTAGE"] = ( db.getSimulationValues({"type": costants.MYAPP_STATUS,
-                                                                       "value": costants.MYAPP_INSTALLED}).count() ) / fix_iter
+        tmp["UNINSTALLED_TIME_PERCENTAGE"] = ( db.db.simulation.count({"type": costants.MYAPP_STATUS,
+                                                                       "value": costants.MYAPP_UNINSTALLED}) ) / fix_iter
+        tmp["INSTALLED_TIME_PERCENTAGE"] = ( db.db.simulation.count({"type": costants.MYAPP_STATUS,
+                                                                       "value": costants.MYAPP_INSTALLED}) ) / fix_iter
         result.append(tmp)
     return result
 
 def getAppOnDeviceSampling():
     myapps = db.getMyApps()
     result = []
-    fix_iter = iter_count        
+    fix_iter = float(iter_count)     
     query_result = db.db.simulation.aggregate([   
             {
-                "$match": { "type": 8 }
+                "$match": { "type": costants.APP_ON_DEVICE}
             },
             {
                 "$project": {
                     "myappId": "$myappId",
                     "deviceId": "$deviceId",
-                    "started": { "$cond": [ { "$eq": ["$status", 0] }, 1, 0 ] },
-                    "stopped": { "$cond": [ { "$eq": ["$status", 1] }, 1, 0 ] } 
+                    "started": { "$cond": [ { "$eq": ["$status", costants.JOB_STARTED] }, 1, 0 ] },
+                    "stopped": { "$cond": [ { "$eq": ["$status", costants.JOB_STOPPED] }, 1, 0 ] } 
                 }
             },
             {
@@ -144,6 +144,7 @@ def getAppOnDeviceSampling():
             }
     ])
     for doc in query_result:
+        print doc
         result.append({
             "myappId": doc["_id"]["myappId"],
             "deviceId": doc["_id"]["deviceId"],

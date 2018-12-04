@@ -19,6 +19,7 @@ db = client.realDatabase
 db.Rdevices.insert_one({
             "ipAddress": "10.10.20.51",
             "port": 8443,
+            "deviceId": 1,
             "totalCPU": 1000,
             "totalMEM": 128,
             "distributions": { 
@@ -27,7 +28,7 @@ db.Rdevices.insert_one({
                         "timeStart": 0,
                         "timeEnd": 24,
                         "mean": 100,
-                        "deviation": 5
+                        "deviation": 20
                     }
                 ],
                 "MEM": [
@@ -43,6 +44,7 @@ db.Rdevices.insert_one({
 db.Rdevices.insert_one({
             "ipAddress": "10.10.20.52",
             "port": 8443,
+            "deviceId": 2,
             "totalCPU": 1000,
             "totalMEM": 128,
             "distributions": { 
@@ -50,8 +52,8 @@ db.Rdevices.insert_one({
                     {
                         "timeStart": 0,
                         "timeEnd": 24,
-                        "mean": 100,
-                        "deviation": 5
+                        "mean": 0,
+                        "deviation": 100
                     }
                 ],
                 "MEM": [

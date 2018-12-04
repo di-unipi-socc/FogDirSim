@@ -17,10 +17,10 @@ class MyAppsAction(Resource):
             data = request.json
             try:
                 action = data.keys()[0]
+                myapp = db.getMyApp(myappid)
                 if action == "deploy":
                     data = data[action]
-                    devices = data["devices"]
-                    myapp = db.getMyApp(myappid)
+                    devices = data["devices"]  
                     app = db.getLocalApplicationBySourceName(myapp["sourceAppName"])
                     if not app["published"]: # This is not checked in FogDirector
                         return {"error": "the app have to be published"}, 400, {"content-type": "application/json"}

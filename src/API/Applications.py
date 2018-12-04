@@ -10,6 +10,12 @@ import os, sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import Database as db
 
+file_error_string = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+                            <error>
+                                <code>1308</code>
+                                <description>Given app package file is invalid: Unsupported Format</description>
+                            </error>'''
+
 class Applications(Resource):
 
     @staticmethod
@@ -83,11 +89,7 @@ class Applications(Resource):
         if db.checkToken(args["x-token-id"]):
             if 'file' not in request.files or request.files["file"].filename == '':
                 # Thank you CISCO for returning an XML here...
-                return  '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-                            <error>
-                                <code>1308</code>
-                                <description>Given app package file is invalid: Unsupported Format</description>
-                            </error>''', 400, {"Content-Type": "application/xml"} # TOOD: resolve output, not XML but string now
+                return  file_error_string, 400, {"Content-Type": "application/xml"} # TOOD: resolve output, not XML but string now
             file = request.files['file']
             if file and self.allowed_file(file.filename):
                 filename = secure_filename(file.filename)
@@ -115,8 +117,11 @@ class Applications(Resource):
                     tar.close()
                 
                 # Opening YAML Description of the application
-                with open("package.yaml", 'r') as stream:
-                    app_data = yaml.load(stream)
+                try:
+                    with open("package.yaml", 'r') as stream:
+                        app_data = yaml.load(stream)
+                except IOError:
+                    return file_error_string, 400, {"Content-Type": "application/xml"} 
                 os.chdir("../")
                 
                 appJson = self.createApplicationJSON(creationDate=int(time.time()),

@@ -10,23 +10,23 @@ def get_truncated_normal(mean=0, sd=1, low=0, upp=10):
                         loc=mean, scale=sd
                     )
 
-def sampleCPU(devid, time=0):
+def sampleCPU(devid, time_int=0):
     """
         Sampling considering only the distribution variables
     """
     device = db.getDevice(devid)
-    mean = device["distributions"]["CPU"][time]["mean"]
-    deviation = device["distributions"]["CPU"][time]["deviation"]
+    mean = device["distributions"]["CPU"][time_int]["mean"]
+    deviation = device["distributions"]["CPU"][time_int]["deviation"]
     maxCPU = device["totalCPU"]
     return get_truncated_normal(mean=mean, sd=deviation, low=0, upp=maxCPU).rvs()
 
-def sampleMEM(devid, time=0):
+def sampleMEM(devid, time_int=0):
     """
         Sampling considering only the distribution variables
     """
     device = db.getDevice(devid)
-    mean = device["distributions"]["MEM"][time]["mean"]
-    deviation = device["distributions"]["MEM"][time]["deviation"]
+    mean = device["distributions"]["MEM"][time_int]["mean"]
+    deviation = device["distributions"]["MEM"][time_int]["deviation"]
     maxMEM = device["totalMEM"]
     return get_truncated_normal(mean=mean, sd=deviation, low=0, upp=maxMEM).rvs()
 
@@ -46,10 +46,10 @@ def sampleBusyMEM(devid, time=0):
     dev = db.getDevice(devid)
     return sampled - dev["usedMEM"] 
 
-def sampleMyAppStatus(devid, requestedCPU, requestedMEM, time=0):
+def sampleMyAppStatus(devid, requestedCPU, requestedMEM, time_int=0):
     dev = db.getDevice(devid)
-    sampledBusyCPU = sampleBusyCPU(devid, time)
-    sampledBusyMEM = sampleBusyMEM(devid, time)
+    sampledBusyCPU = sampleBusyCPU(devid, time_int)
+    sampledBusyMEM = sampleBusyMEM(devid, time_int)
     # Computing the freeCPU as total-(sampled - myapp_itself) since myapp cpu is included in the "usedCPU from sampleFreeCPU"
     freeCPU = dev["totalCPU"] - (sampledBusyCPU - requestedCPU)
     freeMEM = dev["totalMEM"] - (sampledBusyMEM - requestedMEM)

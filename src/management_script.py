@@ -19,21 +19,8 @@ myappname = "FirstMyApp"
 _, myapp = fg.create_myapp(localAppId, myappname)
 
 # Deploying on Device with default resources
-code, res = fg.install_app(myappname, device["ipAddress"])
+code, res = fg.install_app(myappname, "10.10.20.51")
 while code == 400:
-    code, res = fg.install_app(myappname, device["ipAddress"])
+    code, res = fg.install_app(myappname, "10.10.20.51")
 
 fg.start_app(myappname)
-_, alerts = fg.get_alerts()
-for alert in alerts:
-    if alert["type"] == .FEW_CPU or alert["type"] == costants.FEW_MEM:
-        # There is a QOS violation for the application alert["myAppId"]
-        _, myapp = fg.get_myapp_details(myappId=alert["myappId"])
-        fg.stop_app(myappname)
-        _, devices = fg.get_devices()
-        job = fg.ge
-        for device in devices:
-            if device["deviceId"] == alert["deviceId"]:
-                fg.uninstall_app(myappname, device["ipAddress"])
-        _, devices = fg.get
-

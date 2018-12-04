@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, jsonify
 from flask_restful import Api, Resource, reqparse
 
 from API.Devices import Devices
@@ -14,7 +14,7 @@ from API.Jobs import Jobs
 from API.Alerts import Alerts
 import Database as db
 from Simulator.SimThread import SimThread
-import signal, threading, time
+import signal, threading, time, Simulator
 
 def main():
     app = Flask(__name__)
@@ -46,10 +46,19 @@ def main():
     signal.signal(signal.SIGINT, service_shutdown)
     simulatorThread.start()
 
-    @app.route("/result/")
-    def simulator_result():
-        values = getSimulationValues()
-        return render_template("result.html", values=values)
+    @app.route("/result/devices")
+    def result_device():
+        values = Simulator.SimThread.getDeviceSampling()
+        return jsonify(values)
+    
+    @app.route("/result/myapps")
+    def result_myapps():
+        values = Simulator.SimThread.getMyAppsSampling()
+        return jsonify(values)
+
+    @app.route("/result/myappsstartstopdevice")
+    def result_appDevice():
+        return jsonify(Simulator.SimThread.getAppOnDeviceSampling())
     return app
 
 if __name__ == "__main__":
