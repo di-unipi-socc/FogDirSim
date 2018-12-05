@@ -9,7 +9,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import Database as db
 
 class MyAppsAction(Resource):
-    def post(self, myappid):
+    def post(self, myappId):
         parser = reqparse.RequestParser()
         parser.add_argument('x-token-id', location='headers')
         args = parser.parse_args()
@@ -17,7 +17,7 @@ class MyAppsAction(Resource):
             data = request.json
             try:
                 action = data.keys()[0]
-                myapp = db.getMyApp(myappid)
+                myapp = db.getMyApp(myappId)
                 if action == "deploy":
                     data = data[action]
                     devices = data["devices"]  
@@ -30,7 +30,7 @@ class MyAppsAction(Resource):
                         resourceAsked = device["resourceAsk"]["resources"]
                         try:
                             db.checkAndAllocateResource(devid, resourceAsked["cpu"], resourceAsked["memory"])
-                            db.addMyAppToDevice(myappid, devid)
+                            db.addMyAppToDevice(myappId, devid)
                             db.addMyAppLog({
                                 "time": int(time.time()),
                                 "action": action,
@@ -58,7 +58,7 @@ class MyAppsAction(Resource):
                                 "description": str(e)
                             }, 400, {"content-type": "application/json"}
                             
-                    jobid = db.addJobs(myappid, deviceSuccessful, payload=request.json)
+                    jobid = db.addJobs(myappId, deviceSuccessful, payload=request.json)
                     
                 elif action == "start" or action == "stop":
                     db.addMyAppLog({
@@ -70,34 +70,35 @@ class MyAppsAction(Resource):
                         "user": "admin",
                         "message": action+" operation succeeded"
                     })
-                    jobid = db.updateJobsStatus(myappid, action)
+                    jobid = db.updateJobsStatus(myappId, action)
                 elif action == "undeploy":
                     data = data[action]
                     devices = data["devices"]
-                    myapp = db.getMyApp(myappid)
-                    jobDescr = db.getJob(myappid)["payload"]
-                    resourcesDevs = jobDescr["deploy"]["devices"]
-                    for device in devices:
-                        devid = device["deviceId"]
-                        resourceAsked = device["resourceAsk"]["resources"]
-                        cpu = 0
-                        mem = 0
-                        for dev in resourcesDevs: # TODO TEST it!
-                            if dev["deviceId"] == dev["deviceId"]:
-                                cpu = dev["resourceAsk"]["resources"]["cpu"]
-                                mem = dev["resourceAsk"]["resources"]["mem"]
-                        db.deallocateResource(devid,cpu, mem)
-                        db.removeMyAppsFromDevice(myappid, devid)
-                        db.addMyAppLog({
-                            "time": int(time.time()),
-                            "action": action,
-                            "deviceSerialNo": devid,
-                            "appName": myapp["name"],
-                            "appVersion": "1",
-                            "severity": "info",
-                            "user": "admin",
-                            "message": action+" operation succeeded"
-                        })
+                    myapp = db.getMyApp(myappId)
+                    jobs = db.getJobs(myappId)["payload"]
+                    for jobDescr in jobs:
+                        resourcesDevs = jobDescr["deploy"]["devices"]
+                        for device in devices:
+                            devid = device["deviceId"]
+                            resourceAsked = device["resourceAsk"]["resources"]
+                            cpu = 0
+                            mem = 0
+                            for dev in resourcesDevs: # TODO TEST it!
+                                if dev["deviceId"] == dev["deviceId"]:
+                                    cpu = dev["resourceAsk"]["resources"]["cpu"]
+                                    mem = dev["resourceAsk"]["resources"]["mem"]
+                            db.deallocateResource(devid,cpu, mem)
+                            db.removeMyAppsFromDevice(myappId, devid)
+                            db.addMyAppLog({
+                                "time": int(time.time()),
+                                "action": action,
+                                "deviceSerialNo": devid,
+                                "appName": myapp["name"],
+                                "appVersion": "1",
+                                "severity": "info",
+                                "user": "admin",
+                                "message": action+" operation succeeded"
+                            })
                 return {
                     "jobId": str(jobid)
                 }, 200, {"content-type": "application/json"}   

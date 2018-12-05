@@ -95,7 +95,8 @@ All the API not reported here, are not available yet.
  - `/api/v1/appmgr/alerts`
 
 ## Tested functions
-In order to run the tests, execute `PYTHONPATH=$PYTHONPATH:test py.test`
+In order to run the tests, execute `PYTHONPATH=$PYTHONPATH:test py.tests`
+
 All the tests are run over the Simulator AND Fog Director. They success on both systems.
  - Simple login and logout
  - Add a device
@@ -157,5 +158,13 @@ The Infrastructure is composed by:
  - Some IDs that are interger in FogDirector, in the simulator are strings.
  - Only one user is admitted (`admin` user)
  - This simulator not manages Network Interfaces Resources
-## Known Bugs
-The `GET device?searchByAny` returns all elements. It depends on MongoDB invokation. I have to chech it...
+ - Some API are created over documentation, on the sandbox uses to validate them they don't works (/jobs, /myapps)
+ - Simulator doens't chech SHA1 in package.yaml of localapp
+ - On simulator you can start or stop the myapp. On GUI you can start or stop the myapp on specific device (even if there exists API that supports the other behaviour)
+
+## I know that I know nothing. (Socrates)
+ - We don't know how to manage case where, deploying an application on multiple devices, one of them has no resources
+ - We don't know is a single Myapp can be deployed twice on a device
+ - We don't know WHY GET /myapps returns an array but, with searchByName parameter returns a single element
+ - I don't understand how this bad designed tool can be used in production
+ - Why exists the job.

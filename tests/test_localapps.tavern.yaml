@@ -28,7 +28,7 @@ stages:
       headers:
         x-token-id: "{token:s}"
       files:
-        file: "test/NettestApp2V1_lxc.tar.gz"
+        file: "tests/NettestApp2V1_lxc.tar.gz"
     response:
       status_code: 201
       headers:
@@ -109,7 +109,7 @@ stages:
       headers:
         x-token-id: "{token:s}"
       files:
-        file: "test/NettestApp2V1_lxc.tar.gz"
+        file: "tests/NettestApp2V1_lxc.tar.gz"
     response:
       status_code: 201
       headers:

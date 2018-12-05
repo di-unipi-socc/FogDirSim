@@ -39,8 +39,8 @@ class SimThread(Thread):
                     })
             for myapp in db.getMyApps():
                 # If exists a job with mypp => it is installed
-                job = db.getJob(myapp["myappId"])
-                if job == None:
+                jobs = db.getJobs(myapp["myappId"])
+                if jobs.count() == 0:
                     db.addSimulationValues({
                         "myappId": myapp["myappId"],
                         "value": costants.MYAPP_UNINSTALLED,
@@ -67,7 +67,7 @@ class SimThread(Thread):
                     sampled_free_mem = device_sampled_values[device["deviceId"]]["free_mem"]
                     #cpu_request = device["resourceAsk"]["resources"]["cpu"]
                     #mem_request = device["resourceAsk"]["resources"]["memory"]
-                    if sampled_free_cpu < 0:
+                    if sampled_free_cpu < 0: # TODO: Extend with memory
                         device_details = db.getDevice(device["deviceId"])
                         myapp_details = db.getMyApp(job["myappId"])
                         db.addAlert({
@@ -99,6 +99,8 @@ def getDeviceSampling():
     for dev in devices:
         tmp = {}
         tmp["deviceId"] = dev["deviceId"]
+        tmp["ipAddress"] = dev["ipAddress"]
+        tmp["port"] = dev["port"]
         tmp["FEW_CPU_PERCENTAGE"] = ( db.getSimulationValues({"type": costants.DEVICE_LOW_CPU, "deviceId": dev["deviceId"]}).count() ) / fix_iter
         tmp["FEW_MEM_PERCENTAGE"] = ( db.getSimulationValues({"type": costants.DEVICE_LOW_MEM, "deviceId": dev["deviceId"]}).count() ) / fix_iter
         result.append(tmp)
@@ -109,12 +111,13 @@ def getMyAppsSampling():
     result = []
     fix_iter = float(iter_count)
     for myapp in myapps:
+        inst = float(db.db.simulation.count({"myappId": myapp["myappId"], "type": costants.MYAPP_STATUS, "value": costants.MYAPP_INSTALLED}))
+        uninst = float(db.db.simulation.count({"myappId": myapp["myappId"], "type": costants.MYAPP_STATUS, "value": costants.MYAPP_UNINSTALLED}))
         tmp = {}
         tmp["myappId"] = myapp["myappId"]
-        tmp["UNINSTALLED_TIME_PERCENTAGE"] = ( db.db.simulation.count({"type": costants.MYAPP_STATUS,
-                                                                       "value": costants.MYAPP_UNINSTALLED}) ) / fix_iter
-        tmp["INSTALLED_TIME_PERCENTAGE"] = ( db.db.simulation.count({"type": costants.MYAPP_STATUS,
-                                                                       "value": costants.MYAPP_INSTALLED}) ) / fix_iter
+        tmp["name"] = myapp["name"]
+        tmp["UNINSTALLED_TIME_PERCENTAGE"] = uninst / (inst+uninst)
+        tmp["INSTALLED_TIME_PERCENTAGE"] =  inst / (inst + uninst)
         result.append(tmp)
     return result
 
@@ -144,11 +147,11 @@ def getAppOnDeviceSampling():
             }
     ])
     for doc in query_result:
-        print doc
         result.append({
             "myappId": doc["_id"]["myappId"],
             "deviceId": doc["_id"]["deviceId"],
             "START_TIME_PERCENTAGE": doc["start_count"] / float(doc["total_count"]),
-            "STOP_TIME_PERCENTAGE": doc["stop_count"] / float(doc["total_count"])
+            "STOP_TIME_PERCENTAGE": doc["stop_count"] / float(doc["total_count"]),
+            "INSTALL_ON_DEVICE_PERCENTAGE": float(doc["total_count"]) / db.db.simulation.count({"myappId": doc["_id"]["myappId"], "type": costants.MYAPP_STATUS, "value": costants.MYAPP_INSTALLED}) 
         })
     return result

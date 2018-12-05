@@ -67,7 +67,7 @@ class MyApps(Resource):
                 del myapp["_id"]
                 data["data"].append(myapp)
                 if args["searchByName"] != None:
-                    return data, 200, {'ContentType':'application/json'} 
+                    return myapp, 200, {'ContentType':'application/json'} 
             return data, 200, {'ContentType':'application/json'} 
         else:
             return invalidToken()

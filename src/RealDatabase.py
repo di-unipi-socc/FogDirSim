@@ -27,7 +27,7 @@ db.Rdevices.insert_one({
                     {
                         "timeStart": 0,
                         "timeEnd": 24,
-                        "mean": 100,
+                        "mean": 300,
                         "deviation": 20
                     }
                 ],
@@ -52,7 +52,7 @@ db.Rdevices.insert_one({
                     {
                         "timeStart": 0,
                         "timeEnd": 24,
-                        "mean": 0,
+                        "mean": 600,
                         "deviation": 100
                     }
                 ],
@@ -60,7 +60,7 @@ db.Rdevices.insert_one({
                     {
                         "timeStart": 0,
                         "timeEnd": 24,
-                        "mean": 45,
+                        "mean": 80,
                         "deviation": 2
                     }
                 ]

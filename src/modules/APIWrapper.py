@@ -11,9 +11,13 @@ class FogDirector():
     def __init__(self, ip, port=80, ssl=False):
         self.ip = ip
         self.port = port
+        self.ssl = ssl
 
     def authenticate(self, username,password):
-        url = "http://%s/api/v1/appmgr/tokenservice" % self.ip
+        if self.ssl:
+            url = "https://%s/api/v1/appmgr/tokenservice" % self.ip
+        else:
+            url = "http://%s/api/v1/appmgr/tokenservice" % self.ip
         r = requests.post(url,auth=(username,password),verify=False)
         if  r.status_code == 202:
             self.token = r.json()['token']
@@ -22,7 +26,10 @@ class FogDirector():
         return (202, self.token)
 
     def delete_token(self, token):
-        url = "http://%s/api/v1/appmgr/tokenservice/%s" % (self.ip, token)
+        if self.ssl:
+            url = "https://%s/api/v1/appmgr/tokenservice/%s" % (self.ip, token)
+        else:
+            url = "http://%s/api/v1/appmgr/tokenservice/%s" % (self.ip, token)
         headers = {'x-token-id': self.token,'content-type': 'application/json'}
         r = requests.delete(url,headers=headers,verify=False)
         if  r.status_code != 200:
@@ -30,7 +37,10 @@ class FogDirector():
         return (200, r.json() )
 
     def add_device(self, device_ip, device_user, device_psw, device_port = 8443):
-        url = "http://%s/api/v1/appmgr/devices" % self.ip
+        if self.ssl:
+            url = "https://%s/api/v1/appmgr/devices" % self.ip
+        else:
+            url = "http://%s/api/v1/appmgr/devices" % self.ip
         headers = {'x-token-id':self.token,'content-type': 'application/json'}
         data = {'port':device_port,'ipAddress':device_ip,'username':device_user,'password':device_psw}
         r = requests.post(url,data=json.dumps(data),headers=headers,verify=False)
@@ -40,14 +50,20 @@ class FogDirector():
 
     def delete_device(self, device_id):
         headers = {'x-token-id':self.token, 'content-type': 'application/json'}
-        url = "http://%s/api/v1/appmgr/devices/%s" % (self.ip, str(device_id))
+        if self.ssl:
+            url = "https://%s/api/v1/appmgr/devices/%s" % (self.ip, str(device_id))
+        else:
+            url = "http://%s/api/v1/appmgr/devices/%s" % (self.ip, str(device_id))
         r=requests.delete(url, headers=headers, verify=False)
         if  r.status_code != 200:
             return (r.status_code, r.raise_for_status())
         return (200, r.json())
 
     def get_devices(self, limit=10000, offset=0, searchByAnyMatch=None, searchByTags=None):
-        url = "http://%s/api/v1/appmgr/devices?offset=%d&limit=%d" % (self.ip, offset, limit)
+        if self.ssl:
+            url = "https://%s/api/v1/appmgr/devices?offset=%d&limit=%d" % (self.ip, offset, limit)
+        else:
+            url = "http://%s/api/v1/appmgr/devices?offset=%d&limit=%d" % (self.ip, offset, limit)
         if(searchByTags != None):
             url += "&searchByTags=%s" % searchByTags
         if(searchByAnyMatch != None):
@@ -70,18 +86,24 @@ class FogDirector():
         return (200, "All devices deleted")
 
     def add_app(self, app_file, publish_on_upload = False):
-        url = "http://%s/api/v1/appmgr/localapps/upload" % self.ip
+        if self.ssl:
+            url = "https://%s/api/v1/appmgr/localapps/upload" % self.ip
+        else:
+            url = "http://%s/api/v1/appmgr/localapps/upload" % self.ip
         headers = {'x-token-id': self.token}
         if publish_on_upload:
             headers["x-publish-on-upload"] = "true"
         r = requests.post(url, headers=headers, files={'file': open(app_file,'rb')}, verify=False)                      
         if  r.status_code != 201:
-            return (201, r.raise_for_status())
+            return (r.status_code, r.text)
         return (r.status_code, r.json())
 
     # Returns all the tags from apps
     def get_all_tags(self):
-        url="http://%s/api/v1/appmgr/tags/" % self.ip
+        if self.ssl:
+            url = "https://%s/api/v1/appmgr/tags/" % self.ip
+        else:
+            url = "http://%s/api/v1/appmgr/tags/" % self.ip
         headers = {'x-token-id': self.token}
         r=requests.get(url,headers=headers,verify=False)
         tags= json.loads((json.dumps(r.json())))
@@ -95,7 +117,10 @@ class FogDirector():
     def get_localapp_details(self, localappName=None, localappId=None, search_limit=100):
         if localappId == None and localappName == None:
             return (400, "Specify at least one parameter")
-        url = "http://%s/api/v1/appmgr/localapps?limit=%d" % (self.ip, search_limit)
+        if self.ssl:
+            url = "https://%s/api/v1/appmgr/localapps?limit=%d" % (self.ip, search_limit)
+        else:
+            url = "http://%s/api/v1/appmgr/localapps?limit=%d" % (self.ip, search_limit)
         headers = {'x-token-id': self.token}
         r = requests.get(url,headers=headers,verify=False)
         apps=r.json()
@@ -110,13 +135,19 @@ class FogDirector():
         return (404, [])
 
     def get_myapp_details(self, myapp_name):
-        url = "http://%s/api/v1/appmgr/myapps?searchByName=%s" % (self.ip, myapp_name)
+        if self.ssl:
+            url = "https://%s/api/v1/appmgr/myapps?searchByName=%s" % (self.ip, myapp_name)
+        else:
+            url = "http://%s/api/v1/appmgr/myapps?searchByName=%s" % (self.ip, myapp_name)
         headers = {'x-token-id': self.token}
         r=requests.get(url,headers=headers,verify=False)
-        return (200, r.json()["data"][0])
+        return (200, r.json())
 
     def create_myapp(self, localAppId, myappname, version=1):
-        url="http://%s/api/v1/appmgr/myapps" % self.ip
+        if self.ssl:
+            url = "https://%s/api/v1/appmgr/myapps" % self.ip
+        else:
+            url = "http://%s/api/v1/appmgr/myapps" % self.ip
         headers = {'x-token-id': self.token,'content-type': 'application/json'}
         data = {"appSourceType":"LOCAL_APPSTORE"}
         data["name"] = myappname
@@ -128,27 +159,38 @@ class FogDirector():
         return (201, r.json())
 
     def is_myapp_present(self, app_name):
-        url = "http://%s/api/v1/appmgr/myapps?searchByName=%s" % (self.ip, app_name)
+        if self.ssl:
+            url = "https://%s/api/v1/appmgr/myapps?searchByName=%s" % (self.ip, app_name)
+        else:
+            url = "http://%s/api/v1/appmgr/myapps?searchByName=%s" % (self.ip, app_name)
         headers = {'x-token-id': self.token}
         r=requests.get(url,headers=headers,verify=False)
-        if len(r.json()["data"]) == 0:
+        if r.json() == {}:
             return (200, False)
         else:
             return (200, True)
 
 
-    def install_app(self, appname, deviceip, resources={"resources":{"profile":"c1.tiny","cpu":100,"memory":32,"network":[{"interface-name":"eth0","network-name":"iox-bridge0"}]}}):
+    def install_app(self, appname, devicesip, resources={"resources":{"profile":"c1.tiny","cpu":100,"memory":32,"network":[{"interface-name":"eth0","network-name":"iox-bridge0"}]}}):
         _, myapp_present = self.is_myapp_present(appname)
         if myapp_present != True :
             return (404, "You have to create the myapp first")
         _, myapp_details = self.get_myapp_details(appname)
-        _, device_details = self.get_device_details(deviceip)
-        url = "http://%s/api/v1/appmgr/myapps/%s/action" % (self.ip, myapp_details['myappId'])
+        
+        if self.ssl:
+            url = "https://%s/api/v1/appmgr/myapps/%s/action" % (self.ip, myapp_details['myappId'])
+        else:
+            url = "http://%s/api/v1/appmgr/myapps/%s/action" % (self.ip, myapp_details['myappId'])
         headers = {'x-token-id': self.token,'content-type': 'application/json'}
         askedResources = resources
-        data = {"deploy":{"config":{},"metricsPollingFrequency":"3600000","startApp":True,"devices":[{"resourceAsk":askedResources}]}}
-        data["deploy"]["devices"][0]["deviceId"] = device_details['deviceId']
+        data = {"deploy":{"config":{},"metricsPollingFrequency":"3600000","startApp":True,"devices":[]}}
+        
+        for devip in devicesip:
+            _, device_details = self.get_device_details(devip)
+            data["deploy"]["devices"].append({"deviceId":device_details['deviceId'], "resourceAsk":askedResources})
+        print json.dumps(data)
         r = requests.post(url,data=json.dumps(data),headers=headers,verify=False)
+        print r.status_code
         return (r.status_code, r.json())
 
     def uninstall_app(self, appname, deviceip):
@@ -163,7 +205,10 @@ class FogDirector():
 
     def stop_app(self, appname):
         _, myapp_details = self.get_myapp_details(appname)
-        url="http://%s/api/v1/appmgr/myapps/%s/action" % (self.ip, myapp_details['myappId'])
+        if self.ssl:
+            url = "https://%s/api/v1/appmgr/myapps/%s/action" % (self.ip, myapp_details['myappId'])
+        else:
+            url = "http://%s/api/v1/appmgr/myapps/%s/action" % (self.ip, myapp_details['myappId'])
         headers = {'x-token-id': self.token}
         data = {"stop":{}}
         r = requests.post(url,data=json.dumps(data),headers=headers,verify=False)
@@ -171,21 +216,30 @@ class FogDirector():
 
     def start_app(self, appname):
         _, myapp_details = self.get_myapp_details(appname)
-        url = "http://%s/api/v1/appmgr/myapps/%s/action" % (self.ip, myapp_details['myappId'])
+        if self.ssl:
+            url = "https://%s/api/v1/appmgr/myapps/%s/action" % (self.ip, myapp_details['myappId'])
+        else:
+            url = "http://%s/api/v1/appmgr/myapps/%s/action" % (self.ip, myapp_details['myappId'])
         headers = {'x-token-id': self.token,'content-type': 'application/json'}
         data = {"start":{}}
         r = requests.post(url,data=json.dumps(data),headers=headers,verify=False)
         return (200, r.json())
 
     def get_apps(self, limit=100):
-        url = "http://%s/api/v1/appmgr/localapps?limit=%d" % (self.ip, limit)
+        if self.ssl:
+            url = "https://%s/api/v1/appmgr/localapps?limit=%d" % (self.ip, limit)
+        else:
+            url = "http://%s/api/v1/appmgr/localapps?limit=%d" % (self.ip, limit)
         headers = {'x-token-id': self.token}
         r = requests.get(url, headers = headers,verify=False)
         apps=r.json()
         return (200, apps)
   
     def get_alerts(self):
-        url = "http:/%s/api/v1/appmgr/alerts/" % (self.ip)
+        if self.ssl:
+            url = "https:/%s/api/v1/appmgr/alerts/" % (self.ip)
+        else:
+            url = "http:/%s/api/v1/appmgr/alerts/" % (self.ip)
         headers = {"x-token-id": self.token}
         r = requests.get(url, headers=headers, verify=False)
         alerts = r.json()

@@ -207,14 +207,15 @@ def addJobs(myappid, devices, status="DEPLOY", payload={}):
         "payload": payload
     }).inserted_id
 def updateJobsStatus(myappid, status):
-    return db.jobs.find_and_modify({
+    return db.jobs.update_many({
         "myappId": myappid
     }, {"$set": {"status": status} } ) 
-def getJob(myappid):
-    return db.jobs.find_one({"myappId": str(myappid)})
+
+def getJobs(myappid = None):
+    if myappid == None:
+        return db.jobs.find()
+    return db.jobs.find({"myappId": str(myappid)})
     
-def getJobs():
-    return db.jobs.find()
 
 # Logs
 def addMyAppLog(log):

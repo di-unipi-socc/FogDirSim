@@ -29,8 +29,8 @@ def main():
                                 "/api/v1/appmgr/apps/<appURL>", # DELETE
                                 "/api/v1/appmgr/localapps", "/api/v1/appmgr/localapps/") # GET
     api.add_resource(MyApps, "/api/v1/appmgr/myapps", "/api/v1/appmgr/myapps/",
-                            "/api/v1/appmgr/myapps/<myappid>") # DELETE
-    api.add_resource(MyAppsAction, "/api/v1/appmgr/myapps/<myappid>/action")
+                            "/api/v1/appmgr/myapps/<myappId>") # DELETE
+    api.add_resource(MyAppsAction, "/api/v1/appmgr/myapps/<myappId>/action")
     api.add_resource(DeviceEvents, "/api/v1/appmgr/devices/<devid>/events/")
     api.add_resource(Audit, "/api/v1/appmgr/audit/")
     api.add_resource(Jobs, "/api/v1/appmgr/jobs", "/api/v1/appmgr/jobs/")
