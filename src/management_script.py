@@ -2,6 +2,7 @@ from modules.APIWrapper import FogDirector
 from modules import costants
 import time
 
+fg = FogDirector("127.0.0.1:5000")
 code = fg.authenticate("admin", "admin_123")
 if code == 401:
     print "Failed Authentication"
