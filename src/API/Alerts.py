@@ -18,7 +18,14 @@ class Alerts(Resource):
         if db.checkToken(args["x-token-id"]):
             alerts = db.getAlerts()
             data = []
-            devices = db.getDevices()
+            for alert in alerts:
+                data.append(alert)
+            data.sort(lambda x,y: -1 if x["time"] < y["time"] else (0 if x["time"] == y["time"] else 1))
+            return {"data": data}, 200, {"content-type": "application/json"}
+        else:
+            return invalidToken()
+
+"""devices = db.getDevices()
             for dev in devices:
                 for installedApp in dev["installedApps"]:
                     job = db.getJob(installedApp)
@@ -43,10 +50,4 @@ class Alerts(Resource):
                                 "time": int(time.time()),
                                 "type": costants.FEW_MEM,
                                 "message": "Application "+appname+" has too few MEM to run well."
-                            })
-                for alert in alerts:
-                    data.append(alert)
-                data.sort(lambda x,y: -1 if x["time"] < y["time"] else (0 if x["time"] == y["time"] else 1))
-            return {"data": data}, 200, {"content-type": "application/json"}
-        else:
-            return invalidToken()
+                            })"""

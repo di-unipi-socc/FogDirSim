@@ -71,37 +71,41 @@ class MyAppsAction(Resource):
                         "message": action+" operation succeeded"
                     })
                     jobid = db.updateJobsStatus(myappId, action)
-                elif action == "undeploy":
+                elif action == "undeploy": # TODO: Fix it
                     data = data[action]
-                    devices = data["devices"]
-                    myapp = db.getMyApp(myappId)
-                    jobs = db.getJobs(myappId)["payload"]
-                    for jobDescr in jobs:
+                    devices_payload = data["devices"]
+                    myapp = db.getMyApp(myappId) # Taken for Name only
+                    jobs = db.getJobs(myappId)
+                    for job in jobs:
+                        jobDescr = job["payload"]
                         resourcesDevs = jobDescr["deploy"]["devices"]
-                        for device in devices:
-                            devid = device["deviceId"]
-                            resourceAsked = device["resourceAsk"]["resources"]
-                            cpu = 0
-                            mem = 0
-                            for dev in resourcesDevs: # TODO TEST it!
-                                if dev["deviceId"] == dev["deviceId"]:
-                                    cpu = dev["resourceAsk"]["resources"]["cpu"]
-                                    mem = dev["resourceAsk"]["resources"]["mem"]
-                            db.deallocateResource(devid,cpu, mem)
-                            db.removeMyAppsFromDevice(myappId, devid)
-                            db.addMyAppLog({
-                                "time": int(time.time()),
-                                "action": action,
-                                "deviceSerialNo": devid,
-                                "appName": myapp["name"],
-                                "appVersion": "1",
-                                "severity": "info",
-                                "user": "admin",
-                                "message": action+" operation succeeded"
-                            })
-                return {
-                    "jobId": str(jobid)
-                }, 200, {"content-type": "application/json"}   
+                        for device in resourcesDevs:
+                            if device["deviceId"] in devices_payload:
+                                cpu = 0
+                                mem = 0
+                                for dev in resourcesDevs: # Searching for my device
+                                    resourceAsked = dev["resourceAsk"]["resources"]
+                                    if dev["deviceId"] in devices_payload:
+                                        cpu = dev["resourceAsk"]["resources"]["cpu"]
+                                        mem = dev["resourceAsk"]["resources"]["memory"]
+                                        db.deallocateResource(dev["deviceId"],cpu, mem)
+                                        db.removeMyAppsFromDevice(myappId, dev["deviceId"])
+                                        db.addMyAppLog({
+                                            "time": int(time.time()),
+                                            "action": action,
+                                            "deviceSerialNo": dev["deviceId"],
+                                            "appName": myapp["name"],
+                                            "appVersion": "1",
+                                            "severity": "info",
+                                            "user": "admin",
+                                            "message": action+" operation succeeded"
+                                        })
+                try: # TODO: Conform to FOGDIRECTOR
+                    return {
+                        "jobId": str(jobid)
+                    }, 200, {"content-type": "application/json"}   
+                except UnboundLocalError:
+                    return {}, 200, {"content-type": "application/json"}
             except KeyError, e:
                 traceback.print_exc()
                 return {

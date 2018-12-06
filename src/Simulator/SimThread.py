@@ -52,9 +52,9 @@ class SimThread(Thread):
                         "value": costants.MYAPP_INSTALLED,
                         "type": costants.MYAPP_STATUS
                     })
+            db.deleteFromSamplingAlerts()
             for job in db.getJobs():
                 # Cleaning all alerts inserted in previous simulation iter
-                db.deleteFromSamplingAlerts()
                 for device in job["payload"]["deploy"]["devices"]:
                     db.addSimulationValues({
                         "type": costants.APP_ON_DEVICE,

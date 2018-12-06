@@ -188,9 +188,7 @@ class FogDirector():
         for devip in devicesip:
             _, device_details = self.get_device_details(devip)
             data["deploy"]["devices"].append({"deviceId":device_details['deviceId'], "resourceAsk":askedResources})
-        print json.dumps(data)
         r = requests.post(url,data=json.dumps(data),headers=headers,verify=False)
-        print r.status_code
         return (r.status_code, r.json())
 
     def uninstall_app(self, appname, deviceip):
@@ -209,7 +207,7 @@ class FogDirector():
             url = "https://%s/api/v1/appmgr/myapps/%s/action" % (self.ip, myapp_details['myappId'])
         else:
             url = "http://%s/api/v1/appmgr/myapps/%s/action" % (self.ip, myapp_details['myappId'])
-        headers = {'x-token-id': self.token}
+        headers = {'x-token-id': self.token, "content-type": "application/json"}
         data = {"stop":{}}
         r = requests.post(url,data=json.dumps(data),headers=headers,verify=False)
         return (200, r.json())
@@ -237,9 +235,9 @@ class FogDirector():
   
     def get_alerts(self):
         if self.ssl:
-            url = "https:/%s/api/v1/appmgr/alerts/" % (self.ip)
+            url = "https://%s/api/v1/appmgr/alerts/" % (self.ip)
         else:
-            url = "http:/%s/api/v1/appmgr/alerts/" % (self.ip)
+            url = "http://%s/api/v1/appmgr/alerts/" % (self.ip)
         headers = {"x-token-id": self.token}
         r = requests.get(url, headers=headers, verify=False)
         alerts = r.json()
