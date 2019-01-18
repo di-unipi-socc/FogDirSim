@@ -13,7 +13,7 @@ All the API not reported here, are not available yet.
 ###### Authentication
  - `POST /api/v1/appmgr/tokenservice` To create a new token
     - Use this function to create a new token. A username and password have to be passed as basic HTTP Authentication. For the moment, these credential are hardcoded (admin, admin_123) and the token is not checked by other functions. 
- - `DELETE /api/v1/appmgr/tokenservice/<token>` To delete a valid token
+ - `DELETE /API/v1/appmgr/tokenservice/<token>` To delete a valid token
     - Delete the token passed in the URL from the valid tokens. This function needs `x-token-id` field in the header to be executed
 
 ###### Devices
@@ -34,7 +34,7 @@ All the API not reported here, are not available yet.
  - `POST /api/v1/appmgr/localapps/upload` - To add an application from a file 
     - Use this function to upload an application. It must have a `package.yaml` file formatted as required for the IOX Application. This API accepts the following headers: `x-publish-on-upload`
  - `PUT /api/v1/appmgr/localapps/<appid>:<appversion>` - To update the application metadata, e.g. published status
-    - Update an application (i.e. publish it, change description...). The original API requires to have all the field returned by the GET API, this API accepts also only the changed field. The `<appversion>` can be omitted, in that case its value becames 1.
+    - Update an application (i.e. publish it, change description...). The original API requires to have all the field returned by the GET API, this API accepts also only the changed field. The `<appversion>` can be omitted, in that case its value becomes 1.
  - `DELETE /api/v1/appmgr/apps/<appid>` - To delete the application (it have to be uninstalled from every device)
     - Delete an application passing its `<appid>` in the URL. This API accepts the following headers: `x-unpublish-on-delete`. If `x-unpublish-on-delete` is not specified, its values is `false`.
  - `GET /api/v1/appmgr/localapps/` - Get all the app (published and unpublished)
@@ -85,19 +85,22 @@ All the API not reported here, are not available yet.
 
 ###### Application Events (Audit)
  - `GET /api/v1/appmgr/audit` - provides information about app state change events, who performed them, when they were performed and what the operation was. These audit information can be filtered by device serial id, by app and version or even by the user who performed it (but the official documentation doesn't report the exact name to use this filters then the filters are not implemented).
- This API supports the following URL parameter:
+ This API supports* the following URL parameter:
     - `limit`
     - `offset`
     - `searchByAction`
 
+###### Alerts
+ - `GET /api/v1/appmgr/alerts` - provides the alerts about the infrastructure and applications status
+
 ###### NOT YET IMPLEMENTED
  - `/api/v1/appmgr/devices/<devid>/apps/<myappdid>/logs` 
- - `/api/v1/appmgr/alerts`
+ - The Audit API is not fully supported
 
 ## Tested functions
 In order to run the tests, execute `PYTHONPATH=$PYTHONPATH:tests py.test`
 
-All the tests are run over the Simulator AND Fog Director. They success on both systems.
+All the tests are run over the Simulator AND Fog Director. They succeed in both systems.
  - Simple login and logout
  - Add a device
  - Try to add an already inserted device
@@ -113,13 +116,15 @@ All the tests are run over the Simulator AND Fog Director. They success on both 
  - Published LocalApp
 
 ## Infrastructure
-In order to be executed, this simulator requires the infrastructure on which the operation have to be simulated.
+In order to be executed, this simulator requires the infrastructure on which the operation has to be simulated.
 The Infrastructure is composed by:
  - Devices
-    The collection `devices` describes the devices of the infrastructure, identified by `IP` and `PORT`. Addictional information required are: 
+    The collection `devices` describes the devices of the infrastructure, identified by `IP` and `PORT`. Additional information required are: 
     - `totalCPU`: the maximum CPU available on the device
     - `totalMEM`: the maximum Memory available on the device
-    - `distribution.CPU`: an array that contains the distribution of *free* CPU used with time references (`timeStart`-`timeEnd` identify the time when this distribution have to be consider valid. The interval `0-24` have to be covered adding all the time slices) 
+    - `totalVCPU`: the amount of Virtual CPU on the device
+    - `maxVCPUPerApp`: the maximum number of VCPU for application
+    - `distribution.CPU`: an array that contains the distribution of *free* CPU used with time references (`timeStart`-`timeEnd` identify the time when this distribution have to be considered valid. The interval `0-24` have to be covered adding all the time slices) 
     - `distribution.MEM`: an array that contains the distribution of MEM used with time references 
 
     JSON rappresentation of a generic device:
@@ -151,20 +156,26 @@ The Infrastructure is composed by:
     ```
 
 ## Limitations / Main differences from Fog Director
- - The simulator doesn't manage multiversions applications. Each application is identified by an ID that is unique among all others application and versions (then in `/api/v1/appmgr/localapps/<appid>:<appversion>` the version is ignored).
+ - The simulator doesn't manage multi versions applications. Each application is identified by an ID that is unique among all others application and versions (then in `/api/v1/appmgr/localapps/<appid>:<appversion>` the version is ignored).
  - In the PUT `/api/v1/appmgr/localapps/<appid>:<appversion>` API, also not completed description of application is accepted. In Fog Director this "partial body" returns an error.
- - When new device is added, all the information on the device are returned (the discovery phase is not simulated)
- - The device events name type are assumed from the manual and they should not be as FogDirector types
+ - When a new device is added, all the information on the device are returned (the discovery phase is not simulated)
+ - The device events names type are assumed from the manual and they should not be as FogDirector types
  - Some IDs that are interger in FogDirector, in the simulator are strings.
  - Only one user is admitted (`admin` user)
- - This simulator not manages Network Interfaces Resources
+ - This simulator does not manage Network Interfaces Resources
  - Some API are created over documentation, on the sandbox uses to validate them they don't works (/jobs, /myapps)
  - Simulator doens't chech SHA1 in package.yaml of localapp
- - On simulator you can start or stop the myapp. On GUI you can start or stop the myapp on specific device (even if there exists API that supports the other behaviour)
+ - On simulator you can start or stop the myapp. On GUI you can start or stop the myapp on a specific device (even if there exists API that supports the other behaviour)
+
+## Assertion and simplification
+ - The management is done by a single user (no multi-user management)
+ - All the operations are atomically and are computed once for every simulation run
+ - We assume that for every myapps only one deploy can be done. It simplifies the simulation and monitoring system but not reduce the possible states of the tool. This good practice is also implicitely suggested using the GUI.
+
 
 ## I know that I know nothing. (Socrates)
- - We don't know how to manage case where, deploying an application on multiple devices, one of them has no resources
- - We don't know is a single Myapp can be deployed twice on a device
+ - We don't know how to manage a case where, deploying an application on multiple devices, one of them has no resources
+ - We don't know if a single Myapp can be deployed twice on a device
  - We don't know WHY GET /myapps returns an array but, with searchByName parameter returns a single element
- - I don't understand how this bad designed tool can be used in production
- - Why exists the job.
+ - I don't understand how this badly designed tool can be used in a production environment
+ - Why exists the `job` definition
