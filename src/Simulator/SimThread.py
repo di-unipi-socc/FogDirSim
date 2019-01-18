@@ -1,4 +1,5 @@
 from threading import Thread, Event
+import time
 import Database as db
 from misc.ResourceSampling import sampleCPU, sampleMEM
 from misc.config import queue
@@ -12,7 +13,7 @@ class SimThread(Thread):
     def run(self):
         global iter_count
         while not self.shutdown_flag.is_set():
-            queue.execute_next_task()
+            queue.execute_next_task() # Executes a task if present, otherwise returns immediately
             iter_count += 1
             device_sampled_values = {}
             for dev in db.getDevices():   
