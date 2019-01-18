@@ -1,5 +1,4 @@
-from modules.APIWrapper import FogDirector
-from modules import costants
+from APIWrapper import FogDirector
 import time
 
 fg = FogDirector("127.0.0.1:5000")
@@ -12,18 +11,13 @@ _, device = fg.add_device("10.10.20.51", "cisco", "cisco")
 fg.add_device("10.10.20.52", "cisco", "cisco")
 
 # Uploading Application
-code, text = fg.add_app("../tests/NettestApp2V1_lxc.tar.gz", publish_on_upload=True)
-if code != 201:
-    print text
+code, localapp = fg.add_app("./NettestApp2V1_lxc.tar.gz", publish_on_upload=True)
 
 # Creating myapp endpoint
-_, localapps = fg.get_apps()
-app = localapps["data"][0]
-localAppId = app["localAppId"]
-myappname = "FirstMyApp"
-_, myapp = fg.create_myapp(localAppId, myappname)
+myappname = "MyFirstApp"
+_, myapp = fg.create_myapp(localapp["localAppId"], myappname)
 
-# Deploying on Device with default resources
+# Deploying on Devices with default resources
 code, res = fg.install_app(myappname, ["10.10.20.51"])
 while code == 400:
     code, res = fg.install_app(myappname, ["10.10.20.51"])
@@ -34,10 +28,7 @@ while code == 400:
 
 fg.start_app(myappname)
 
-#import sys
-#sys.exit()
-
-fg.add_app("../tests/TestApp2.tar.gz", publish_on_upload=True)
+fg.add_app("./TestApp2.tar.gz", publish_on_upload=True)
 # Creating myapp endpoint
 _, localapps = fg.get_apps()
 app = localapps["data"][1]
@@ -61,13 +52,13 @@ while True:
     time.sleep(5)
     _, alerts = fg.get_alerts()
     for alert in alerts["data"]:
-        if 0 == alert["pagiaros_type"]:
+        if 0 == alert["type"]: #
             if alert["appName"] == "FirstMyApp":
-                "stop App"
+                #"stop App"
                 fg.stop_app("FirstMyApp")
-                "unistall App"
+                #"unistall App"
                 fg.uninstall_app("FirstMyApp", alert["ipAddress"])
-                "install App"
+                #"install App"
                 fg.install_app("FirstMyApp", [otherDevice(alert["ipAddress"])])
-                "start app"
+                #"start app"
                 fg.start_app("FirstMyApp")

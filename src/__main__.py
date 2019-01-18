@@ -15,11 +15,13 @@ from API.Alerts import Alerts
 import Database as db
 from Simulator.SimThread import SimThread
 import signal, threading, time, Simulator
+from misc import config
+
+app = config.flaskApp
 
 def main():
-    app = Flask(__name__)
+    global app
     api = Api(app)
-
     api.add_resource(Devices, "/api/v1/appmgr/devices", "/api/v1/appmgr/devices/<deviceid>")
     api.add_resource(Authentication, "/api/v1/appmgr/tokenservice","/api/v1/appmgr/tokenservice/<token>")
     api.add_resource(Tags, "/api/v1/appmgr/tags")
@@ -41,7 +43,7 @@ def main():
         simulatorThread.shutdown_flag.set()
         exit()
 
-    print "Creating Simulation Thread"
+    print("Creating Simulation Thread")
     simulatorThread = SimThread()
     signal.signal(signal.SIGINT, service_shutdown)
     simulatorThread.start()

@@ -22,11 +22,9 @@
   color: #61dafb;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.card {
+  float: left;
+}
+.card:nth-child(2n+1) {
+  clear: left;   
 }

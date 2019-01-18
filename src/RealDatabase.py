@@ -22,6 +22,8 @@ db.Rdevices.insert_one({
             "deviceId": 1,
             "totalCPU": 1000,
             "totalMEM": 128,
+            "totalVCPU": 2,
+            "maxVCPUPerApp": 2,
             "distributions": { 
                 "CPU": [
                     {
@@ -46,6 +48,8 @@ db.Rdevices.insert_one({
             "port": 8443,
             "deviceId": 2,
             "totalCPU": 1000,
+            "totalVCPU": 2,
+            "maxVCPUPerApp": 2,
             "totalMEM": 128,
             "distributions": { 
                 "CPU": [

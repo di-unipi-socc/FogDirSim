@@ -1,7 +1,6 @@
 import requests
 import json
 import base64
-import costants
 
 # Suppressing all warning given by the unverified http requestes
 import urllib3

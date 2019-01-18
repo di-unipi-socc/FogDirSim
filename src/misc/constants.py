@@ -7,8 +7,12 @@ JOB_STARTED = 6
 JOB_STOPPED = 7
 JOB_STATUS = 8
 APP_ON_DEVICE = 9
-APP_ON_DEVICE_WITH_NO_RESOURCES = 10
+APP_ON_DEVICE_WITH_NO_RESOURCES_CPU = 10
+APP_ON_DEVICE_WITH_NO_RESOURCES_MEM = 11
 
+MYAPP_PROFILE_LOW = "relax"
+MYAPP_PROFILE_NORMAL = "normal"
+MYAPP_PROFILE_HIGH = "angry"
 
 # Alerts Type
 APP_HEALTH = 0 # App is corrupted on a the device or ***has some other issue with its health***. 

@@ -15,7 +15,6 @@ class Alerts(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument('x-token-id', location='headers')
         args = parser.parse_args()
-
         if db.checkToken(args["x-token-id"]):
             alerts = db.getAlerts()
             data = []

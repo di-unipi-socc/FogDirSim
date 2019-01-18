@@ -18,10 +18,11 @@ code {
   grid-template-columns: repeat(8, 1fr);
   grid-template-areas:
     'deviceId deviceId deviceId deviceId deviceId timeInstalled timeInstalled timeInstalled'
-    'start start start start stop stop stop stop';
+    'start start start start start start start start';
   grid-gap: 1px;
   background-color: #2196F3;
   padding: 1px;
+  margin-top: 5px
 }
 .myAppDeviceGrid > div {
   background-color: rgba(255, 255, 255, 0.8);

@@ -4,9 +4,10 @@ import SECRETS as config
 import RealDatabase as rdb
 from bson.objectid import ObjectId
 from bson.int64 import Int64
-import modules.ResourceSampling as sampling
+import misc.ResourceSampling as sampling
 import threading
-from  modules.Exceptions import NoResourceError, MyAppInstalledOnDeviceError
+from misc import constants
+from  misc.Exceptions import NoResourceError, MyAppInstalledOnDeviceError
 
 client = pm.MongoClient("mongodb://%s:%s@%s:%d" % (config.db_username, 
                                                    config.db_password, 
@@ -54,6 +55,7 @@ def addDevice(ipAddress, port, user, pasw):
     devSpecs["tags"] = []
     db.devices.insert_one(devSpecs)
     return devSpecs
+
 def deviceExists(ipAddress, port):
     return db.devices.count_documents({"ipAddress": ipAddress, "port": port}) > 0
 def getDevice(devid):
@@ -103,22 +105,22 @@ def checkAndAllocateResource(devid, cpu, mem):
         )
 def deallocateResource(devid, cpu, mem):
     with lock:
-        device = getDevice(devid)
         db.devices.find_one_and_update(
             {"deviceId": devid},
             { "$inc": {"usedCPU": -cpu, "usedMEM": -mem} }
         )     
-def addMyAppToDevice(myappid, devid):
-    r = db.devices.find_one_and_update({
+def addMyAppToDevice(myappid, devid, profile):
+    db.devices.find_one_and_update({
         "deviceId": Int64(devid)
     }, {
-        "$addToSet": {"installedApps": myappid}
+        "$addToSet": {"installedApps": {"appid": myappid, "profile": profile}}
     })
+
 def removeMyAppsFromDevice(myappid, devid):
     db.devices.find_one_and_update({
         "deviceId": devid
     }, {
-        "$pull": {"installedApps": myappid}
+        "$pull": {"installedApps": {"appid": myappid}}
     })
 
 # Tags
@@ -143,6 +145,7 @@ def tagDevice(deviceid, tag):
 # Local Application
 def addLocalApplication(appdata):
     return db.applications.insert_one(appdata).inserted_id
+    
 def localApplicationExists(appid, version=1):
     return db.applications.count_documents({"localAppId": appid, "version": version}) > 0
 def getLocalApplications():
@@ -199,12 +202,13 @@ def getMyApps(searchByName=None):
         return db.myapps.find()
     
 # Jobs App
-def addJobs(myappid, devices, status="DEPLOY", payload={}):
+def addJobs(myappid, devices, profile=constants.MYAPP_PROFILE_NORMAL, status="DEPLOY",payload={}):
     return db.jobs.insert_one({
         "myappId": myappid,
         "status": status,
         "devices": devices,
-        "payload": payload
+        "payload": payload,
+        "profile": profile
     }).inserted_id
 def updateJobsStatus(myappid, status):
     return db.jobs.update_many({

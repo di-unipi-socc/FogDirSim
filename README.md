@@ -95,7 +95,7 @@ All the API not reported here, are not available yet.
  - `/api/v1/appmgr/alerts`
 
 ## Tested functions
-In order to run the tests, execute `PYTHONPATH=$PYTHONPATH:test py.tests`
+In order to run the tests, execute `PYTHONPATH=$PYTHONPATH:tests py.test`
 
 All the tests are run over the Simulator AND Fog Director. They success on both systems.
  - Simple login and logout
