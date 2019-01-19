@@ -18,9 +18,14 @@ class MyAppsAction(Resource):
                     data = data[action]
                     devices = data["devices"]  
                     app = db.getLocalApplicationBySourceName(myapp["sourceAppName"])
-                    if not app["published"]: # This is not checked in FogDirector
+                    if not app["published"]: # This is not checked in FogDirector, but in unpublished app it crash
                         return {"error": "the app have to be published"}, 400, {"content-type": "application/json"}
                     deviceSuccessful = []
+                    if False: #TODO: if myapp name already exists
+                        return {
+                            "code": 1304,
+                            "description": "An app with name com.cisco.eng.ccm.model.app.App@95815c9e already exists." # Cisco does not return the name but the identifier
+                        }, 409, {"content-type": "application/json"} 
                     for device in devices:
                         devid = device["deviceId"]
                         resourceAsked = device["resourceAsk"]["resources"]
@@ -38,6 +43,7 @@ class MyAppsAction(Resource):
                                 "appName": myapp["name"],
                                 "appVersion": "1",
                                 "severity": "info",
+                                "profile": profile,
                                 "user": "admin",
                                 "message": action+" operation succeeded"
                             })
@@ -60,7 +66,7 @@ class MyAppsAction(Resource):
                             
                     jobid = db.addJobs(myappId, deviceSuccessful, profile=profile, payload=request.json)
                     
-                elif action == "start" or action == "stop":
+                elif action == "start" or action == "stop": # TODO: add response for this request
                     db.addMyAppLog({
                         "time": int(time.time()),
                         "action": action,
@@ -72,7 +78,7 @@ class MyAppsAction(Resource):
                     })
                     jobid = db.updateJobsStatus(myappId, action)
                     
-                elif action == "undeploy": # TODO: Fix it
+                elif action == "undeploy": # TODO: add correct response for this request
                     data = data[action]
                     devices_payload = data["devices"]
                     myapp = db.getMyApp(myappId) # Taken for Name only
@@ -101,7 +107,8 @@ class MyAppsAction(Resource):
                                             "user": "admin",
                                             "message": action+" operation succeeded"
                                         })
-                try: # TODO: Conform to FOGDIRECTOR
+                 # TODO: Conform to FOGDIRECTOR
+                try:
                     return {
                         "jobId": str(jobid)
                     }, 200, {"content-type": "application/json"}   
@@ -113,6 +120,9 @@ class MyAppsAction(Resource):
                         "code": 1001,
                         "description": "Given request is not valid: "+str(e)
                     }, 400, {"content-type": "application/json"}
-            return
+            return {
+                    "code": 500,
+                    "description": "An unexpected error happened. {0}"
+                }, 500, {"content-type": "application/json"} 
         else:
             return invalidToken()
