@@ -172,7 +172,6 @@ The Infrastructure is composed by:
  - All the operations are atomically and are computed once for every simulation run
  - We assume that for every myapps only one deploy can be done. It simplifies the simulation and monitoring system but not reduce the possible states of the tool. This good practice is also implicitely suggested using the GUI.
 
-
 ## I know that I know nothing. (Socrates)
  - We don't know how to manage a case where, deploying an application on multiple devices, one of them has no resources
  - We don't know if a single Myapp can be deployed twice on a device
