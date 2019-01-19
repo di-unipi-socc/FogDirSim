@@ -24,6 +24,8 @@ db.Rdevices.insert_one({
             "totalMEM": 128,
             "totalVCPU": 2,
             "maxVCPUPerApp": 2,
+            "chaos_down_prob": 0.4,
+            "chaos_revive_prob": 0.2,
             "distributions": { 
                 "CPU": [
                     {
@@ -51,6 +53,8 @@ db.Rdevices.insert_one({
             "totalVCPU": 2,
             "maxVCPUPerApp": 2,
             "totalMEM": 128,
+            "chaos_down_prob": 0.4,
+            "chaos_revive_prob": 0.2,
             "distributions": { 
                 "CPU": [
                     {

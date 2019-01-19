@@ -1,7 +1,7 @@
 from flask import Flask, request, make_response, Response
 from flask_restful import Api, Resource, reqparse
 import time, json, os, yaml, io
-from API.Authentication import invalidToken
+from API_executor.Authentication import invalidToken
 import tarfile
 
 import Database as db

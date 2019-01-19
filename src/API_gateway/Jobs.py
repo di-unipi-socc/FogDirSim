@@ -1,15 +1,13 @@
 from flask import Flask, request
 from flask_restful import Api, Resource, reqparse
 import time, json
-from API.Authentication import invalidToken
+import Database as db
 from misc.config import queue
 
-class TaggingDevices(Resource):
-
-    def post(self, tagid):
+class Jobs(Resource):
+    def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('x-token-id', location='headers')
         args = parser.parse_args()
-        data = request.json #{"devices":[deviceids]}}
-        identifier = queue.add_for_processing(("TaggingDevices", "post"), args, data, tagid)
+        identifier = queue.add_for_processing(("Jobs", "get"), args)
         return queue.get_result(identifier)

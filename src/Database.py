@@ -52,10 +52,16 @@ def addDevice(ipAddress, port, user, pasw):
     devSpecs["usedCPU"] = 0 # these two variables are computed only with apps installed by the simulator
     devSpecs["usedMEM"] = 0 
     devSpecs["installedApps"] = []
+    devSpecs["alive"] = True
     devSpecs["tags"] = []
     db.devices.insert_one(devSpecs)
     return devSpecs
-
+def setDeviceDown(deviceId):
+    db.devices.update_one({"deviceId": deviceId}, {"alive": False})
+def setDeviceAlive(deviceId):
+    db.devices.update_one({"deviceId": deviceId}, {"alive": True})
+def deviceIsAlive(deviceId):
+    return db.devices.count_documents({"deviceId": deviceId, "alive": True}) > 0
 def deviceExists(ipAddress, port):
     return db.devices.count_documents({"ipAddress": ipAddress, "port": port}) > 0
 def getDevice(devid):

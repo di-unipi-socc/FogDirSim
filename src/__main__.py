@@ -1,17 +1,17 @@
 from flask import Flask, render_template, jsonify
 from flask_restful import Api, Resource, reqparse
 
-from API.Devices import Devices
-from API.TaggingDevices import TaggingDevices
-from API.Tags import Tags
-from API.Applications import Applications
-from API.Authentication import Authentication
-from API.MyApps import MyApps
-from API.MyAppsAction import MyAppsAction
-from API.Audit import Audit
-from API.DevicesEvents import DeviceEvents
-from API.Jobs import Jobs
-from API.Alerts import Alerts
+from API_gateway.Devices import Devices
+from API_gateway.TaggingDevices import TaggingDevices
+from API_gateway.Tags import Tags
+from API_gateway.Applications import Applications
+from API_gateway.Authentication import Authentication
+from API_gateway.MyApps import MyApps
+from API_gateway.MyAppsAction import MyAppsAction
+from API_gateway.Audit import Audit
+from API_gateway.DevicesEvents import DeviceEvents
+from API_gateway.Jobs import Jobs
+from API_gateway.Alerts import Alerts
 import Database as db
 from Simulator.SimThread import SimThread
 import signal, threading, time, Simulator

@@ -1,7 +1,7 @@
 from flask import Flask, request
 from flask_restful import Api, Resource, reqparse
 from misc.Exceptions import MyAppInstalledOnDeviceError
-from API.Authentication import invalidToken
+from API_executor.Authentication import invalidToken
 from misc import constants
 import Database as db
 

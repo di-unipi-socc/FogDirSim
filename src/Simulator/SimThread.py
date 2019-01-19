@@ -4,6 +4,7 @@ import Database as db
 from misc.ResourceSampling import sampleCPU, sampleMEM
 from misc.config import queue
 from misc import constants
+import random
 iter_count = 0
 
 class SimThread(Thread):
@@ -16,42 +17,52 @@ class SimThread(Thread):
             queue.execute_next_task() # Executes a task if present, otherwise returns immediately
             iter_count += 1
             device_sampled_values = {}
-            for dev in db.getDevices():   
-                sampled_free_cpu = sampleCPU(dev["deviceId"]) - dev["usedCPU"] 
-                sampled_free_mem = sampleMEM(dev["deviceId"]) - dev["usedMEM"]
-                device_sampled_values[dev["deviceId"]] = {"free_cpu": sampled_free_cpu, "free_mem": sampled_free_mem}
-                if sampled_free_cpu <= 0:
+            for dev in db.getDevices():
+                deviceId = dev["deviceId"]
+                r = random.random()
+                if r["alive"] and r <= dev["chaos_down_prob"]:
+                    db.setDeviceDown(deviceId)
+                if not r["alive"] and r <= dev["chaos_revive_prob"]:
+                    db.setDeviceAlive(deviceId)             
+                if db.deviceIsAlive(deviceId):
+                    sampled_free_cpu = sampleCPU(deviceId) - dev["usedCPU"] 
+                    sampled_free_mem = sampleMEM(deviceId) - dev["usedMEM"]
+                    device_sampled_values[deviceId] = {"free_cpu": sampled_free_cpu, "free_mem": sampled_free_mem}
+                    if sampled_free_cpu <= 0:
+                        db.addSimulationValues({
+                            "time": iter_count,
+                            "type": constants.DEVICE_LOW_CPU,
+                            "deviceId": deviceId,
+                            "value": sampled_free_mem
+                        })
+                    if sampled_free_mem <= 0:
+                        db.addSimulationValues({
+                            "time": iter_count,
+                            "type": constants.DEVICE_LOW_MEM,
+                            "deviceId": deviceId,
+                            "value": sampled_free_mem
+                        })
                     db.addSimulationValues({
-                        "time": time.time(),
-                        "type": constants.DEVICE_LOW_CPU,
-                        "deviceId": dev["deviceId"],
-                        "value": sampled_free_mem
+                        "time": iter_count,
+                        "type": constants.DEVICE_CPU_USED,
+                        "deviceId": deviceId,
+                        "value": dev["usedCPU"]
                     })
-                if sampled_free_mem <= 0:
                     db.addSimulationValues({
-                        "time": time.time(),
-                        "type": constants.DEVICE_LOW_MEM,
-                        "deviceId": dev["deviceId"],
-                        "value": sampled_free_mem
+                        "time": iter_count,
+                        "type": constants.DEVICE_MEM_USED,
+                        "deviceId": deviceId,
+                        "value": dev["usedMEM"]
                     })
-            for myapp in db.getMyApps():
-                # If exists a job with mypp => it is installed
-                jobs = db.getJobs(myapp["myappId"])
-                if jobs.count() == 0:
+                else: 
                     db.addSimulationValues({
-                        "myappId": myapp["myappId"],
-                        "value": constants.MYAPP_UNINSTALLED,
-                        "type": constants.MYAPP_STATUS
+                        "time": iter_count,
+                        "type": constants.DEVICE_DOWN,
+                        "deviceId": deviceId
                     })
-                else:
-                    db.addSimulationValues({
-                        "myappId": myapp["myappId"],
-                        "value": constants.MYAPP_INSTALLED,
-                        "type": constants.MYAPP_STATUS
-                    })
-            db.deleteFromSamplingAlerts()
+            
+            db.deleteFromSamplingAlerts() # Cleaning all alerts inserted in previous simulation iter
             for job in db.getJobs():
-                # Cleaning all alerts inserted in previous simulation iter
                 for device in job["payload"]["deploy"]["devices"]:
                     db.addSimulationValues({
                         "type": constants.APP_ON_DEVICE,
@@ -78,7 +89,7 @@ class SimThread(Thread):
                             "type": "status",
                             "message": "The node on which this app is installed has critical problem with CPU resource",
                             #"message": "The desired state of the app on this device was \"running\" but the actual state is \"stopped\"",
-                            "time": int(time.time()), # Relative
+                            "time": int(iter_count), # Relative
                             "source": "Device periodic report",
                             "action": "",
                             "status": "ACTIVE",
@@ -100,7 +111,7 @@ class SimThread(Thread):
                             "severity": "critical",
                             "message": "The node on which this app is installed has critical problem with Memory resource",
                             #"message": "The desired state of the app on this device was \"running\" but the actual state is \"stopped\"",
-                            "time": int(time.time()), # Relative
+                            "time": int(iter_count), # Relative
                             "source": "Device periodic report",
                             "action": "",
                             "status": "ACTIVE",

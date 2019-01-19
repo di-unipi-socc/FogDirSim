@@ -1,7 +1,7 @@
 from flask import Flask, request
 from flask_restful import Api, Resource, reqparse
 import time, json
-from API.Authentication import invalidToken
+from API_executor.Authentication import invalidToken
 import Database as db
 
 def post(args, data, tagid):

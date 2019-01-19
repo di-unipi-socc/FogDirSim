@@ -161,10 +161,10 @@ The Infrastructure is composed by:
  - When a new device is added, all the information on the device are returned (the discovery phase is not simulated)
  - The device events names type are assumed from the manual and they should not be as FogDirector types
  - Some IDs that are interger in FogDirector, in the simulator are strings.
- - Only one user is admitted (`admin` user)
+ - Only one user is admitted (`admin` user, `admin123` password)
  - This simulator does not manage Network Interfaces Resources
- - Some API are created over documentation, on the sandbox uses to validate them they don't works (/jobs, /myapps)
- - Simulator doens't chech SHA1 in package.yaml of localapp
+ - Some API are created over documentation, the logic is understood looking at the Sandbox responses (/jobs, /myapps)
+ - Simulator doens't check SHA1 in package.yaml of localapp
  - On simulator you can start or stop the myapp. On GUI you can start or stop the myapp on a specific device (even if there exists API that supports the other behaviour)
 
 ## Assertion and simplification

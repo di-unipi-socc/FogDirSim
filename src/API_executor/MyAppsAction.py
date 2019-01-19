@@ -1,7 +1,7 @@
 from flask import Flask, request
 from flask_restful import Api, Resource, reqparse
 import time, traceback
-from API.Authentication import invalidToken
+from API_executor.Authentication import invalidToken
 from misc.Exceptions import NoResourceError
 from misc import constants
 import Database as db

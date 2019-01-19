@@ -1,7 +1,6 @@
 from flask import Flask, request
 from flask_restful import Api, Resource, reqparse
 import time, traceback
-from API.Authentication import invalidToken
 from misc.config import queue
 import Database as db
 

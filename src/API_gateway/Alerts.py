@@ -1,14 +1,15 @@
 from flask import Flask, request
 from flask_restful import Api, Resource, reqparse
-from API.Authentication import invalidToken
 import time, json
-import Database as db
+from misc.ResourceSampling import sampleMyAppStatus
+from misc import constants
 from misc.config import queue
 
-class Jobs(Resource):
+class Alerts(Resource):
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('x-token-id', location='headers')
         args = parser.parse_args()
-        identifier = queue.add_for_processing(("Jobs", "get"), args)
-        return queue.get_result(identifier)
+        return queue.get_result(
+            queue.add_for_processing(("Alerts", "get"), args)
+        )
