@@ -57,9 +57,9 @@ def addDevice(ipAddress, port, user, pasw):
     db.devices.insert_one(devSpecs)
     return devSpecs
 def setDeviceDown(deviceId):
-    db.devices.update_one({"deviceId": deviceId}, {"alive": False})
+    db.devices.update_one({"deviceId": deviceId}, {"$set": {"alive": False}})
 def setDeviceAlive(deviceId):
-    db.devices.update_one({"deviceId": deviceId}, {"alive": True})
+    db.devices.update_one({"deviceId": deviceId}, {"$set": {"alive": True}})
 def deviceIsAlive(deviceId):
     return db.devices.count_documents({"deviceId": deviceId, "alive": True}) > 0
 def deviceExists(ipAddress, port):
@@ -176,13 +176,14 @@ def getLocalApplicationBySourceName(sourceAppName):
 
 # My apps
 myapp_lock = threading.Lock()
-def createMyApp(appname, sourceAppName, version, apptype):
+def createMyApp(appname, sourceAppName, version, apptype, minjobs=0):
     with myapp_lock:
         myappappid = db.myapps.insert_one({
             "name": appname,
             "sourceAppName": sourceAppName,
             "version": version,
-            "type": apptype
+            "type": apptype,
+            "minjobs": minjobs
         }).inserted_id
         return db.myapps.find_one_and_update({"_id": myappappid}, 
                                                 {"$set": {
@@ -194,9 +195,9 @@ def deleteMyApp(appid):
         if db.devices.count_documents({"installedApps": appid}) > 0:
             raise MyAppInstalledOnDeviceError("Myapps is installed on some device")
         return db.myapps.find_one_and_delete({"_id": ObjectId(appid)})
-def myAppExists(sourceAppName):
+def myAppExists(name):
     with myapp_lock:
-        return db.myapps.count_documents({"sourceAppName": sourceAppName}) > 0
+        return db.myapps.count_documents({"name": name}) > 0
 def getMyApp(myappid):
     with myapp_lock:
         return db.myapps.find_one({"myappId": myappid})
@@ -219,7 +220,11 @@ def updateJobsStatus(myappid, status):
     return db.jobs.update_many({
         "myappId": myappid
     }, {"$set": {"status": status} } ) 
-
+def uninstallJob(myappId, deviceId):
+    db.jobs.update({
+        "myappId": myappId,
+    }, { "$pull": { 'devices': { "deviceId": deviceId } } })
+    db.jobs.remove({ "devices": { "$exists": True, "$size": 0 } })
 def getJobs(myappid = None):
     if myappid == None:
         return db.jobs.find()

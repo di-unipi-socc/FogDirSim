@@ -58,11 +58,7 @@ def main():
         values = Simulator.SimThread.getMyAppsSampling()
         return jsonify(values)
 
-    @app.route("/result/myappsstartstopdevice")
-    def result_appDevice():
-        return jsonify(Simulator.SimThread.getAppOnDeviceSampling())
-    return app
-
+    return app 
 if __name__ == "__main__":
     app = main()
     app.run(debug=True, use_reloader=False)

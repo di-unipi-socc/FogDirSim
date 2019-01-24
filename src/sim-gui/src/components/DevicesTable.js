@@ -21,11 +21,15 @@ export default class DevicesTable extends React.Component {
         <thead>
           <tr>
             <th>#</th>
-            <th>Device ID</th>
-            <th>IP Address</th>
+            <th>ID</th>
+            <th>IP</th>
             <th>Port</th>
             <th>CRITICAL CPU</th>
-            <th>MEMORY UNDER HIGH PRESSURE</th>
+            <th>CRITICAL MEM</th>
+            <th>AVG CPU Usage</th>
+            <th>AVG MEM Usage</th>
+            <th>AVG #MYAPP</th>
+            <th>DOWN PROB</th>
           </tr>
         </thead>
         <tbody>
@@ -36,8 +40,12 @@ export default class DevicesTable extends React.Component {
                 <td>{dev.deviceId}</td>
                 <td>{dev.ipAddress}</td>
                 <td>{dev.port}</td>
-                <td>{dev.FEW_CPU_PERCENTAGE * 100} %</td>
-                <td>{dev.FEW_MEM_PERCENTAGE * 100} %</td>
+                <td>{(dev.CRITICAL_CPU_PERCENTAGE * 100).toFixed(2)} %</td>
+                <td>{(dev.CRITICAL_MEM_PERCENTAGE * 100).toFixed(2)} %</td>
+                <td>{(dev.AVERAGE_CPU_USED).toFixed(2)+"/"+dev.totalCPU}</td>
+                <td>{(dev.AVERAGE_MEM_USED).toFixed(2)+"/"+dev.totalMEM}</td>
+                <td>{(dev.AVERAGE_MYAPP_COUNT.toFixed(2))}</td>
+                <td>{(dev.DEVICE_DOWN_PROB_chaos * 100).toFixed(2)} %</td>
               </tr>
             ))
           }

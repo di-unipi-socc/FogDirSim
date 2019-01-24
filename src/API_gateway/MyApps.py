@@ -9,6 +9,7 @@ class MyApps(Resource):
     def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument('x-token-id', location='headers')
+        parser.add_argument('minjobs')
         args = parser.parse_args()
         data = request.json
         identifier = queue.add_for_processing(("MyApps", "post"), args, data)

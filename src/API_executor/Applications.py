@@ -70,7 +70,8 @@ def createApplicationJSON(creationDate,
                     "cpuUsage": cpuUsage,
                     "memoryUsage": memoryUsage,
                     "classification": "APP",
-                    "properties": []
+                    "properties": [],
+                    "sourceAppName": str(appid)+":"+str(version)
                 }
 
 # /api/v1/appmgr/localapps/upload

@@ -2,6 +2,7 @@ from flask import Flask, request
 from flask_restful import Api, Resource, reqparse
 from API_executor.Authentication import invalidToken
 import time, json
+from functools import cmp_to_key
 from misc.ResourceSampling import sampleMyAppStatus
 from misc import constants
 
@@ -16,7 +17,7 @@ def get(args):
         data = []
         for alert in alerts:
             data.append(alert)
-        data.sort(lambda x,y: -1 if x["time"] < y["time"] else (0 if x["time"] == y["time"] else 1))
+        data.sort(key=cmp_to_key(lambda x,y: -1 if x["time"] < y["time"] else (0 if x["time"] == y["time"] else 1)))
         return {"data": data}, 200, {"content-type": "application/json"}
     else:
         return invalidToken()

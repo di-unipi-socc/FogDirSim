@@ -17,17 +17,20 @@ def post(args, data):
                     "code": 1001,
                     "description": "Given request is not valid: {0}"
                 }, 400, {"Content-Type": "application/json"}
-        if db.myAppExists(sourceAppName):
+        if db.myAppExists(appname):
             return {
                     "code": 1304,
-                    "description": "An app with name %s already exists." % sourceAppName
+                    "description": "An app with name %s already exists." % appname # Cisco does not return the name but the identifier
                 }, 409, {"content-type": "application/json"}
         if appType != "LOCAL_APPSTORE":
             {
                 "code": -1,
                 "description": "This simulator is not able to manage not LOCAL_APPSTORE applications"
             }, 400, {"Content-Type": "application/json"}
-        myapp = db.createMyApp(appname, sourceAppName, version, appType)
+        if args["minjobs"] != None:
+            myapp = db.createMyApp(appname, sourceAppName, version, appType, minjobs=args["minjobs"])
+        else:
+            myapp = db.createMyApp(appname, sourceAppName, version, appType)
         del myapp["_id"]
         return myapp, 201, {"content-type": "application/json"}
     else:
