@@ -3,8 +3,8 @@ from flask_restful import Api, Resource, reqparse
 from API_executor.Authentication import invalidToken
 import time, json
 from functools import cmp_to_key
-from misc.ResourceSampling import sampleMyAppStatus
-from misc import constants
+from Simulator.ResourceSampling import sampleMyAppStatus
+import constants
 
 #importing Database
 import os, sys

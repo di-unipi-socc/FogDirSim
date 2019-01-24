@@ -1,8 +1,8 @@
 from flask import Flask, request
 from flask_restful import Api, Resource, reqparse
 from misc.Exceptions import MyAppInstalledOnDeviceError
-from misc import constants
-from misc.config import queue
+import constants
+from constants import queue
 import Database as db
 
 class MyApps(Resource):

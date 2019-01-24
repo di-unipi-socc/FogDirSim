@@ -3,7 +3,7 @@ from flask_restful import Api, Resource, reqparse
 import time, json, os, yaml, io
 import tarfile
 from werkzeug.utils import secure_filename
-from misc.config import queue
+from constants import queue
 
 file_error_string = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
                             <error>

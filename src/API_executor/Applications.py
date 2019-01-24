@@ -5,7 +5,7 @@ from API_executor.Authentication import invalidToken
 import tarfile
 
 import Database as db
-from misc import config
+import config
 
 file_error_string = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
                             <error>

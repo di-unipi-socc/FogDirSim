@@ -11,7 +11,7 @@ energy_consumption["1"] = (lambda cpu_usage, mem_usage: cpu_usage+mem_usage)
 def device2_energy(cpu_usage, mem_usage):
     return 2*cpu_usage+mem_usage
 energy_consumption["2"] = device2_energy
-energy_consumption["3"] = (lambda *args: 1)
+energy_consumption["3"] = (lambda *args: 100)
 
 def getEnergyConsumed(deviceId, cpu_usage, mem_usage):
     try:

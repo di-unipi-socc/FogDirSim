@@ -4,9 +4,9 @@ import SECRETS as config
 import RealDatabase as rdb
 from bson.objectid import ObjectId
 from bson.int64 import Int64
-import misc.ResourceSampling as sampling
+import Simulator.ResourceSampling as sampling
 import threading
-from misc import constants
+import constants
 from  misc.Exceptions import NoResourceError, MyAppInstalledOnDeviceError
 
 client = pm.MongoClient("mongodb://%s:%s@%s:%d" % (config.db_username, 

@@ -54,22 +54,30 @@ while True:
     for alert in alerts["data"]:
         if 0 == alert["simulation_type"]: #APP_HEALTH
             if alert["appName"] == "dep1" and not moved1:
+                print("**Moving dep1 from 1 to 3")
                 #"stop App"
-                fg.stop_app("dep1")
+                code, _ =fg.stop_app("dep1")
+                print("stop_app dep1", code)
                 #"unistall App"
-                fg.uninstall_app("dep1", alert["ipAddress"])
+                code, _ = fg.uninstall_app("dep1", alert["ipAddress"])
+                print("uninstall dep1", code)
                 #"install App"
-                print("Moving dep1 from 1 to 3")
                 while fg.install_app("dep1", ["10.10.20.53"]) == 400:
                     continue
+                print("app Installed on dev3")
                 #"start app"
-                fg.start_app("dep1")
+                code, _ = fg.start_app("dep1")
+                print("start app dep1", code)
                 moved1 = True
             elif alert["appName"] == "dep2":
-                fg.stop_app("dep2")
-                fg.uninstall_app("dep2", alert["ipAddress"])
-                print("Toggling dep2")
-                while fg.install_app("dep2", [otherDevice(alert["ipAddress"])]):
+                print("**Toggling dep2")
+                code, _ = fg.stop_app("dep2")
+                print("stop app dep2", code)
+                code, _ = fg.uninstall_app("dep2", alert["ipAddress"])
+                print("uninstall dep2 from ", alert["ipAddress"], code)
+                while fg.install_app("dep2", [otherDevice(alert["ipAddress"])]) == 400:
                     continue
-                fg.start_app("dep2")
+                print("installed app dep2 on", otherDevice(alert["ipAddress"]))
+                code, _ = fg.start_app("dep2")
+                print("started dep2 ", code)
 

@@ -1,11 +1,10 @@
 from threading import Thread, Event
-import time
+import time, random
 import Database as db
-from misc.ResourceSampling import sampleCPU, sampleMEM
-from misc.config import queue, profile_low, profile_normal, profile_high
-from misc import constants
-from misc.ResourceSampling import get_truncated_normal
-import random
+from Simulator.ResourceSampling import sampleCPU, sampleMEM, get_truncated_normal
+from constants import queue
+from config import profile_low, profile_normal, profile_high, getEnergyConsumed
+import constants
 iter_count = 0
 
 # Volatile Simulaton Memory
@@ -18,7 +17,10 @@ NUMBER_OF_MYAPP_ON_DEVICE_counter_sum = {}
 DEVICE_DOWN_counter_sum = {}
 MYAPP_UP_counter = {}
 MYAPP_DOWN_counter = {}
+MYAPP_CPU_CONSUMING_counter = {}
+MYAPP_MEM_CONSUMING_counter = {}
 MYAPP_ON_DEVICE_counter = {}
+DEVICE_ENERGY_CONSUMPTION_sum = {}
 
 def resources_requested(sourceAppName):
     localapp_details = db.getLocalApplicationBySourceName(sourceAppName)
@@ -61,12 +63,14 @@ class SimThread(Thread):
                     DEVICE_DOWN_counter_sum[deviceId] = 0
                 if not deviceId in resources_sampled_count:
                     resources_sampled_count[deviceId] = 0
-
+                if not deviceId in DEVICE_ENERGY_CONSUMPTION_sum:
+                    DEVICE_ENERGY_CONSUMPTION_sum[deviceId] = 0    
                 r = random.random()
                 if dev["alive"] and r <= dev["chaos_down_prob"]:
                     db.setDeviceDown(deviceId)
                 if not dev["alive"] and r <= dev["chaos_revive_prob"]:
-                    db.setDeviceAlive(deviceId)             
+                    db.setDeviceAlive(deviceId)  
+
                 if db.deviceIsAlive(deviceId):
                     sampled_free_cpu = sampleCPU(deviceId) - dev["usedCPU"] 
                     sampled_free_mem = sampleMEM(deviceId) - dev["usedMEM"]
@@ -79,6 +83,14 @@ class SimThread(Thread):
                     # adding sampled resources
                     DEVICE_CPU_USED_sum[deviceId] += dev["usedCPU"]
                     DEVICE_MEM_USED_sum[deviceId] += dev["usedMEM"]
+                    
+                    cpu_usage = dev["totalCPU"]-sampled_free_cpu
+                    mem_usage = dev["totalMEM"]-sampled_free_mem
+                    basal_cpu_usage = cpu_usage - dev["usedCPU"]
+                    basal_mem_usage = mem_usage - dev["usedMEM"]
+                    consumed_energy = (getEnergyConsumed(deviceId, cpu_usage, mem_usage) - 
+                                        getEnergyConsumed(deviceId, basal_cpu_usage, basal_mem_usage))
+                    DEVICE_ENERGY_CONSUMPTION_sum[deviceId] += consumed_energy
                     resources_sampled_count[deviceId] += 1
                     # adding number of installed apps
                     NUMBER_OF_MYAPP_ON_DEVICE_counter_sum[deviceId] += len(dev["installedApps"])            
@@ -92,6 +104,9 @@ class SimThread(Thread):
                 myappId = job["myappId"]
                 if not myappId in MYAPP_ON_DEVICE_counter:
                     MYAPP_ON_DEVICE_counter[myappId] = {}
+                if not myappId in MYAPP_CPU_CONSUMING_counter:
+                    MYAPP_CPU_CONSUMING_counter[myappId] = {}
+                    MYAPP_MEM_CONSUMING_counter[myappId] = {}
                 myapp_details = db.getMyApp(myappId)
                 localapp_resources = resources_requested(myapp_details["sourceAppName"])
                 max_cpu = localapp_resources[0]
@@ -168,7 +183,7 @@ class SimThread(Thread):
                                 "simulation_type": constants.APP_HEALTH
                             }, from_sampling=True)
                         if application_cpu_sampling > max_cpu*0.95:
-                             db.addAlert({
+                            db.addAlert({
                                 "deviceId": device["deviceId"],
                                 "ipAddress": device_details["ipAddress"],
                                 "hostname": device_details["ipAddress"],
@@ -241,6 +256,7 @@ def getDeviceSampling():
         tmp["AVERAGE_MEM_USED"] = DEVICE_MEM_USED_sum[deviceId] / float(resources_sampled_count[deviceId])
         tmp["AVERAGE_MYAPP_COUNT"] = NUMBER_OF_MYAPP_ON_DEVICE_counter_sum[deviceId] / float(resources_sampled_count[deviceId])
         tmp["DEVICE_DOWN_PROB_chaos"] = DEVICE_DOWN_counter_sum[deviceId] / fix_iter 
+        tmp["DEVICE_ENERGY_CONSUMPTION"] = DEVICE_ENERGY_CONSUMPTION_sum[deviceId] / float(resources_sampled_count[deviceId]) 
         result.append(tmp)
     return result
 

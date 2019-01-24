@@ -3,7 +3,7 @@ from flask_restful import Api, Resource, reqparse
 import time, traceback
 from API_executor.Authentication import invalidToken
 from misc.Exceptions import NoResourceError
-from misc import constants
+import constants
 import Database as db
 
 def post(args, data, myappId):

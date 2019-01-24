@@ -1,7 +1,7 @@
 from flask import Flask, request
 from flask_restful import Api, Resource, reqparse
 import time, traceback
-from misc.config import queue
+from constants import queue
 import Database as db
 
 class MyAppsAction(Resource):

@@ -6,16 +6,14 @@ import { Nav, NavItem, NavLink, Card, CardBody, CardImg, CardText, CardTitle, Bu
 import { BrowserRouter as Router, Route, Link } from "react-router-dom";
 import DevicesTable from "./components/DevicesTable"
 import MyAppsTable from "./components/MyAppsTable"
-import CostPanel from "./components/CostPanel"
-
-const Index = () => <h1>Fog Dir Simulator - Results</h1>
+import Certificate from './components/Certificate';
 
 class App extends Component {
   render() {
     return (
       <Router>
         <div className="container">
-          <Nav>
+          <Nav className="justify-content-center">
             <NavItem>
               <NavLink href="/">Home</NavLink>
             </NavItem>
@@ -25,14 +23,10 @@ class App extends Component {
             <NavItem>
               <NavLink href="/myapps">MyApps</NavLink>
             </NavItem>
-            <NavItem>
-              <NavLink href="/cost">Cost</NavLink>
-            </NavItem>
           </Nav>
-          <Route path="/" exact component={Index} />
+          <Route path="/" exact component={Certificate} />
           <Route path="/devices/" component={DevicesTable} />
           <Route path="/myapps/" component={MyAppsTable} />
-          <Route path="/cost/" component={CostPanel} />
         </div>
       </Router>
     );

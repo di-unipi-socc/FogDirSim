@@ -15,9 +15,9 @@ from API_gateway.Alerts import Alerts
 import Database as db
 from Simulator.SimThread import SimThread
 import signal, threading, time, Simulator
-from misc import config
+import constants
 
-app = config.flaskApp
+app = constants.flaskApp
 
 def main():
     global app

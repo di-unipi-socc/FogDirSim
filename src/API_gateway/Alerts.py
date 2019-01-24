@@ -1,9 +1,7 @@
 from flask import Flask, request
 from flask_restful import Api, Resource, reqparse
 import time, json
-from misc.ResourceSampling import sampleMyAppStatus
-from misc import constants
-from misc.config import queue
+from constants import queue
 
 class Alerts(Resource):
     def get(self):

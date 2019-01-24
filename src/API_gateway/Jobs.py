@@ -2,7 +2,7 @@ from flask import Flask, request
 from flask_restful import Api, Resource, reqparse
 import time, json
 import Database as db
-from misc.config import queue
+from constants import queue
 
 class Jobs(Resource):
     def get(self):
