@@ -1,6 +1,6 @@
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, send_from_directory
 from flask_restful import Api, Resource, reqparse
-
+import os
 from API_gateway.Devices import Devices
 from API_gateway.TaggingDevices import TaggingDevices
 from API_gateway.Tags import Tags
@@ -57,6 +57,19 @@ def main():
     def result_myapps():
         values = Simulator.SimThread.getMyAppsSampling()
         return jsonify(values)
+
+    @app.route("/result/simulationcounter")
+    def sim_count():
+        return str(Simulator.SimThread.getSimulationCount())
+
+    # Serve React App
+    """@app.route('/', defaults={'path': ''})
+    @app.route('/<path:path>')
+    def serve(path):
+        if path != "" and os.path.exists("sim-gui/build/" + path):
+            return send_from_directory('sim-gui/build', path)
+        else:
+            return send_from_directory('sim-gui/build', 'index.html')"""
 
     return app 
 if __name__ == "__main__":

@@ -131,7 +131,7 @@ def post(args, request, uploadDir, filename):
             appJson["published"] = True
         appID = str(db.addLocalApplication(appJson))
         appJson["localAppId"] = appID
-        db.updateLocalApplication(appID, {"localAppId": appID})
+        appJson["sourceAppName"] = str(appID)+":1"
         os.rename(tmpDir, appID)
 
         os.chdir("../")

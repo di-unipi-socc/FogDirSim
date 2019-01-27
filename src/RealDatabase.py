@@ -16,6 +16,7 @@ client = pm.MongoClient("mongodb://%s:%s@%s:%d" % (config.db_username,
 client.drop_database("realDatabase")
 db = client.realDatabase
 # Building RealDatabase
+"""
 db.Rdevices.insert_one({
             "ipAddress": "10.10.20.51",
             "port": 8443,
@@ -31,7 +32,7 @@ db.Rdevices.insert_one({
                     {
                         "timeStart": 0,
                         "timeEnd": 24,
-                        "mean": 180,
+                        "mean": 2000,
                         "deviation": 39
                     }
                 ],
@@ -39,13 +40,12 @@ db.Rdevices.insert_one({
                     {
                         "timeStart": 0,
                         "timeEnd": 24,
-                        "mean": 55,
+                        "mean": 120,
                         "deviation": 16
                     }
                 ]
             }
         })
-
 db.Rdevices.insert_one({
             "ipAddress": "10.10.20.52",
             "port": 8443,
@@ -54,7 +54,7 @@ db.Rdevices.insert_one({
             "totalVCPU": 2,
             "maxVCPUPerApp": 2,
             "totalMEM": 128,
-            "chaos_down_prob": 0.03,
+            "chaos_down_prob": 0.4,
             "chaos_revive_prob": 0.2,
             "distributions": { 
                 "CPU": [
@@ -74,8 +74,7 @@ db.Rdevices.insert_one({
                     }
                 ]
             }
-        })
-        
+        })     
 db.Rdevices.insert_one({
             "ipAddress": "10.10.20.53",
             "port": 8443,
@@ -105,7 +104,40 @@ db.Rdevices.insert_one({
                 ]
             }
         })
+"""
 
+# Devices based on Cisco® 890 Series Integrated Services Routers (ISRs) 
+for i in range(0,300):
+    deviceId = i+1
+    db.Rdevices.insert_one({
+                "ipAddress": "10.10.20."+str(deviceId),
+                "port": 8443,
+                "deviceId": deviceId,
+                "totalCPU": 1700,
+                "totalVCPU": 2,
+                "maxVCPUPerApp": 2,
+                "totalMEM": 512,
+                "chaos_down_prob": 0,
+                "chaos_revive_prob": 1,
+                "distributions": { 
+                    "CPU": [
+                        {
+                            "timeStart": 0,
+                            "timeEnd": 24,
+                            "mean": 1500,
+                            "deviation": 78
+                        }
+                    ],
+                    "MEM": [
+                        {
+                            "timeStart": 0,
+                            "timeEnd": 24,
+                            "mean": 300,
+                            "deviation": 10
+                        }
+                    ]
+                }
+            })
 
 def getDevice(ip = None, port = None, deviceId = None):
     if ip == None and port == None and deviceId == None:

@@ -18,6 +18,7 @@ def post(args, data, myappId):
                 if not app["published"]: # This is not checked in FogDirector, but in unpublished app it crash
                     return {"error": "the app have to be published"}, 400, {"content-type": "application/json"}
                 deviceSuccessful = []
+                profile = constants.MYAPP_PROFILE_NORMAL
                 for device in devices:
                     devid = device["deviceId"]
                     resourceAsked = device["resourceAsk"]["resources"]
@@ -55,7 +56,7 @@ def post(args, data, myappId):
                             "code": 1000,
                             "description": str(e)
                         }, 400, {"content-type": "application/json"}
-                        
+                # TODO: if la myapp è già sul device: ritorna errore  
                 jobid = db.addJobs(myappId, deviceSuccessful, profile=profile, payload=data)
                 
             elif "start" in data.keys() or "stop" in data.keys(): # TODO: add response for this request

@@ -167,10 +167,13 @@ The Infrastructure is composed by:
  - Simulator doens't check SHA1 in package.yaml of localapp
  - On simulator you can start or stop the myapp. On GUI you can start or stop the myapp on a specific device (even if there exists API that supports the other behaviour)
 
-## Assertion and simplification
+## Assumptions and simplifications
  - The management is done by a single user (no multi-user management)
  - All the operations are atomically and are computed once for every simulation run
  - We assume that for every myapps only one deploy can be done. It simplifies the simulation and monitoring system but not reduce the possible states of the tool. This good practice is also implicitely suggested using the GUI.
+ - We don't model the things (serial/remote) binding 
+ - We don't model the network since FD doesn't
+ - There is no correlations among samplings and no correlation between resources usages
 
 ## I know that I know nothing. (Socrates)
  - We don't know how to manage a case where, deploying an application on multiple devices, one of them has no resources

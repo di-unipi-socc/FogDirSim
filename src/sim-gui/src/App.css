@@ -22,9 +22,4 @@
   color: #61dafb;
 }
 
-.card {
-  float: left;
-}
-.card:nth-child(2n+1) {
-  clear: left;   
-}
+

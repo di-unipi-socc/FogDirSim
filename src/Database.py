@@ -150,7 +150,15 @@ def tagDevice(deviceid, tag):
 
 # Local Application
 def addLocalApplication(appdata):
-    return db.applications.insert_one(appdata).inserted_id
+    appId = db.applications.insert_one(appdata).inserted_id
+    db.applications.find_one_and_update({"_id": appId}, 
+                                        {"$set": {
+                                            "sourceAppName": str(appId)+":1",
+                                            "localAppId": str(appId)
+                                        }
+                                    }, return_document=pm.ReturnDocument.AFTER)
+    return appId
+
 def localApplicationExists(appid, version=1):
     return db.applications.count_documents({"localAppId": appid, "version": version}) > 0
 def getLocalApplications():

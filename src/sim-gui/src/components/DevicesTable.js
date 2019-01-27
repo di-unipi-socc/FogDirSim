@@ -13,8 +13,7 @@ export default class DevicesTable extends React.Component {
     fetch(URL+"/result/devices")
       .then(res => res.json())
       .then(res => this.setState({devices: res}))
-      //.then(() => setTimeout(this.getData, 2000))
-      .catch(err => alert("DeviceTable Fetch Error "+err))
+    setTimeout(this.getData, 3000)
   }
 
   componentWillMount(){
@@ -27,7 +26,7 @@ export default class DevicesTable extends React.Component {
         <thead>
           <tr>
             <th>#</th>
-            <th>ID</th>
+            <th scope="row">ID</th>
             <th>IP</th>
             <th>Port</th>
             <th>CRITICAL CPU</th>
@@ -43,17 +42,17 @@ export default class DevicesTable extends React.Component {
           {
             this.state.devices.map((dev, i) => (
               <tr key={dev.deviceId}>
-                <td scope="row">{i}</td>
+                <td>{i}</td>
                 <td>{dev.deviceId}</td>
                 <td>{dev.ipAddress}</td>
                 <td>{dev.port}</td>
-                <td><AnimatedNumber key={dev.deviceId} value={Math.round(dev.CRITICAL_CPU_PERCENTAGE*100)/100} formatValue={(val) =>( val * 100).toFixed(2) + " %"} /></td>
-                <td><AnimatedNumber key={dev.deviceId} value={Math.round(dev.CRITICAL_MEM_PERCENTAGE*100)/100} formatValue={(val) =>( val * 100).toFixed(2) + " %"} /></td>
-                <td><AnimatedNumber key={dev.deviceId} value={Math.round((dev.AVERAGE_CPU_USED)*100)/100} formatValue={(val) => val.toFixed(2)+"/"+dev.totalCPU}/></td>
-                <td><AnimatedNumber key={dev.deviceId} value={Math.round((dev.AVERAGE_MEM_USED)*100)/100} formatValue={(val) => val.toFixed(2)+"/"+dev.totalMEM}/></td>
-                <td><AnimatedNumber key={dev.deviceId} value={Math.round((dev.AVERAGE_MYAPP_COUNT)*100)/100} formatValue={(val) => val.toFixed(2)}/></td>
-                <td><AnimatedNumber key={dev.deviceId} value={Math.round((dev.DEVICE_DOWN_PROB_chaos)*100)/100} formatValue={(val) => (val*100).toFixed(2) +" %"}/></td>
-                <td><AnimatedNumber key={dev.deviceId} value={Math.round((dev.DEVICE_ENERGY_CONSUMPTION)*100)/100} formatValue={(val) => (val*100).toFixed(2)}/></td>
+                <td><AnimatedNumber key={dev.deviceId} value={Math.round(dev.CRITICAL_CPU_PERCENTAGE*100)/100} duration={1} formatValue={(val) =>( val * 100).toFixed(2) + " %"} /></td>
+                <td><AnimatedNumber key={dev.deviceId} value={Math.round(dev.CRITICAL_MEM_PERCENTAGE*100)/100} duration={1} formatValue={(val) =>( val * 100).toFixed(2) + " %"} /></td>
+                <td><AnimatedNumber key={dev.deviceId} value={Math.round((dev.AVERAGE_CPU_USED)*100)/100} duration={1} formatValue={(val) => val.toFixed(2)+"/"+dev.totalCPU}/></td>
+                <td><AnimatedNumber key={dev.deviceId} value={Math.round((dev.AVERAGE_MEM_USED)*100)/100} duration={1} formatValue={(val) => val.toFixed(2)+"/"+dev.totalMEM}/></td>
+                <td><AnimatedNumber key={dev.deviceId} value={Math.round((dev.AVERAGE_MYAPP_COUNT)*100)/100} duration={1} formatValue={(val) => val.toFixed(2)}/></td>
+                <td><AnimatedNumber key={dev.deviceId} value={Math.round((dev.DEVICE_DOWN_PROB_chaos)*100)/100} duration={1} formatValue={(val) => (val*100).toFixed(2) +" %"}/></td>
+                <td><AnimatedNumber key={dev.deviceId} value={Math.round((dev.DEVICE_ENERGY_CONSUMPTION)*100)/100} duration={1} formatValue={(val) => (val*100).toFixed(2)}/></td>
               </tr>
             ))
           }

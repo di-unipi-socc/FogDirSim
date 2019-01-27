@@ -1,4 +1,3 @@
-
 DEVICE_CRITICAL_CPU = 1
 DEVICE_CRITICAL_MEM = 2
 DEVICE_DOWN = 3
@@ -9,8 +8,6 @@ DEVICE_MYAPP_COUNT = 6
 MYAPP_INSTALLED = 4
 MYAPP_UNINSTALLED = 5
 MYAPP_STATUS = 6
-MYAPP_CPU_CONSUMING = 7
-MYAPP_MEM_CONSUMING = 8
 JOB_STARTED = 7
 JOB_STOPPED = 8
 JOB_STATUS = 9
@@ -23,9 +20,10 @@ MYAPP_PROFILE_NORMAL = "normal"
 MYAPP_PROFILE_HIGH = "angry"
 
 # Alerts Type
-APP_HEALTH = 0 # App is corrupted on a the device or ***has some other issue with its health***. 
-DEVICE_REACHABILITY = 1
-
+APP_HEALTH = "APP_HEALTH" # App is corrupted on a the device or ***has some other issue with its health***. 
+DEVICE_REACHABILITY = "DEVICE_REACHABILITY"
+MYAPP_CPU_CONSUMING = "MYAPP_CPU_CONSUMING"
+MYAPP_MEM_CONSUMING = "MYAPP_MEM_CONSUMING"
 
 from misc.MagicalQueue import MagicalQueue
 from API_executor import Alerts, Applications, Audit, Authentication, Devices, DevicesEvents, Jobs, MyApps, MyAppsAction, TaggingDevices, Tags
@@ -36,4 +34,4 @@ def methodGetter(moduleName, functionName, *args, **kwargs):
     return method(*args, **kwargs)
 
 queue = MagicalQueue(methodGetter)
-flaskApp = Flask(__name__)
+flaskApp = Flask(__name__, static_folder="sim-gui/build/static")

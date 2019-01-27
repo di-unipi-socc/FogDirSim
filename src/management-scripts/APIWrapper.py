@@ -71,9 +71,21 @@ class FogDirector():
         r=requests.get(url,headers=headers,verify=False)
         return (200, r.json())
 
-    def get_device_details(self, deviceip):
+    def get_device_details(self, deviceIp):
+        code, devices = self.get_devices()
+        for dev in devices["data"]:
+            if dev["ipAddress"] == str(deviceIp):
+                return (code, dev)
+        print("deviceIp non trovato", deviceIp)
+        return (code, {'data': []})
+
+    def get_device_details_anymatch(self, deviceip):
         code, devices = self.get_devices(searchByAnyMatch=deviceip)
-        return (code, devices['data'][0])
+        try:
+            dev = devices["data"][0]
+        except IndexError:
+            print(devices)
+        return (code, dev)
 
     def delete_all_devices(self, limit=10000, offset = 0):
         devices = self.get_devices()
@@ -170,7 +182,7 @@ class FogDirector():
             return (200, True)
 
 
-    def install_app(self, appname, devicesip, resources={"resources":{"profile":"c1.tiny","cpu":100,"memory":32,"network":[{"interface-name":"eth0","network-name":"iox-bridge0"}]}}):
+    def install_app(self, appname, devicesip, minjobs=0, resources={"resources":{"profile":"c1.tiny","cpu":100,"memory":32,"network":[{"interface-name":"eth0","network-name":"iox-bridge0"}]}}):
         _, myapp_present = self.is_myapp_present(appname)
         if myapp_present != True :
             return (404, "You have to create the myapp first")
@@ -186,7 +198,10 @@ class FogDirector():
         
         for devip in devicesip:
             _, device_details = self.get_device_details(devip)
-            data["deploy"]["devices"].append({"deviceId":device_details['deviceId'], "resourceAsk":askedResources})
+            try:
+                data["deploy"]["devices"].append({"deviceId":device_details['deviceId'], "resourceAsk":askedResources})
+            except KeyError:
+                print("keyerror", device_details, devip)
         r = requests.post(url,data=json.dumps(data),headers=headers,verify=False)
         return (r.status_code, r.json())
 
