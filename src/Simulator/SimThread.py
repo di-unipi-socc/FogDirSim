@@ -65,7 +65,6 @@ class SimThread(Thread):
                 deviceId = dev["deviceId"]
                 # Initializing Variable
                 if not deviceId in DEVICE_CRITICAL_CPU_counter_sum:
-                    print("Inizialized ", deviceId)
                     DEVICE_CRITICAL_CPU_counter_sum[deviceId] = 0              
                     DEVICE_CRITICAL_MEM_counter_sum[deviceId] = 0
                     DEVICE_CPU_USED_sum[deviceId] = 0
