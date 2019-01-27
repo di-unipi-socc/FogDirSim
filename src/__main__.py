@@ -63,13 +63,13 @@ def main():
         return str(Simulator.SimThread.getSimulationCount())
 
     # Serve React App
-    """@app.route('/', defaults={'path': ''})
+    @app.route('/', defaults={'path': ''})
     @app.route('/<path:path>')
     def serve(path):
         if path != "" and os.path.exists("sim-gui/build/" + path):
             return send_from_directory('sim-gui/build', path)
         else:
-            return send_from_directory('sim-gui/build', 'index.html')"""
+            return send_from_directory('sim-gui/build', 'index.html')
 
     return app 
 if __name__ == "__main__":

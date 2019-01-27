@@ -59,7 +59,7 @@ stages:
         body:
           new_testag_id: tagId
   
-  - name: tagging device {deviceid:d}
+  - name: tagging device {deviceid:s}
     request:
       verify: false
       url: "{host:s}/api/v1/appmgr/tags/{new_testag_id:s}/devices"
@@ -69,7 +69,7 @@ stages:
         content-type: application/json
       json:
         devices: 
-          - "{deviceid:d}"
+          - "{deviceid:s}"
     response:
       status_code: 200
       headers:
@@ -80,7 +80,7 @@ stages:
         body:
           tagName: name
   
-  - name: getting device {deviceid:d} by tag
+  - name: getting device {deviceid:s} by tag
     request:
       verify: false
       url: "{host:s}/api/v1/appmgr/devices?searchByTags={tagName:s}"
@@ -100,7 +100,7 @@ stages:
   - name: delete a device
     request:
       verify: false
-      url: "{host:s}/api/v1/appmgr/devices/{deviceid:d}"
+      url: "{host:s}/api/v1/appmgr/devices/{deviceid:s}"
       method: DELETE
       headers:
         x-token-id: "{token:s}"

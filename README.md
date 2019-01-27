@@ -7,7 +7,63 @@ It simulates Fog Director giving the same [API of Fog Director](https://develope
 
 This simulator loads the infrastructure from a given Database (a.k.a. RealDatabase). 
 
-#### Available API (in progress)
+## Run an example
+### Install the tool
+In order to install this tool you have to copy this repository and install the requirements:
+```
+git clone https://github.com/alessandro308/FogDirSimulator
+pip3 install requirements.txt
+```
+The tool use a MongoDB instance to keep trace of the simulation status. You can run it in a container:
+```
+docker run -d --name some-mongo -e MONGO_INITDB_ROOT_USERNAME=YourName -e MONGO_INITDB_ROOT_PASSWORD=YourPassword -v $PWD/mongodb:/data/db -p 27017:27017 mongo
+```
+### Configure the tool
+In order to be run, you have to specify the database connection configuration. Create a file called `SECRETS.py` in `/src` folder and insert the configuration values following the `SECRETS_demo.py` file format.
+
+### Define the infrastructure
+In order to define your infrastructure (i.e. devices avaialable, resources distribution, chaos parameters) you have to edit `RealDatabase.py` script. This script is executed at the start and populate the database used to read devices specs at runtime. You can use the devices example or defining your own devices. In order to add a device you have to insert some code lines like:
+```python
+db.Rdevices.insert_one({ 
+                "ipAddress": "10.10.20."+str(deviceId),
+                "port": 8443,
+                "deviceId": deviceId,
+                "totalCPU": 1700,
+                "totalVCPU": 2,
+                "maxVCPUPerApp": 2,
+                "totalMEM": 512,
+                "chaos_down_prob": 0,
+                "chaos_revive_prob": 1,
+                "distributions": { 
+                    "CPU": [
+                        {
+                            "timeStart": 0,
+                            "timeEnd": 24, 
+                            "mean": 1500,
+                            "deviation": 78
+                        }
+                    ],
+                    "MEM": [
+                        {
+                            "timeStart": 0,
+                            "timeEnd": 24,
+                            "mean": 300,
+                            "deviation": 10
+                        }
+                    ]
+                }
+            })
+```
+### Execute the simulator
+You are now ready to start the tool, move in the tool folder and start python scripts:
+```
+cd FogDirSimulator
+python3 src
+```
+
+Start your management script / execute your API calls by hand, as you prefer. Open your browser at `http://localhost:5000/` and see your results! Enjoy!
+
+## Available API (in progress)
 All the API not reported here, are not available yet.
 
 ###### Authentication
@@ -114,6 +170,8 @@ All the tests are run over the Simulator AND Fog Director. They succeed in both 
  - Try to add an already inserted tag
  - Tag a device
  - Published LocalApp
+ - Created new Deployment (myapp)
+ - Installed/Uninstalled an application on a device
 
 ## Infrastructure
 In order to be executed, this simulator requires the infrastructure on which the operation has to be simulated.

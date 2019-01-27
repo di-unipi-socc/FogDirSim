@@ -5,5 +5,5 @@ description: host and port of the server
 
 variables:
   host: http://localhost:5000
-  #host: https://10.10.20.50
+#  host: https://10.10.20.50
   
