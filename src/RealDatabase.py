@@ -15,8 +15,8 @@ client = pm.MongoClient("mongodb://%s:%s@%s:%d" % (config.db_username,
                                                    config.db_port))
 client.drop_database("realDatabase")
 db = client.realDatabase
+
 # Building RealDatabase
-"""
 db.Rdevices.insert_one({
             "ipAddress": "10.10.20.51",
             "port": 8443,
@@ -138,7 +138,7 @@ for i in range(0,300):
                     ]
                 }
             })
-
+"""
 def getDevice(ip = None, port = None, deviceId = None):
     if ip == None and port == None and deviceId == None:
         return None

@@ -4,11 +4,12 @@ import { URL } from "../costants"
 import MyAppDevice from "./MyAppDevice"
 import {PieChart} from 'react-easy-chart';
 import Quadretti from "./Quadretti"
+
 let alert_to_color = {
-  "APP_HEALTH": "red",
-  "DEVICE_REACHABILITY": "orange",
-  "MYAPP_CPU_CONSUMING": "blue",
-  "MYAPP_MEM_CONSUMING": "purple"
+  "APP_HEALTH": "#CD533B",
+  "DEVICE_REACHABILITY": "#33753e",
+  "MYAPP_CPU_CONSUMING": "#E3B505",
+  "MYAPP_MEM_CONSUMING": "#4392F1"
 }
 
 export default class MyAppsTable extends React.Component {
@@ -45,14 +46,11 @@ export default class MyAppsTable extends React.Component {
         <tbody>
           {
             this.state.myapps.map((myapp, i) => {
-              let total = 100
               let pie_data = []
               for (let k in myapp.ALERT_PERCENTAGE){
                 pie_data.push({key: k, value: myapp.ALERT_PERCENTAGE[k], color: alert_to_color[k]})
-                total -= myapp.ALERT_PERCENTAGE[k]
               }
-              pie_data.push({key: "no_alert", value: total, color: "green"})
-              console.log(i, pie_data)
+              //pie_data.push({key: "no_alert", value: total, color: "green"})
               return <tr key={myapp.myappId}>
               <td>{i}</td>
               <td>{myapp.myappId}</td>
@@ -66,6 +64,7 @@ export default class MyAppsTable extends React.Component {
                 <table className="quadretto">
                 <tbody><tr>
                   <td>
+                    {pie_data.reduce((p, v) => p+v.value, 0) == 0 ? "No alerts" :
                     <PieChart
                       key={myapp.myappId}
                       id={myapp.myappId}
@@ -73,6 +72,7 @@ export default class MyAppsTable extends React.Component {
                       innerHoleSize={0}
                       data={pie_data}
                     />
+                  }
                   </td>
                   <td>
                     <Quadretti data={pie_data.map(val => { return {color: val.color, val: val.value, name: val.key}} )} />

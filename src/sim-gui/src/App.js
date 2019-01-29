@@ -7,30 +7,31 @@ import DevicesTable from "./components/DevicesTable"
 import MyAppsTable from "./components/MyAppsTable"
 import Certificate from './components/Certificate';
 import { URL } from "./costants"
-import AnimatedNumber from "animated-number-react";
+import CountUp from 'react-countup';
+
+const simCounter_updateTime = 2000
 
 class App extends Component {
   constructor(props){
     super(props)
-    this.state = {counter: 0}
-    this.setCounter()
+    this.state = {counter: 0, prev_counter: 0, counter_loading: true}
   }
 
   setCounter = () => {
     fetch(URL+"/result/simulationcounter")
     .then(res =>  res.text())
-    .then(res => this.setState({counter: res}))
-    setTimeout(this.setCounter, 2000)
+    .then(res => this.setState({counter_loading: false, counter: parseInt(res), prev_counter: this.state.counter_loading ? parseInt(res-20) : this.state.counter}))
+    setTimeout(this.setCounter, simCounter_updateTime)
   }
 
   componentWillMount(){
+    this.setCounter()
   }
 
   render() {
     return (
       <Router>
         <div className="col-lg-12">
-        
           <Nav className="justify-content-center">
             <NavItem>
               <NavLink href="/">Home</NavLink>
@@ -44,7 +45,7 @@ class App extends Component {
           </Nav>
           <Nav className="justify-content-center">
             <NavItem>
-              <NavLink>Simulation Iteration Counter: <AnimatedNumber value={this.state.counter} duration={1000} formatValue={val => Math.round(val)}/></NavLink>
+    <NavLink>Simulation Iteration Counter: {this.state.counter_loading ? <i>loading</i> : <CountUp start={this.state.prev_counter} easingFn={(t,b,c,d) => b+c*(t/d)} end={this.state.counter} duration={simCounter_updateTime/2000+1}/>}</NavLink>
             </NavItem>
           </Nav>
           <Route path="/" exact component={Certificate} />

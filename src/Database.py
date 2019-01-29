@@ -13,9 +13,13 @@ client = pm.MongoClient("mongodb://%s:%s@%s:%d" % (config.db_username,
                                                    config.db_password, 
                                                    config.db_host, 
                                                    config.db_port))
-client.drop_database("fogdirector")
-db = client.fogdirector
-db.devices.create_index([('$**', pm.TEXT)], name='TextIndex', default_language='english')
+db = None
+def resetSimulation():
+    global db
+    client.drop_database("fogdirector")
+    db = client.fogdirector
+    db.devices.create_index([('$**', pm.TEXT)], name='TextIndex', default_language='english')   
+resetSimulation()
 
 # Authentication
 def addToken(expiryTime, token, user):
@@ -67,7 +71,11 @@ def deviceExists(ipAddress, port):
 def getDevice(devid):
     return db.devices.find_one({"deviceId": Int64(devid)})
 def deleteDevice(devid):
+    installedApps = db.devices.find_one({"deviceId": Int64(devid)})["installedApps"]
+    for app in installedApps:
+        uninstallJob(app["appid"], devid)
     db.devices.find_one_and_delete({"deviceId": Int64(devid)})
+
 def getDevices(limit=100, offset=0, searchByTag=None, searchByAnyMatch=None):
     if searchByTag != None:
         tag = db.tags.find_one({"name": searchByTag})
@@ -200,7 +208,7 @@ def createMyApp(appname, sourceAppName, version, apptype, minjobs=0):
                                             }, return_document=pm.ReturnDocument.AFTER)
 def deleteMyApp(appid):
     with myapp_lock:
-        if db.devices.count_documents({"installedApps": appid}) > 0:
+        if db.devices.count_documents({"installedApps.appid": appid}) > 0:
             raise MyAppInstalledOnDeviceError("Myapps is installed on some device")
         return db.myapps.find_one_and_delete({"_id": ObjectId(appid)})
 def myAppExists(name):
@@ -233,6 +241,7 @@ def uninstallJob(myappId, deviceId):
         "myappId": myappId,
     }, { "$pull": { 'devices': { "deviceId": deviceId } } })
     db.jobs.remove({ "devices": { "$exists": True, "$size": 0 } })
+
 def getJobs(myappid = None):
     if myappid == None:
         return db.jobs.find()
@@ -262,3 +271,4 @@ def addSimulationValues(values):
     db.simulation.insert_one(values)
 def getSimulationValues(_filter):
     return db.simulation.find(_filter)
+

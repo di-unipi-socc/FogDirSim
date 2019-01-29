@@ -103,11 +103,11 @@ def post(args, request, uploadDir, filename):
             return file_error_string, 400, {"Content-Type": "application/xml"} 
         os.chdir("../")
         
-        if False:  # TODO: if application already exists, create correct if condition
+        if db.getMyApps(searchByName = app_data["info"]["name"]).count() != 0: 
             return '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
                     <error>
                         <code>1316</code>
-                        <description>An app with the same deployId already exists. Please make sure that the first forty characters of the app do not match with any of the existing apps.</description>
+                        <description>An app with the same deployId already exists. Please make sure that the characters of the app do not match with any of the existing apps.</description>
                     </error>''', 409, {"Content-Type": "application/xml"}
 
         appJson = createApplicationJSON(creationDate=int(time.time()),

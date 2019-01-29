@@ -61,6 +61,24 @@ stages:
       save:
         body:
           myappId: myappId
+
+  - name: creating already defined myapp endpoint
+    request:
+      verify: false
+      url: "{host:s}/api/v1/appmgr/myapps"
+      method: POST
+      headers:
+        content-type: application/json
+        x-token-id: "{token:s}"
+      json:
+        name: "{appname:s}"
+        sourceAppName: "{sourceAppName:s}"
+        version: "{version:s}"
+        appSourceType: "{appSourceType:s}"
+    response:
+      status_code: 409
+      headers:
+        content-type: application/json
   
   - name: deleting myapps
     request:

@@ -25,4 +25,4 @@ class Authentication(Resource):
         parser.add_argument('x-token-id', location='headers')
         args = parser.parse_args()
         return queue.get_result(
-                queue.add_for_processing(("Authorization", "delete"), args, token))
+                queue.add_for_processing(("Authentication", "delete"), args, token))

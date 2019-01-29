@@ -1,5 +1,8 @@
 from APIWrapper import FogDirector
 import time, random, math
+from infrastructure import ciscorouter_size300 as infrastructure
+
+infrastructure.create()
 
 fg = FogDirector("127.0.0.1:5000")
 code = fg.authenticate("admin", "admin_123")

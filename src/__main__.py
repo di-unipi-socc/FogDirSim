@@ -1,6 +1,6 @@
 from flask import Flask, render_template, jsonify, send_from_directory
 from flask_restful import Api, Resource, reqparse
-import os
+import os, time
 from API_gateway.Devices import Devices
 from API_gateway.TaggingDevices import TaggingDevices
 from API_gateway.Tags import Tags
@@ -14,8 +14,11 @@ from API_gateway.Jobs import Jobs
 from API_gateway.Alerts import Alerts
 import Database as db
 from Simulator.SimThread import SimThread
+from Simulator.HistoryThread import Historian
+from Simulator import HistoryThread
 import signal, threading, time, Simulator
 import constants
+from threading import Thread, Lock
 
 app = constants.flaskApp
 
@@ -38,15 +41,19 @@ def main():
     api.add_resource(Jobs, "/api/v1/appmgr/jobs", "/api/v1/appmgr/jobs/")
     api.add_resource(Alerts, "/api/v1/appmgr/alerts", "/api/v1/appmgr/alerts/")
 
+    
     def service_shutdown(signum, frame):
-        print('Caught signal %d' % signum)
+        print('\nOh, ok, I\'ll shutdown all the thread in a second... Byeee!')
         simulatorThread.shutdown_flag.set()
+        historianThread.shutdown_flag.set()
         exit()
-
+    signal.signal(signal.SIGINT, service_shutdown)
     print("Creating Simulation Thread")
     simulatorThread = SimThread()
-    signal.signal(signal.SIGINT, service_shutdown)
+    historianThread = Historian()
+    
     simulatorThread.start()
+    historianThread.start()
 
     @app.route("/result/devices")
     def result_device():
@@ -62,6 +69,59 @@ def main():
     def sim_count():
         return str(Simulator.SimThread.getSimulationCount())
 
+    @app.route("/result/totalenergy")
+    def result_system_energy():
+        values = Simulator.SimThread.getDeviceSampling()
+        total = 0
+        for val in values:
+            total += val["DEVICE_ENERGY_CONSUMPTION"]
+        return total
+        
+    @app.route("/result/systemuptime")
+    def result_system_uptime():
+        values = Simulator.SimThread.getMyAppsSampling()
+        if len(values) == 0:
+            return 1
+        total = 0
+        for val in values:
+            total += val["UP_PERCENTAGE"] 
+        return total / len(values)
+
+    @app.route("/result/uptime_history")
+    def get_uptime_history():
+        val = HistoryThread.get_uptime_history()
+        return jsonify(val)
+
+    @app.route("/result/energy_history")
+    def get_energy_history():
+            return jsonify(HistoryThread.get_energy_history())
+    
+    @app.route("/simulationreset")
+    def reset_simulation():
+        average_alerts = {}
+        myapps = Simulator.SimThread.getMyAppsSampling()
+        for myapp in myapps:
+            for k in myapp["ALERT_PERCENTAGE"]:
+                if k in average_alerts:
+                    average_alerts[k] += myapp["ALERT_PERCENTAGE"][k]
+                else:
+                    average_alerts[k] = myapp["ALERT_PERCENTAGE"][k]
+        for k in average_alerts:
+            average_alerts[k] /= len(myapps)
+        result = {
+            "energy": result_system_energy(),
+            "uptime": result_system_uptime(),
+            "uptime_history": HistoryThread.get_uptime_history(),
+            "alerts": average_alerts,
+            "iteration_count": sim_count()
+        }
+        with Simulator.SimThread.device_lock:
+            with Simulator.SimThread.myapp_lock:
+                Simulator.SimThread.reset_simulation_counters()
+                db.resetSimulation()
+                Simulator.HistoryThread.reset_history()
+        return jsonify(result)
+
     # Serve React App
     @app.route('/', defaults={'path': ''})
     @app.route('/<path:path>')
@@ -70,8 +130,8 @@ def main():
             return send_from_directory('sim-gui/build', path)
         else:
             return send_from_directory('sim-gui/build', 'index.html')
-
     return app 
+
 if __name__ == "__main__":
     app = main()
-    app.run(debug=True, use_reloader=False)
+    app.run(debug=True, use_reloader=False, threaded=True)

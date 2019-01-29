@@ -40,6 +40,7 @@ def delete(args, myappId):
     if db.checkToken(args["x-token-id"]):
         try:
             app = db.deleteMyApp(myappId)
+
             del app["_id"]
             return app
         except MyAppInstalledOnDeviceError as e:

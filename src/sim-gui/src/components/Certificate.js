@@ -1,45 +1,67 @@
 import React from 'react';
 import { URL } from "../costants"
 import Number from "./Number"
+import {PieChart, LineChart} from 'react-easy-chart';
+import Quadretti from "./Quadretti"
+
+let alert_to_color = {
+    "APP_HEALTH": "#CD533B",
+    "DEVICE_REACHABILITY": "#33753e",
+    "MYAPP_CPU_CONSUMING": "#e2b404",
+    "MYAPP_MEM_CONSUMING": "#4392F1"
+}
 
 export default class Certificate extends React.Component {
     constructor(props){
         super(props)
-        this.state = {cost: 0, prev_cost: -1000, uptime: 0, prev_uptime: -1000, downtime: 0}
+        this.state = {cost: 0, uptime: 1, prev_cost: 0, prev_uptime: 1, pie_data: [], uptime_history: [], energy_history: []}
     }
 
     getData = () => {
       fetch(URL+"/result/devices")
         .then(res => res.json())
         .then(res => res.reduce((prev, current) => (prev+current.DEVICE_ENERGY_CONSUMPTION), 0))
-        .then(cost => this.setState({cost: cost, prev_cost: this.state.cost}))
+        .then(cost => this.setState({cost: cost, prev_cost: this.state.cost, energy_history: [...this.state.energy_history, {x: this.state.energy_history.length + 1, y: cost}]}))
       fetch(URL+"/result/myapps")
         .then(res => res.json())
-        //.then(res => console.log(res))
-        .then(res => res.reduce((prev, current) => (prev+current.UP_PERCENTAGE), 0) / res.length ) 
-        .then(uptime => this.setState({uptime: uptime, prev_uptime: this.state.uptime, downtime: 1-uptime}))
+        .then(res => {
+            let uptime = res.reduce((prev, current) => (prev+current.UP_PERCENTAGE), 0) / res.length
+            let average_alerts = {}
+            res.forEach(myapp => {
+                for(let key in myapp.ALERT_PERCENTAGE){
+                    if (average_alerts[key] != null){
+                        average_alerts[key] += myapp.ALERT_PERCENTAGE[key]
+                    }else{
+                        average_alerts[key] = myapp.ALERT_PERCENTAGE[key]
+                    }
+                }
+            })
 
-      setTimeout(this.getData, 10000)
+            let pie_data = []
+            let total = 100
+            for (let k in average_alerts){
+                pie_data.push({key: k, value: average_alerts[k]/res.length, color: alert_to_color[k]})
+                total -= average_alerts[k]/res.length
+            }
+            pie_data.push({key: "NO_ALERT", value: total, color: "green"})
+            this.setState({uptime: uptime, prev_uptime: this.state.uptime, pie_data: pie_data, uptime_history: [...this.state.uptime_history, {x: this.state.uptime_history.length + 1, y: uptime}]})
+        })
+      setTimeout(this.getData, 5000)
     }
 
     componentWillMount(){
-        console.log("certificate will mount")
+        fetch(URL+"/result/uptime_history")
+        .then(res => res.json())
+        .then(res => res.map( (value, i) => ({x: i, y: value}) )) 
+        .then(res => this.setState({"uptime_history": res}))
+        fetch(URL+"/result/energy_history")
+        .then(res => res.json())
+        .then(res => res.map( (value, i) => ({x: i, y: value}) )) 
+        .then(res => this.setState({"energy_history": res}))
         this.getData()
     }
-    componentWillUpdate(){
-        console.log("certificate will update")
-    }
+
     render(){
-        let uptime_stability = false
-        let cost_stability = false
-        console.log(this.state.uptime)
-        if (Math.abs(this.state.uptime - this.state.prev_uptime) < 0.05){
-            uptime_stability = true
-        }
-        if (Math.abs(this.state.cost - this.state.prev_cost) < 100){
-            cost_stability = true
-        }
-        console.log(uptime_stability)
         return (
         <div className="container">
         <div className="jumbotron">
@@ -47,22 +69,63 @@ export default class Certificate extends React.Component {
                 <div className="container">
                     <div className="row">
                         <div className="col-sm">
-                            <Number title="Total Cost" stability={cost_stability} value={Math.round(this.state.cost*10000)/100} formatValue={(val => (val.toFixed(2)+" kWh/month"))}/>
+                            <Number title="Total Energy" start={this.state.prev_cost*0.72} value={this.state.cost*0.72} decimals={2} suffix=" kWh/month"/>
                         </div>
                         <div className="col-sm">
-                            <Number title="Mean Uptime" stability={uptime_stability} value={Math.round(this.state.uptime*10000)/100} formatValue={(val => (val.toFixed(2)+" %"))}/>
+                            <Number title="Mean Uptime" start={this.state.prev_uptime*100} decimals={2} value={this.state.uptime*100} suffix=" %" />
                         </div>
                         <div className="col-sm">
-                            <Number title="Mean Downtime"  stability={uptime_stability} value={Math.round(this.state.downtime*10000)/100} formatValue={(val => (val.toFixed(2)+" %"))}/>
+                            <Number title="Mean Downtime" start={100-(this.state.prev_uptime*100)} decimals={2} value={100-(this.state.uptime*100)} suffix=" %"/>
+                        </div>
+                    </div>
+                    <hr className="my-4"/>
+                    <div className="row">
+                        <div className="col-sm">
+                            <h2>Uptime</h2>
+                            <LineChart
+                                axes
+                                yAxisOrientLeft
+                                width={450}
+                                height={150}
+                                yDomainRange={[0, 1]}
+                                yTicks={3}
+                                xTicks={1}
+                                data={[this.state.uptime_history]}
+                            />
+                            <h2>Energy Consumption</h2>
+                            <LineChart
+                                axes
+                                yAxisOrientLeft
+                                width={450}
+                                height={150}
+                                yTicks={3}
+                                data={[this.state.energy_history]}
+                            />
+                        </div>
+                        <div className="col-sm">
+                            <h3>Alert Type Summary</h3>
+                            <table className="quadretto">
+                                    <tbody><tr>
+                                    <td>
+                                        <PieChart
+                                            key={"pie"}
+                                            id={"pie-chart"}
+                                            size={200}
+                                            innerHoleSize={0}
+                                            data={this.state.pie_data}
+                                        />
+                                    </td>
+                                    <td>
+                                        <Quadretti data={this.state.pie_data.map(val => { return {color: val.color, val: val.value, name: val.key}} )} />
+                                    </td>
+                                    </tr>
+                                    </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
-                <hr className="my-4"/>
-                <p>In order to see detailed information...</p>
-                <p className="lead">
-                    <a className="btn btn-primary btn-lg" href="/devices" role="button" style={{margin: "10px"}} >Devices</a>
-                    <a className="btn btn-primary btn-lg" href="/myapps" role="button">MyApps</a>
-                </p>
+                
+                
         </div></div>)
     }
 }
