@@ -123,6 +123,7 @@ for DEPLOYMENT_NUMBER in range(20, 200, 10):
     file  = open("simulation_result.txt", "a")
     file.write("sim_count: "+str(count)+" - depl_num: "+str(DEPLOYMENT_NUMBER)+"\n")
     file.write(json.dumps(r))
+    file.write("\n\n")
     file.close()
 
 file  = open("final_simulation_result.txt", "w")
