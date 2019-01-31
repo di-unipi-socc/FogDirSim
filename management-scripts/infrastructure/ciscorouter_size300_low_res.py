@@ -18,7 +18,7 @@ def create():
         dev = {
                     "ipAddress": "10.10.20."+str(deviceId),
                     "port": 8443,
-                    "deviceId": str(deviceId),
+                    "deviceId": deviceId,
                     "totalCPU": 1700,
                     "totalVCPU": 2,
                     "maxVCPUPerApp": 2,
