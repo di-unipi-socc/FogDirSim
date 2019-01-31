@@ -32,11 +32,11 @@ def formatDeviceOutput(device):
         "name": "x86_64",
         "cartridges": [],
         "cpu": {
-            "available": sampleCPU(device["ipAddress"])-device["usedCPU"],
+            "available": sampleCPU(device["deviceId"])-device["usedCPU"],
             "total": device["totalCPU"]
         },
         "memory": {
-            "available": sampleMEM(device["ipAddress"]) - device["usedMEM"],
+            "available": sampleMEM(device["deviceId"]) - device["usedMEM"],
             "total": device["totalMEM"]
         },
         "disk": {
