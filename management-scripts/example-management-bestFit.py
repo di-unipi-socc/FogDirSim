@@ -57,7 +57,7 @@ DEPLOYMENT_NUMBER = 150
     # Adding devices
 
 for DEPLOYMENT_NUMBER in range(20, 200, 10):
-
+    print("Trying to deploy", str(DEPLOYMENT_NUMBER), "number of devices")
     for i in range(0, DEVICES_NUMBER):
         deviceId = i+1      
         _, device1 = fg.add_device("10.10.20."+str(deviceId), "cisco", "cisco")
@@ -83,6 +83,8 @@ for DEPLOYMENT_NUMBER in range(20, 200, 10):
     count = 0
     last_count_alerted = 0
     while count < 10000 or (count > 4000 and count-last_count_alerted > 150) :
+        if count % 200 == 0:
+            print ("Count: "+str(count))
         count += 1
         _, alerts = fg.get_alerts()
         for alert in alerts["data"]:
@@ -107,6 +109,10 @@ for DEPLOYMENT_NUMBER in range(20, 200, 10):
                 print("start app", dep, code)
 
     r = reset_simulation("sim_count:"+str(count)+":depl_num:"+str(DEPLOYMENT_NUMBER))
-    print(r)
+    file  = open("simulation_result.txt", "a")
+    file.write("sim_count: "+str(count)+" - depl_num: "+str(DEPLOYMENT_NUMBER)+"\n")
+    file.close()
 
-print(previous_simulation)
+file  = open("final_simulation_result.txt", "w")
+file.write(json.dumps(previous_simulation))
+file.close()
