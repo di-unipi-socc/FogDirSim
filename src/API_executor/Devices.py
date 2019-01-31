@@ -1,6 +1,7 @@
 from API_executor.Authentication import invalidToken
 import time, json
 import Database as db
+from Simulator.ResourceSampling import sampleCPU, sampleMEM
 
 def computeDeviceId(ip, port):
     return str(abs(hash(ip + str(port))))
@@ -31,11 +32,11 @@ def formatDeviceOutput(device):
         "name": "x86_64",
         "cartridges": [],
         "cpu": {
-            "available": device["totalCPU"]-device["usedCPU"],
+            "available": sampleCPU(device["ipAddress"])-device["usedCPU"],
             "total": device["totalCPU"]
         },
         "memory": {
-            "available": device["totalMEM"] - device["usedMEM"],
+            "available": sampleMEM(device["ipAddress"]) - device["usedMEM"],
             "total": device["totalMEM"]
         },
         "disk": {
