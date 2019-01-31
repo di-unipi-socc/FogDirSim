@@ -54,9 +54,8 @@ if code == 401:
 
 DEVICES_NUMBER = 20
 DEPLOYMENT_NUMBER = 150
-    # Adding devices
 
-for DEPLOYMENT_NUMBER in range(50, 200, 10):
+for DEPLOYMENT_NUMBER in range(130, 200, 10):
     print("Trying to deploy", str(DEPLOYMENT_NUMBER), "number of devices")
     for i in range(0, DEVICES_NUMBER):
         deviceId = i+1      
