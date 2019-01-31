@@ -27,16 +27,16 @@ def create():
                             {
                                 "timeStart": 0,
                                 "timeEnd": 24,
-                                "mean": 400,
-                                "deviation": 78
+                                "mean": 950,
+                                "deviation": 500
                             }
                         ],
                         "MEM": [
                             {
                                 "timeStart": 0,
                                 "timeEnd": 24,
-                                "mean": 150,
-                                "deviation": 100
+                                "mean": 300,
+                                "deviation": 200
                             }
                         ]
                     }

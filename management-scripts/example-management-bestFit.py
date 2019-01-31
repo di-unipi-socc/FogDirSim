@@ -1,6 +1,6 @@
 from APIWrapper import FogDirector
 import time, random, math
-from infrastructure import ciscorouter_size300 as infrastructure
+from infrastructure import ciscorouter_size300_low_res as infrastructure
 import requests
 import json, signal
 
