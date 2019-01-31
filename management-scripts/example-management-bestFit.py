@@ -67,7 +67,6 @@ for DEPLOYMENT_NUMBER in range(50, 200, 10):
 
     for myapp_index in range(0, DEPLOYMENT_NUMBER):
         dep = "dep"+str(myapp_index)
-        print("deploying", dep)
         # Creating myapp1 endpoint
         _, myapp1 = fg.create_myapp(localapp["localAppId"], dep)
 
@@ -84,7 +83,6 @@ for DEPLOYMENT_NUMBER in range(50, 200, 10):
             code, res = fg.install_app(dep, [deviceIp], resources={"resources":{"profile":"c1.tiny","cpu":100,"memory":32,"network":[{"interface-name":"eth0","network-name":"iox-bridge0"}]}})
         
         fg.start_app(dep)
-        print(dep, "started")
 
     count = 0
     last_count_alerted = 0
