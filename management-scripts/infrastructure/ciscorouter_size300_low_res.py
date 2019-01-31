@@ -1,6 +1,7 @@
 import pymongo as pm 
 import time, json, random
 import infrastructure.SECRETS as config
+import _pickle as cPickle
 
 def create():
     devices = []
@@ -17,7 +18,7 @@ def create():
         dev = {
                     "ipAddress": "10.10.20."+str(deviceId),
                     "port": 8443,
-                    "deviceId": deviceId,
+                    "deviceId": str(deviceId),
                     "totalCPU": 1700,
                     "totalVCPU": 2,
                     "maxVCPUPerApp": 2,
@@ -45,6 +46,5 @@ def create():
                 }
         db.Rdevices.insert_one(dev)
         devices.append(dev)
-    file = open("infrastructure.txt", "w")
-    file.write(json.dumps(devices))
-    file.close()
+    with open("infrastructure.txt", "w") as file:
+        file.write(cPickle.dump(devices, file))
