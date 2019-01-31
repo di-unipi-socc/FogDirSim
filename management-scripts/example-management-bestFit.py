@@ -74,7 +74,11 @@ for DEPLOYMENT_NUMBER in range(20, 200, 10):
         deviceIp = bestFit(100, 32)
 
         code, res = fg.install_app(dep, [deviceIp], resources={"resources":{"profile":"c1.tiny","cpu":100,"memory":32,"network":[{"interface-name":"eth0","network-name":"iox-bridge0"}]}})
+        trial = 0
         while code == 400:
+            trial += 1
+            if trial == 100:
+                print(DEPLOYMENT_NUMBER, "are too high value to deploy")
             print("*** Cannot deploy", dep,"to the building router", deviceIp, ".Try another ***")
             deviceIp = bestFit(100, 32)
             code, res = fg.install_app(dep, [deviceIp], resources={"resources":{"profile":"c1.tiny","cpu":100,"memory":32,"network":[{"interface-name":"eth0","network-name":"iox-bridge0"}]}})
