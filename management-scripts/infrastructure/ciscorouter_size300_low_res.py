@@ -14,15 +14,17 @@ def create():
     for i in range(0,300):
         r = random.random()
         r1 = random.random()
+        r2 = random.random()
+        r3 = random.random()
         deviceId = i+1
         dev = {
                     "ipAddress": "10.10.20."+str(deviceId),
                     "port": 8443,
                     "deviceId": deviceId,
-                    "totalCPU": 1700,
+                    "totalCPU": r2*2500,
                     "totalVCPU": 2,
                     "maxVCPUPerApp": 2,
-                    "totalMEM": 512,
+                    "totalMEM": r3*1024,
                     "chaos_down_prob": 0,
                     "chaos_revive_prob": 1,
                     "distributions": { 
@@ -47,6 +49,6 @@ def create():
         db.Rdevices.insert_one(dev)
         devices.append(dev)
 
-    with open("infrastructure.txt", "w") as file:
-        file.write(str(cPickle.dumps(devices)))
+    with open("infrastructure.txt", "wb") as file:
+        file.write((cPickle.dumps(devices)))
 
