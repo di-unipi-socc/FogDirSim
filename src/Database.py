@@ -129,7 +129,6 @@ def addMyAppToDevice(myappid, devid, profile):
     }, {
         "$addToSet": {"installedApps": {"appid": myappid, "profile": profile}}
     })
-
 def removeMyAppsFromDevice(myappid, devid):
     db.devices.find_one_and_update({
         "deviceId": devid
