@@ -46,5 +46,7 @@ def create():
                 }
         db.Rdevices.insert_one(dev)
         devices.append(dev)
+
     with open("infrastructure.txt", "w") as file:
         cPickle.dump(devices, file)
+
