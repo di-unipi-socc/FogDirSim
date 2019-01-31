@@ -29,7 +29,7 @@ def FTpi_like(cpu, mem):
         bestFit(cpu, mem) # requires 1 iteration for each counting => 1000 iteration for every device choice
     return None
 
-def service_shutdown(signum, frame):
+def service_shutdown(*args):
     print('\nOh, ok, I will print the simulation result.Byeee!')
     r = reset_simulation("new")
     print(r)
@@ -66,8 +66,9 @@ for DEPLOYMENT_NUMBER in range(20, 200, 10):
     code, localapp = fg.add_app("./NettestApp2V1_lxc.tar.gz", publish_on_upload=True)
 
     for myapp_index in range(0, DEPLOYMENT_NUMBER):
-        # Creating myapp1 endpoint
         dep = "dep"+str(myapp_index)
+        print("deploying", dep)
+        # Creating myapp1 endpoint
         _, myapp1 = fg.create_myapp(localapp["localAppId"], dep)
 
         deviceIp = bestFit(100, 32)
@@ -79,6 +80,7 @@ for DEPLOYMENT_NUMBER in range(20, 200, 10):
             code, res = fg.install_app(dep, [deviceIp], resources={"resources":{"profile":"c1.tiny","cpu":100,"memory":32,"network":[{"interface-name":"eth0","network-name":"iox-bridge0"}]}})
         
         fg.start_app(dep)
+        print(dep, "started")
 
     count = 0
     last_count_alerted = 0
