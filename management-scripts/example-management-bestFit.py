@@ -10,6 +10,8 @@ def bestFit(cpu, mem):
     _, devices = fg.get_devices()
     devices = [ dev for dev in devices["data"] if dev["capabilities"]["nodes"][0]["cpu"]["available"] >= cpu and dev["capabilities"]["nodes"][0]["memory"]["available"]]
     devices.sort(reverse=True, key=(lambda dev: (dev["capabilities"]["nodes"][0]["cpu"]["available"], dev["capabilities"]["nodes"][0]["memory"]["available"]) ))
+    for dev in devices:
+        print(dev["ipAddress"])
     best_fit = devices[0]
     return best_fit["ipAddress"]
 

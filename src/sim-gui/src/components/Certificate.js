@@ -99,6 +99,7 @@ export default class Certificate extends React.Component {
                                 width={450}
                                 height={150}
                                 yTicks={3}
+                                xTicks={1}
                                 data={[this.state.energy_history]}
                             />
                         </div>

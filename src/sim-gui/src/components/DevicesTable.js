@@ -50,8 +50,8 @@ export default class DevicesTable extends React.Component {
                 <td>{dev.port}</td>
                 <td><CountUp key={dev.deviceId} end={dev.CRITICAL_CPU_PERCENTAGE*100}     start={this.state.prev_devices[i].CRITICAL_CPU_PERCENTAGE*100}   decimals={2}  suffix=" %"  /></td>
                 <td><CountUp key={dev.deviceId} end={dev.CRITICAL_MEM_PERCENTAGE*100}     start={this.state.prev_devices[i].CRITICAL_MEM_PERCENTAGE*100}   decimals={2}  suffix=" %"   /></td>
-                <td><CountUp key={dev.deviceId} end={(dev.AVERAGE_CPU_USED)}              start={this.state.prev_devices[i].AVERAGE_CPU_USED}              decimals={2}  suffix={"/"+dev.totalCPU}/></td>
-                <td><CountUp key={dev.deviceId} end={(dev.AVERAGE_MEM_USED)}              start={this.state.prev_devices[i].AVERAGE_MEM_USED}              decimals={2}  suffix={"/"+dev.totalMEM}/></td>
+                <td><CountUp key={dev.deviceId} end={(dev.AVERAGE_CPU_USED)}              start={this.state.prev_devices[i].AVERAGE_CPU_USED}              decimals={2}  suffix={"/"+dev.totalCPU.toFixed(2)}/></td>
+                <td><CountUp key={dev.deviceId} end={(dev.AVERAGE_MEM_USED)}              start={this.state.prev_devices[i].AVERAGE_MEM_USED}              decimals={2}  suffix={"/"+dev.totalMEM.toFixed(2)}/></td>
                 <td><CountUp key={dev.deviceId} end={(dev.AVERAGE_MYAPP_COUNT)}           start={this.state.prev_devices[i].AVERAGE_MYAPP_COUNT}           decimals={2} /></td>
                 <td><CountUp key={dev.deviceId} end={(dev.DEVICE_DOWN_PROB_chaos*100)}    start={this.state.prev_devices[i].DEVICE_DOWN_PROB_chaos*100}    decimals={2}  suffix=" %" /></td>
                 <td><CountUp key={dev.deviceId} end={(dev.DEVICE_ENERGY_CONSUMPTION * 0.72)}     start={this.state.prev_devices[i].DEVICE_ENERGY_CONSUMPTION * 0.72}     decimals={2}  suffix=" kWh/month" /></td>
