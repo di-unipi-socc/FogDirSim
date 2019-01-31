@@ -1,18 +1,20 @@
 import pymongo as pm 
-import time, json
+import time, json, random
 import infrastructure.SECRETS as config
 
 def create():
+    devices = []
     client = pm.MongoClient("mongodb://%s:%s@%s:%d" % (config.db_username, 
                                                     config.db_password, 
                                                     config.db_host, 
                                                     config.db_port))
     client.drop_database("realDatabase")
     db = client.realDatabase
-
     for i in range(0,300):
+        r = random.random()
+        r1 = random.random()
         deviceId = i+1
-        db.Rdevices.insert_one({
+        dev = {
                     "ipAddress": "10.10.20."+str(deviceId),
                     "port": 8443,
                     "deviceId": deviceId,
@@ -28,7 +30,7 @@ def create():
                                 "timeStart": 0,
                                 "timeEnd": 24,
                                 "mean": 950,
-                                "deviation": 500
+                                "deviation": r*500
                             }
                         ],
                         "MEM": [
@@ -36,8 +38,13 @@ def create():
                                 "timeStart": 0,
                                 "timeEnd": 24,
                                 "mean": 300,
-                                "deviation": 200
+                                "deviation": r1*200
                             }
                         ]
                     }
-                })
+                }
+        db.Rdevices.insert_one(dev)
+        devices.append(dev)
+    file = open("infrastructure.txt", "w")
+    file.write(json.dumps(devices))
+    file.close()
