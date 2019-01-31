@@ -106,10 +106,10 @@ for DEPLOYMENT_NUMBER in range(130, 200, 10):
                     print("uninstall", dep, code)
                     #"install App"
                     devip =  bestFit(100, 32)
-                    code, _ = fg.install_app("dep", [devip]) 
+                    code, _ = fg.install_app(dep, [devip]) 
                     while code == 400:
                         devip =  bestFit(100, 32)
-                        code, _ = fg.install_app("dep", [devip])  
+                        code, _ = fg.install_app(dep, [devip])  
                     print(dep, " installed on ", devip)
                     #"start app"
                     code, _ = fg.start_app(dep)
