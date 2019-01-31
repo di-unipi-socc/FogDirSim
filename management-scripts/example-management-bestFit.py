@@ -6,16 +6,14 @@ import json, signal
 
 infrastructure.create()
 tmp = 0
-def bestFit(cpu, mem):
+def bestFit(cpu, mem, print=False):
     _, devices = fg.get_devices()
     devices = [ dev for dev in devices["data"] if dev["capabilities"]["nodes"][0]["cpu"]["available"] >= cpu and dev["capabilities"]["nodes"][0]["memory"]["available"]]
     devices.sort(reverse=True, key=(lambda dev: (dev["capabilities"]["nodes"][0]["cpu"]["available"], dev["capabilities"]["nodes"][0]["memory"]["available"]) ))
-    global tmp
-    if tmp%30 == 0:
+    if print:
         print("***********")
         for dev in devices:
             print(dev["ipAddress"], (dev["capabilities"]["nodes"][0]["cpu"]["available"], dev["capabilities"]["nodes"][0]["memory"]["available"]))
-    tmp += 1
     best_fit = devices[0]
     return best_fit["ipAddress"]
 
@@ -83,7 +81,7 @@ for DEPLOYMENT_NUMBER in range(130, 200, 10):
             if trial == 100:
                 print(DEPLOYMENT_NUMBER, "are too high value to deploy")
             print("*** Cannot deploy", dep,"to the building router", deviceIp, ".Try another ***")
-            deviceIp = bestFit(100, 32)
+            deviceIp = bestFit(100, 32, print=True)
             code, res = fg.install_app(dep, [deviceIp], resources={"resources":{"profile":"c1.tiny","cpu":100,"memory":32,"network":[{"interface-name":"eth0","network-name":"iox-bridge0"}]}})
         
         fg.start_app(dep)
