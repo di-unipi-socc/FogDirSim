@@ -2,8 +2,9 @@
 
 These lines try to simulate Fog Director in order to prevent you to put in production an application that will destroy your infrastructure.
 <center>
-![Home Screenshot](https://github.com/alessandro308/FogDirSimulator/blob/master/docs/img/home_screen_video.gif?raw=true)
+<img src="https://github.com/alessandro308/FogDirSimulator/blob/master/docs/img/home_screen_video.gif?raw=true" alt="Home Screen" />
 </center>
+
 ## How it works?
 It simulates Fog Director giving the same [API of Fog Director](https://developer.cisco.com/docs/iox/#!fog-director-api-documentation/cisco-fog-director-rest-api) but executing all the operation only on a Database instead of on your infrastructure.
 
