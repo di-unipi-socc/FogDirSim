@@ -85,11 +85,12 @@ for DEPLOYMENT_NUMBER in range(20, 200, 10):
     count = 0
     last_count_alerted = 0
     try:
-        while count < 20000 or (count > 2000 and count-last_count_alerted > 150) :
+        while count < 20000:
             if count % 200 == 0:
                 print ("Count: "+str(count))
                 print ("last_count_alerted: ", str(last_count_alerted), " - diff", count-last_count_alerted)
-
+            if (count > 2000 and count-last_count_alerted > 150):
+                break
             count += 1
             _, alerts = fg.get_alerts()
             for alert in alerts["data"]:
