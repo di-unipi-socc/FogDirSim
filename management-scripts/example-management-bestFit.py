@@ -35,7 +35,7 @@ def service_shutdown(signum, frame):
     print(r)
     exit()
 
-signal.signal(signal.SIGINT, service_shutdown)
+#signal.signal(signal.SIGINT, service_shutdown)
 
 previous_simulation = []
 def reset_simulation(current_identifier):
@@ -82,31 +82,39 @@ for DEPLOYMENT_NUMBER in range(20, 200, 10):
 
     count = 0
     last_count_alerted = 0
-    while count < 10000 or (count > 4000 and count-last_count_alerted > 150) :
-        if count % 200 == 0:
-            print ("Count: "+str(count))
-        count += 1
-        _, alerts = fg.get_alerts()
-        for alert in alerts["data"]:
-            last_count_alerted = count
-            if "APP_HEALTH" == alert["simulation_type"]: # No other alerts can be triggered
-                dep = alert["appName"]
-                print("**Moving ", dep, "****")
-                code, _ = fg.stop_app(dep)
-                print("stop_app ", dep, code)
-                #"unistall App"
-                code, _ = fg.uninstall_app(dep, alert["ipAddress"])
-                print("uninstall", dep, code)
-                #"install App"
-                devip =  bestFit(100, 32)
-                code, _ = fg.install_app("dep", [devip]) 
-                while code == 400:
+    try:
+        while count < 20000 or (count > 2000 and count-last_count_alerted > 150) :
+            if count % 200 == 0:
+                print ("Count: "+str(count))
+                print ("last_count_alerted: ", str(last_count_alerted), " - diff", count-last_count_alerted)
+
+            count += 1
+            _, alerts = fg.get_alerts()
+            for alert in alerts["data"]:
+                last_count_alerted = count
+                if "APP_HEALTH" == alert["simulation_type"]: # No other alerts can be triggered
+                    dep = alert["appName"]
+                    print("**Moving ", dep, "****")
+                    code, _ = fg.stop_app(dep)
+                    print("stop_app ", dep, code)
+                    #"unistall App"
+                    code, _ = fg.uninstall_app(dep, alert["ipAddress"])
+                    print("uninstall", dep, code)
+                    #"install App"
                     devip =  bestFit(100, 32)
-                    code, _ = fg.install_app("dep", [devip])  
-                print(dep, " installed on ", devip)
-                #"start app"
-                code, _ = fg.start_app(dep)
-                print("start app", dep, code)
+                    code, _ = fg.install_app("dep", [devip]) 
+                    while code == 400:
+                        devip =  bestFit(100, 32)
+                        code, _ = fg.install_app("dep", [devip])  
+                    print(dep, " installed on ", devip)
+                    #"start app"
+                    code, _ = fg.start_app(dep)
+                    print("start app", dep, code)
+    except KeyboardInterrupt:
+        r = input("Exit (y/n)?")
+        if r == "y":
+            service_shutdown()
+            exit()
 
     r = reset_simulation("sim_count:"+str(count)+":depl_num:"+str(DEPLOYMENT_NUMBER))
     file  = open("simulation_result.txt", "a")
