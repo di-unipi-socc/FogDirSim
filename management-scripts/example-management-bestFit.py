@@ -14,6 +14,8 @@ def bestFit(cpu, mem, print_result=False):
         print("***********")
         for dev in devices:
             print(dev["ipAddress"], (dev["capabilities"]["nodes"][0]["cpu"]["available"], dev["capabilities"]["nodes"][0]["memory"]["available"]))
+    if len(devices) == 0:
+        print("THE SYSTEM HAS NO ENOUGH RESOURCES TO SUPPORT YOUR IDEA. SORRY.")
     best_fit = devices[0]
     return best_fit["ipAddress"]
 
