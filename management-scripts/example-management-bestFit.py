@@ -52,6 +52,7 @@ def reset_simulation(current_identifier):
     })
     return r.json()
 reset_simulation(0)
+print("STARTING SIMULATION")
 
 fg = FogDirector("127.0.0.1:5000")
 code = fg.authenticate("admin", "admin_123")
