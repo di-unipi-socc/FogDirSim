@@ -8,6 +8,7 @@ infrastructure.create()
 tmp = 0
 def bestFit(cpu, mem, print_result=False):
     _, devices = fg.get_devices()
+    init = True
     devices = [ dev for dev in devices["data"] if dev["capabilities"]["nodes"][0]["cpu"]["available"] >= cpu and dev["capabilities"]["nodes"][0]["memory"]["available"] >= mem]
     devices.sort(reverse=True, key=(lambda dev: (dev["capabilities"]["nodes"][0]["cpu"]["available"], dev["capabilities"]["nodes"][0]["memory"]["available"]) ))
     if print_result:
@@ -16,6 +17,7 @@ def bestFit(cpu, mem, print_result=False):
             print(dev["ipAddress"], (dev["capabilities"]["nodes"][0]["cpu"]["available"], dev["capabilities"]["nodes"][0]["memory"]["available"]))
     if len(devices) == 0:
         print("THE SYSTEM HAS NO ENOUGH RESOURCES TO SUPPORT YOUR IDEA. SORRY.")
+        return None
     best_fit = devices[0]
     return best_fit["ipAddress"]
 
@@ -77,6 +79,8 @@ for DEPLOYMENT_NUMBER in range(130, 200, 10):
         _, myapp1 = fg.create_myapp(localapp["localAppId"], dep)
 
         deviceIp = bestFit(100, 32)
+        while deviceIp == None:
+            deviceIp = bestFit(100, 32)
         code, res = fg.install_app(dep, [deviceIp], resources={"resources":{"profile":"c1.tiny","cpu":100,"memory":32,"network":[{"interface-name":"eth0","network-name":"iox-bridge0"}]}})
         trial = 0
         while code == 400:
@@ -85,6 +89,8 @@ for DEPLOYMENT_NUMBER in range(130, 200, 10):
                 print(DEPLOYMENT_NUMBER, "are too high value to deploy")
             print("*** Cannot deploy", dep,"to the building router", deviceIp, ".Try another ***")
             deviceIp = bestFit(100, 32, print_result=True)
+            while deviceIp == None:
+                deviceIp = bestFit(100, 32, print_result=True)
             code, res = fg.install_app(dep, [deviceIp], resources={"resources":{"profile":"c1.tiny","cpu":100,"memory":32,"network":[{"interface-name":"eth0","network-name":"iox-bridge0"}]}})
         
         fg.start_app(dep)
@@ -112,9 +118,13 @@ for DEPLOYMENT_NUMBER in range(130, 200, 10):
                     print("uninstall", dep, code)
                     #"install App"
                     devip =  bestFit(100, 32)
+                    while devip == None:
+                        devip = bestFit(100, 32)
                     code, _ = fg.install_app(dep, [devip]) 
                     while code == 400:
                         devip =  bestFit(100, 32)
+                        if devip == None:
+                            continue
                         code, _ = fg.install_app(dep, [devip])  
                     print(dep, " installed on ", devip)
                     #"start app"
