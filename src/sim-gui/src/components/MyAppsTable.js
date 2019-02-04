@@ -47,12 +47,12 @@ export default class MyAppsTable extends React.Component {
           {
             this.state.myapps.map((myapp, i) => {
               let pie_data = []
-              let total = 100
+              let total = 1
               for (let k in myapp.ALERT_PERCENTAGE){
                 total -= myapp.ALERT_PERCENTAGE[k]
                 pie_data.push({key: k, value: myapp.ALERT_PERCENTAGE[k]*100, color: alert_to_color[k]})
               }
-              pie_data.push({key: "no_alert", value: total, color: "green"})
+              pie_data.push({key: "no_alert", value: total*100, color: "green"})
               return <tr key={myapp.myappId}>
               <td>{i}</td>
               <td>{myapp.myappId}</td>

@@ -38,7 +38,7 @@ export default class Certificate extends React.Component {
             })
 
             let pie_data = []
-            let total = 100
+            let total = 1
             for (let k in average_alerts){
                 pie_data.push({key: k, value: average_alerts[k]/res.length, color: alert_to_color[k]})
                 total -= average_alerts[k]/res.length
@@ -117,7 +117,7 @@ export default class Certificate extends React.Component {
                                         />
                                     </td>
                                     <td>
-                                        <Quadretti data={this.state.pie_data.map(val => { return {color: val.color, val: val.value, name: val.key}} )} />
+                                        <Quadretti data={this.state.pie_data.map(val => { return {color: val.color, val: val.value*100, name: val.key}} )} />
                                     </td>
                                     </tr>
                                     </tbody>
