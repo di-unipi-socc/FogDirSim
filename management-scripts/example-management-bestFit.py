@@ -40,7 +40,12 @@ def FTpi_like(cpu, mem):
 def service_shutdown(*args):
     print('\nOh, ok, I will print the simulation result.Byeee!')
     r = reset_simulation("new")
-    print(r)
+    file_name = input("Filename to save simulation result")
+    file  = open(file_name, "w")
+    file.write("sim_count: "+str(count)+" - depl_num: "+str(DEPLOYMENT_NUMBER)+"\n")
+    file.write(json.dumps(r))
+    file.write("\n\n")
+    file.close()
     exit()
 
 #signal.signal(signal.SIGINT, service_shutdown)
@@ -61,7 +66,7 @@ code = fg.authenticate("admin", "admin_123")
 if code == 401:
     print("Failed Authentication")
 
-DEVICES_NUMBER = 20
+DEVICES_NUMBER = 30
 DEPLOYMENT_NUMBER = 150
 
 decision_function = randomFit
@@ -80,9 +85,9 @@ for DEPLOYMENT_NUMBER in range(150, 200, 10):
         # Creating myapp1 endpoint
         _, myapp1 = fg.create_myapp(localapp["localAppId"], dep)
 
-        deviceIp = decision_function(1, 20)
+        deviceIp = decision_function(1, 10)
         while deviceIp == None:
-            deviceIp = decision_function(1, 20)
+            deviceIp = decision_function(1, 10)
         code, res = fg.install_app(dep, [deviceIp], resources={"resources":{"profile":"c1.tiny","cpu":100,"memory":32,"network":[{"interface-name":"eth0","network-name":"iox-bridge0"}]}})
         trial = 0
         while code == 400:
@@ -90,9 +95,9 @@ for DEPLOYMENT_NUMBER in range(150, 200, 10):
             if trial == 100:
                 print(DEPLOYMENT_NUMBER, "are too high value to deploy")
             print("*** Cannot deploy", dep,"to the building router", deviceIp, ".Try another ***")
-            deviceIp = decision_function(1, 20)
+            deviceIp = decision_function(1, 10)
             while deviceIp == None:
-                deviceIp = decision_function(1, 20)
+                deviceIp = decision_function(1, 10)
             code, res = fg.install_app(dep, [deviceIp], resources={"resources":{"profile":"c1.tiny","cpu":100,"memory":32,"network":[{"interface-name":"eth0","network-name":"iox-bridge0"}]}})
         
         fg.start_app(dep)
@@ -100,38 +105,33 @@ for DEPLOYMENT_NUMBER in range(150, 200, 10):
     count = 0
     last_count_alerted = 0
     try:
+        managed_apps = []
         while count < 20000:
-            if count % 200 == 0:
-                print ("Count: "+str(count))
-                print ("last_count_alerted: ", str(last_count_alerted), " - diff", count-last_count_alerted)
-            if (count > 2000 and count-last_count_alerted > 150):
-                break
             count += 1
             _, alerts = fg.get_alerts()
+            managed_apps = []
             for alert in alerts["data"]:
                 last_count_alerted = count
                 if "APP_HEALTH" == alert["simulation_type"]: # No other alerts can be triggered
                     dep = alert["appName"]
-                    print("**Moving ", dep, "****")
+                    if dep in managed_apps:
+                        continue
                     code, _ = fg.stop_app(dep)
-                    print("stop_app ", dep, code)
                     #"unistall App"
                     code, _ = fg.uninstall_app(dep, alert["ipAddress"])
-                    print("uninstall", dep, code)
+                    
                     #"install App"
-                    devip =  decision_function(1, 20)
+                    devip =  decision_function(1, 10)
                     while devip == None:
                         devip = decision_function(1,20)
                     code, _ = fg.install_app(dep, [devip]) 
                     while code == 400:
-                        devip =  decision_function(1, 20)
+                        devip =  decision_function(1, 10)
                         if devip == None:
                             continue
                         code, _ = fg.install_app(dep, [devip])  
-                    print(dep, " installed on ", devip)
                     #"start app"
                     code, _ = fg.start_app(dep)
-                    print("start app", dep, code)
     except KeyboardInterrupt:
         r = input("Exit (y/n)?")
         if r == "y":
