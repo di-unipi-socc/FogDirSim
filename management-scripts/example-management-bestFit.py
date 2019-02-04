@@ -86,9 +86,9 @@ for DEPLOYMENT_NUMBER in range(150, 200, 10):
         # Creating myapp1 endpoint
         _, myapp1 = fg.create_myapp(localapp["localAppId"], dep)
 
-        deviceIp = decision_function(1, 10)
+        deviceIp = decision_function(1, DEVICES_NUMBER)
         while deviceIp == None:
-            deviceIp = decision_function(1, 10)
+            deviceIp = decision_function(1, DEVICES_NUMBER)
         code, res = fg.install_app(dep, [deviceIp], resources={"resources":{"profile":"c1.tiny","cpu":100,"memory":32,"network":[{"interface-name":"eth0","network-name":"iox-bridge0"}]}})
         trial = 0
         while code == 400:
@@ -96,9 +96,9 @@ for DEPLOYMENT_NUMBER in range(150, 200, 10):
             if trial == 100:
                 print(DEPLOYMENT_NUMBER, "are too high value to deploy")
             print("*** Cannot deploy", dep,"to the building router", deviceIp, ".Try another ***")
-            deviceIp = decision_function(1, 10)
+            deviceIp = decision_function(1, DEVICES_NUMBER)
             while deviceIp == None:
-                deviceIp = decision_function(1, 10)
+                deviceIp = decision_function(1, DEVICES_NUMBER)
             code, res = fg.install_app(dep, [deviceIp], resources={"resources":{"profile":"c1.tiny","cpu":100,"memory":32,"network":[{"interface-name":"eth0","network-name":"iox-bridge0"}]}})
         
         fg.start_app(dep)
@@ -119,12 +119,12 @@ for DEPLOYMENT_NUMBER in range(150, 200, 10):
                         continue
                     code, _ = fg.stop_app(dep)
                     code, _ = fg.uninstall_app(dep, alert["ipAddress"])
-                    devip =  decision_function(1, 10)
+                    devip =  decision_function(1, DEVICES_NUMBER)
                     while devip == None:
-                        devip = decision_function(1,20)
+                        devip = decision_function(1,DEVICES_NUMBER)
                     code, _ = fg.install_app(dep, [devip]) 
                     while code == 400:
-                        devip =  decision_function(1, 10)
+                        devip =  decision_function(1, DEVICES_NUMBER)
                         if devip == None:
                             continue
                         code, _ = fg.install_app(dep, [devip])
