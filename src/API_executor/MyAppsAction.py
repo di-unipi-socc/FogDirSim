@@ -27,7 +27,10 @@ def post(args, data, myappId):
                     else:
                         profile = constants.MYAPP_PROFILE_NORMAL
                     try:
-                        db.checkAndAllocateResource(devid, resourceAsked["cpu"], resourceAsked["memory"])
+                        try:
+                            db.checkAndAllocateResource(devid, resourceAsked["cpu"], resourceAsked["memory"])
+                        except TypeError:
+                            return {"Error": "Device does not exist"}, 400, {"content-type: application/json"}
                         db.addMyAppToDevice(myappId, devid, profile)
                         db.addMyAppLog({
                             "time": int(time.time()),
@@ -59,7 +62,7 @@ def post(args, data, myappId):
                 # TODO: if la myapp è già sul device: ritorna errore  
                 jobid = db.addJobs(myappId, deviceSuccessful, profile=profile, payload=data)
                 
-            elif "start" in data.keys() or "stop" in data.keys(): # TODO: add response for this request
+            elif "start" in data.keys() or "stop" in data.keys(): 
                 action = "start" if "start" in data.keys() else "stop"
                 db.addMyAppLog({
                     "time": int(time.time()),
@@ -72,38 +75,42 @@ def post(args, data, myappId):
                 })
                 jobid = db.updateJobsStatus(myappId, action)
                 
-            elif "undeploy" in data.keys(): # TODO: add correct response for this request
+            elif "undeploy" in data.keys(): 
                 action = "undeploy"
                 data = data[action]
                 devices_payload = data["devices"]
                 myapp = db.getMyApp(myappId) # Taken for Name only
-                jobs = db.getJobs(myappId)
-                for job in jobs:
-                    jobDescr = job["payload"]
-                    resourcesDevs = jobDescr["devices"]
-                    for device in resourcesDevs:
-                        if device["deviceId"] in devices_payload:
-                            cpu = 0
-                            mem = 0
-                            for dev in resourcesDevs: # Searching for my device
-                                resourceAsked = dev["resourceAsk"]["resources"]
-                                if dev["deviceId"] in devices_payload:
-                                    cpu = dev["resourceAsk"]["resources"]["cpu"]
-                                    mem = dev["resourceAsk"]["resources"]["memory"]
-                                    db.deallocateResource(dev["deviceId"],cpu, mem)
-                                    db.removeMyAppsFromDevice(myappId, dev["deviceId"])
-                                    db.uninstallJob(myappId, dev["deviceId"])
+                myapp_jobs = db.getJobs(myappId)
+                if myapp_jobs == 0:
+                    return {"Error": "no jobs are running"}, 400, {"content-type": "application/json"}
+                for job in myapp_jobs:
+                    try:
+                        jobDescr = job["payload"]
+                        resourcesDevs = jobDescr["devices"]
+                        for device in resourcesDevs:
+                            if device["deviceId"] in devices_payload:
+                                cpu = 0
+                                mem = 0
+                                resourceAsked = device["resourceAsk"]["resources"]
+                                if device["deviceId"] in devices_payload:
+                                    cpu = device["resourceAsk"]["resources"]["cpu"]
+                                    mem = device["resourceAsk"]["resources"]["memory"]
+                                    db.deallocateResource(device["deviceId"],cpu, mem)
+                                    db.removeMyAppsFromDevice(myappId, device["deviceId"])
+                                    db.uninstallJob(myappId, device["deviceId"])
+
                                     db.addMyAppLog({
                                         "time": int(time.time()),
                                         "action": action,
-                                        "deviceSerialNo": dev["deviceId"],
+                                        "deviceSerialNo": device["deviceId"],
                                         "appName": myapp["name"],
                                         "appVersion": "1",
                                         "severity": "info",
                                         "user": "admin",
                                         "message": action+" operation succeeded"
                                     })
-                # TODO: Conform to FOGDIRECTOR
+                    except TypeError:
+                        return {"Error": "Internal Error TypeError"}, 500, {"content-type": "application/json"}
             try:
                 return {
                     "jobId": str(jobid)

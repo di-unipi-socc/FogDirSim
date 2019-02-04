@@ -27,6 +27,7 @@ MYAPP_ON_DEVICE_counter = {}
 DEVICE_ENERGY_CONSUMPTION_sum = {}
 MYAPP_DEVICE_START_counter = {}
 MYAPP_ALERT_counter = {}
+MYAPP_ALERT_incrementing = {}
 
 def reset_simulation_counters():
     global DEVICE_CRITICAL_CPU_counter_sum
@@ -63,6 +64,8 @@ def reset_simulation_counters():
     MYAPP_ALERT_counter = {}
     global iter_count
     iter_count = 0
+    global MYAPP_ALERT_incrementing
+    MYAPP_ALERT_incrementing = {}
 
 myapp_ondevice_already_sampled = {}
 def resources_requested(sourceAppName):
@@ -152,6 +155,7 @@ class SimThread(Thread):
                 myapp_jobs_down_counter = {}
                 for job in db.getJobs():
                     myappId = job["myappId"]
+                    
                     if not myappId in MYAPP_ON_DEVICE_counter: # initialize all counters
                         MYAPP_ON_DEVICE_counter[myappId] = {}
                         MYAPP_CPU_CONSUMING_counter[myappId] = {}
@@ -160,6 +164,8 @@ class SimThread(Thread):
                         MYAPP_ALERT_counter[myappId] = {constants.APP_HEALTH: 0, constants.DEVICE_REACHABILITY: 0, 
                                                         constants.MYAPP_CPU_CONSUMING: 0, constants.MYAPP_MEM_CONSUMING: 0}
                         myapp_ondevice_already_sampled[myappId] = {}
+                        MYAPP_ALERT_incrementing[myappId] = 0
+                    MYAPP_ALERT_incrementing[myappId] += 1 # keeps trace of jobs in order to averaging the alerting counts
 
                     myapp_details = db.getMyApp(myappId)
                     localapp_resources = resources_requested(myapp_details["sourceAppName"])
@@ -353,7 +359,7 @@ def getMyAppsSampling():
             else:
                 tmp["ON_DEVICE_PERCENTAGE"] = {}
             if myappId in MYAPP_ALERT_counter:
-                tmp["ALERT_PERCENTAGE"] = {k: (v / float(MYAPP_LIFETIME[myappId]))
+                tmp["ALERT_PERCENTAGE"] = {k: (v / float(MYAPP_ALERT_incrementing[myappId]))
                                                 for k,v in MYAPP_ALERT_counter[myappId].items()}
             else:
                 tmp["ALERT_PERCENTAGE"] = {}

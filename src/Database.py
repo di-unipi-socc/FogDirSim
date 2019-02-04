@@ -232,9 +232,11 @@ def addJobs(myappid, devices, profile=constants.MYAPP_PROFILE_NORMAL, status="DE
         "profile": profile
     }).inserted_id
 def updateJobsStatus(myappid, status):
-    return db.jobs.update_many({
+    db.jobs.update_many({
         "myappId": myappid
-    }, {"$set": {"status": status} } ) 
+    }, {"$set": {"status": status} } )
+    return myappid
+
 def uninstallJob(myappId, deviceId):
     db.jobs.update({
         "myappId": myappId,
