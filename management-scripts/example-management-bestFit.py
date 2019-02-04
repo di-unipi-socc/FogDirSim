@@ -22,8 +22,8 @@ def bestFit(cpu, mem, print_result=False):
     return best_fit["ipAddress"]
 
 def randomFit(start_range, end_range):
-    deviceId = int(random.random()*end_range)+start_range
-    fg.add_device("10.10.20."+str(deviceId), "cisco", "cisco")
+    deviceId = int(random.random()*(end_range-1))+start_range
+    return "10.10.20."+str(deviceId)
 
 def firstFit(cpu, mem):
     _, devices = fg.get_devices()
@@ -80,9 +80,9 @@ for DEPLOYMENT_NUMBER in range(150, 200, 10):
         # Creating myapp1 endpoint
         _, myapp1 = fg.create_myapp(localapp["localAppId"], dep)
 
-        deviceIp = decision_function(100, 32)
+        deviceIp = decision_function(1, 20)
         while deviceIp == None:
-            deviceIp = decision_function(100, 32)
+            deviceIp = decision_function(1, 20)
         code, res = fg.install_app(dep, [deviceIp], resources={"resources":{"profile":"c1.tiny","cpu":100,"memory":32,"network":[{"interface-name":"eth0","network-name":"iox-bridge0"}]}})
         trial = 0
         while code == 400:
@@ -90,9 +90,9 @@ for DEPLOYMENT_NUMBER in range(150, 200, 10):
             if trial == 100:
                 print(DEPLOYMENT_NUMBER, "are too high value to deploy")
             print("*** Cannot deploy", dep,"to the building router", deviceIp, ".Try another ***")
-            deviceIp = decision_function(100, 32, print_result=True)
+            deviceIp = decision_function(1, 20)
             while deviceIp == None:
-                deviceIp = decision_function(100, 32, print_result=True)
+                deviceIp = decision_function(1, 20)
             code, res = fg.install_app(dep, [deviceIp], resources={"resources":{"profile":"c1.tiny","cpu":100,"memory":32,"network":[{"interface-name":"eth0","network-name":"iox-bridge0"}]}})
         
         fg.start_app(dep)
@@ -119,12 +119,12 @@ for DEPLOYMENT_NUMBER in range(150, 200, 10):
                     code, _ = fg.uninstall_app(dep, alert["ipAddress"])
                     print("uninstall", dep, code)
                     #"install App"
-                    devip =  decision_function(100, 32)
+                    devip =  decision_function(1, 20)
                     while devip == None:
-                        devip = decision_function(100, 32)
+                        devip = decision_function(1,20)
                     code, _ = fg.install_app(dep, [devip]) 
                     while code == 400:
-                        devip =  decision_function(100, 32)
+                        devip =  decision_function(1, 20)
                         if devip == None:
                             continue
                         code, _ = fg.install_app(dep, [devip])  
