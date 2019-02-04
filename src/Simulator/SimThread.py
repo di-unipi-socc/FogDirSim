@@ -126,6 +126,7 @@ class SimThread(Thread):
                         device_sampled_values[deviceId] = {"free_cpu": sampled_free_cpu, "free_mem": sampled_free_mem}
                         # adding critical CPU, MEM
                         if sampled_free_cpu <= 0:
+                            print("device", deviceId, "has no free cpu")
                             DEVICE_CRITICAL_CPU_counter_sum[deviceId] += 1
                         if sampled_free_mem <= 0:
                             DEVICE_CRITICAL_MEM_counter_sum[deviceId] += 1
@@ -187,7 +188,6 @@ class SimThread(Thread):
                             if job["status"] == "start": 
                                 MYAPP_DEVICE_START_counter[myappId][device["deviceId"]] += 1
                             myapp_ondevice_already_sampled[myappId][device["deviceId"]] = iter_count
-                        
 
                         if not db.deviceIsAlive(device["deviceId"]):
                             if not myappId in myapp_jobs_down_counter:
@@ -218,6 +218,7 @@ class SimThread(Thread):
                             sampled_free_cpu = device_sampled_values[device["deviceId"]]["free_cpu"]
                             sampled_free_mem = device_sampled_values[device["deviceId"]]["free_mem"]
                             if sampled_free_cpu <= 0:
+                                print("Myapp on", device["deviceId"], "has cpu problem")
                                 db.addAlert({
                                     "deviceId": device["deviceId"],
                                     "ipAddress": device_details["ipAddress"],
@@ -285,7 +286,7 @@ class SimThread(Thread):
                 for myapp in db.getMyApps():
                     myappId = myapp["myappId"]
                     if not myappId in MYAPP_LIFETIME: # Inizializer
-                        MYAPP_LIFETIME[myappId] = 1
+                        MYAPP_LIFETIME[myappId] = 0
                         MYAPP_DOWN_counter[myappId] = 0
                         MYAPP_UP_counter[myappId] = 0
 
@@ -303,8 +304,7 @@ class SimThread(Thread):
                         else:
                             MYAPP_DOWN_counter[myappId] += 1
                 
-            queue.execute_next_task() # Executes a task if present, otherwise returns immediately
-                        
+            queue.execute_next_task() # Executes a task if present, otherwise returns immediately                   
                         
 def getDeviceSampling():
     with device_lock:
