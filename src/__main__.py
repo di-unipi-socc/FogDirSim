@@ -125,8 +125,6 @@ def main():
     # Serve React App
     @app.route('/', defaults={'path': ''})
     @app.route('/<path:path>')
-    @app.route("/myapps", defaults={'path': ''})
-    @app.route("/devices", defaults={'path': ''})
     def serve(path):
         if path != "" and os.path.exists("sim-gui/build/" + path):
             return send_from_directory('sim-gui/build', path)
