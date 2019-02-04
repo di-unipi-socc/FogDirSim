@@ -126,7 +126,6 @@ class SimThread(Thread):
                         device_sampled_values[deviceId] = {"free_cpu": sampled_free_cpu, "free_mem": sampled_free_mem}
                         # adding critical CPU, MEM
                         if sampled_free_cpu <= 0:
-                            print("device", deviceId, "has no free cpu")
                             DEVICE_CRITICAL_CPU_counter_sum[deviceId] += 1
                         if sampled_free_mem <= 0:
                             DEVICE_CRITICAL_MEM_counter_sum[deviceId] += 1
@@ -218,7 +217,6 @@ class SimThread(Thread):
                             sampled_free_cpu = device_sampled_values[device["deviceId"]]["free_cpu"]
                             sampled_free_mem = device_sampled_values[device["deviceId"]]["free_mem"]
                             if sampled_free_cpu <= 0:
-                                print("Myapp on", device["deviceId"], "has cpu problem")
                                 db.addAlert({
                                     "deviceId": device["deviceId"],
                                     "ipAddress": device_details["ipAddress"],
