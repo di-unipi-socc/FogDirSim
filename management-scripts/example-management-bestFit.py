@@ -67,7 +67,7 @@ code = fg.authenticate("admin", "admin_123")
 if code == 401:
     print("Failed Authentication")
 
-DEVICES_NUMBER = 30
+DEVICES_NUMBER = 20
 DEPLOYMENT_NUMBER = 150
 
 decision_function = randomFit
