@@ -32,7 +32,7 @@ def post(args, data):
         else:
             myapp = db.createMyApp(appname, sourceAppName, version, appType)
         del myapp["_id"]
-        return myapp, 201, {"content-type": "application/json"}
+        return {"myappId": myapp["myappId"], "name": myapp["name"]}, 201, {"content-type": "application/json"}
     else:
         return invalidToken()
     

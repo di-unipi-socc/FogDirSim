@@ -5,6 +5,7 @@ import requests
 import json, signal
 
 infrastructure.create()
+
 tmp = 0
 def bestFit(cpu, mem, print_result=False):
     _, devices = fg.get_devices()
@@ -117,10 +118,7 @@ for DEPLOYMENT_NUMBER in range(150, 200, 10):
                     if dep in managed_apps:
                         continue
                     code, _ = fg.stop_app(dep)
-                    #"unistall App"
                     code, _ = fg.uninstall_app(dep, alert["ipAddress"])
-                    
-                    #"install App"
                     devip =  decision_function(1, 10)
                     while devip == None:
                         devip = decision_function(1,20)
@@ -129,8 +127,7 @@ for DEPLOYMENT_NUMBER in range(150, 200, 10):
                         devip =  decision_function(1, 10)
                         if devip == None:
                             continue
-                        code, _ = fg.install_app(dep, [devip])  
-                    #"start app"
+                        code, _ = fg.install_app(dep, [devip])
                     code, _ = fg.start_app(dep)
     except KeyboardInterrupt:
         r = input("Exit (y/n)?")
