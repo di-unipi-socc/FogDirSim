@@ -49,7 +49,7 @@ export default class MyAppsTable extends React.Component {
               let pie_data = []
               let total = 100
               for (let k in myapp.ALERT_PERCENTAGE){
-                total += myapp.ALERT_PERCENTAGE[k]
+                total -= myapp.ALERT_PERCENTAGE[k]
                 pie_data.push({key: k, value: myapp.ALERT_PERCENTAGE[k], color: alert_to_color[k]})
               }
               pie_data.push({key: "no_alert", value: total, color: "green"})
