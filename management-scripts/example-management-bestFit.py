@@ -68,7 +68,7 @@ if code == 401:
     print("Failed Authentication")
 
 DEVICES_NUMBER = 3
-DEPLOYMENT_NUMBER = 10
+DEPLOYMENT_NUMBER = 15
 
 decision_function = bestFit
 for i in range(0, 10):
