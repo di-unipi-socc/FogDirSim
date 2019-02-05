@@ -102,7 +102,7 @@ for _ in range(0, 10):
             code, res = fg.install_app(dep, [deviceIp], resources={"resources":{"profile":"c1.tiny","cpu":100,"memory":32,"network":[{"interface-name":"eth0","network-name":"iox-bridge0"}]}})
         
         fg.start_app(dep)
-    r = requests.get('https://localhost:5000/result/simulationcounter')
+    r = requests.get('http://localhost:5000/result/simulationcounter')
     print("DEPLOYED IN ", r.text)
     count = 0
     last_count_alerted = 0

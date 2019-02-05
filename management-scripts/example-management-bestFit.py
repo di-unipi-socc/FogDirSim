@@ -102,7 +102,7 @@ for _ in range(0, 10):
         
         fg.start_app(dep)
 
-    r = requests.get('https://localhost:5000/result/simulationcounter')
+    r = requests.get('http://localhost:5000/result/simulationcounter')
     print("DEPLOYED IN ", r.text)
     break
     count = 0
