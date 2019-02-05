@@ -21,10 +21,11 @@ def bestFit(cpu, mem, print_result=False):
         return None
     best_fit = devices[0]
     return best_fit["ipAddress"]
-
-def randomFit(start_range, end_range):
-    deviceId = int(random.random()*(end_range-1))+start_range
-    return "10.10.20."+str(deviceId)
+    
+def randomFit():
+    _, devices = fg.get_devices()
+    r = random.randint(0, len(devices["data"]) - 1)
+    return devices["data"][r]["ipAddress"]
 
 def firstFit(cpu, mem):
     _, devices = fg.get_devices()
@@ -67,15 +68,15 @@ code = fg.authenticate("admin", "admin_123")
 if code == 401:
     print("Failed Authentication")
 
-DEVICES_NUMBER = 3
-DEPLOYMENT_NUMBER = 20
-fallimenti = 0
+DEVICES_NUMBER = 20
+DEPLOYMENT_NUMBER = 150
 
+fallimenti = []
+print("STARTING BESTFIT PHASE")
 decision_function = bestFit
-for i in range(0, 10):
+for i in range(0, 30):
     reset_simulation(i)
-    fallimenti = 0
-    print("Trying to deploy", str(DEPLOYMENT_NUMBER), "number of devices. Tentativo", i)
+    fallimento = 0
     for i in range(0, DEVICES_NUMBER):
         deviceId = i+1      
         _, device1 = fg.add_device("10.10.20."+str(deviceId), "cisco", "cisco")
@@ -107,7 +108,8 @@ for i in range(0, 10):
         fg.start_app(dep)
 
     r = requests.get('http://localhost:5000/result/simulationcounter')
-    print("DEPLOYED IN ", r.text, "fallimenti", fallimenti)
+    fallimenti.append(fallimento)
+    print(i, ") DEPLOYED IN ", r.text, "fallimenti", fallimento, "media", sum(fallimenti)/float(len(fallimenti)))
     continue
     count = 0
     last_count_alerted = 0
@@ -131,6 +133,92 @@ for i in range(0, 10):
                     code, _ = fg.install_app(dep, [devip]) 
                     while code == 400:
                         devip =  decision_function(100, 32)
+                        if devip == None:
+                            continue
+                        code, _ = fg.install_app(dep, [devip])
+                    code, _ = fg.start_app(dep)
+    except KeyboardInterrupt:
+        r = input("Exit (y/n)?")
+        if r == "y":
+            service_shutdown()
+            exit()
+
+    r = reset_simulation("sim_count:"+str(count)+":depl_num:"+str(DEPLOYMENT_NUMBER))
+    file  = open("simulation_result.txt", "a")
+    file.write("sim_count: "+str(count)+" - depl_num: "+str(DEPLOYMENT_NUMBER)+"\n")
+    file.write(json.dumps(r))
+    file.write("\n\n")
+    file.close()
+
+
+print("STARTING RANDOM PHASE")
+DEVICES_NUMBER = 20
+DEPLOYMENT_NUMBER = 150
+
+fallimenti = []
+
+decision_function = bestFit
+for i in range(0, 30):
+    reset_simulation(i)
+    fallimento = 0
+
+    print("Trying to deploy", str(DEPLOYMENT_NUMBER), "number of devices. Tentativo", i)
+
+    for i in range(0, DEVICES_NUMBER):
+        deviceId = i+1      
+        _, device1 = fg.add_device("10.10.20."+str(deviceId), "cisco", "cisco")
+
+    # Uploading Application
+    code, localapp = fg.add_app("./NettestApp2V1_lxc.tar.gz", publish_on_upload=True)
+
+    for myapp_index in range(0, DEPLOYMENT_NUMBER):
+        dep = "dep"+str(myapp_index)
+        # Creating myapp1 endpoint
+        _, myapp1 = fg.create_myapp(localapp["localAppId"], dep)
+
+        deviceIp = randomFit() #, DEVICES_NUMBER)
+        while deviceIp == None:
+            deviceIp = randomFit() #, DEVICES_NUMBER)
+        code, res = fg.install_app(dep, [deviceIp], resources={"resources":{"profile":"c1.tiny","cpu":100,"memory":32,"network":[{"interface-name":"eth0","network-name":"iox-bridge0"}]}})
+        trial = 0
+        while code == 400:
+            trial += 1
+            if trial == 100:
+                print(DEPLOYMENT_NUMBER, "are too high value to deploy")
+            #print("*** Cannot deploy", dep,"to the building router", deviceIp, ".Try another ***")
+            fallimenti += 1
+            deviceIp = randomFit() #1, DEVICES_NUMBER)
+            while deviceIp == None:
+                deviceIp = randomFit() #, DEVICES_NUMBER)
+            code, res = fg.install_app(dep, [deviceIp], resources={"resources":{"profile":"c1.tiny","cpu":100,"memory":32,"network":[{"interface-name":"eth0","network-name":"iox-bridge0"}]}})
+        
+        fg.start_app(dep)
+    r = requests.get('http://localhost:5000/result/simulationcounter')
+    fallimenti.append(fallimento)
+    print("DEPLOYED IN ", r.text, "fallimenti", fallimento, "media", sum(fallimenti)/float(len(fallimenti)))
+    continue
+    count = 0
+    last_count_alerted = 0
+    try:
+        managed_apps = []
+        while count < 20000:
+            count += 1
+            _, alerts = fg.get_alerts()
+            managed_apps = []
+            for alert in alerts["data"]:
+                last_count_alerted = count
+                if "APP_HEALTH" == alert["simulation_type"]: # No other alerts can be triggered
+                    dep = alert["appName"]
+                    if dep in managed_apps:
+                        continue
+                    code, _ = fg.stop_app(dep)
+                    code, _ = fg.uninstall_app(dep, alert["ipAddress"])
+                    devip =  randomFit()
+                    while devip == None:
+                        devip = randomFit()
+                    code, _ = fg.install_app(dep, [devip]) 
+                    while code == 400:
+                        devip =  randomFit()
                         if devip == None:
                             continue
                         code, _ = fg.install_app(dep, [devip])
