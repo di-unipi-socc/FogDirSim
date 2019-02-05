@@ -359,8 +359,10 @@ def getMyAppsSampling():
             else:
                 tmp["ON_DEVICE_PERCENTAGE"] = {}
             if myappId in MYAPP_ALERT_counter:
-                tmp["ALERT_PERCENTAGE"] = {k: (v / float(MYAPP_ALERT_incrementing[myappId]))
-                                                for k,v in MYAPP_ALERT_counter[myappId].items()}
+                tmp["ALERT_PERCENTAGE"] = {constants.MYAPP_CPU_CONSUMING: MYAPP_ALERT_counter[myappId][constants.MYAPP_CPU_CONSUMING] / MYAPP_ALERT_incrementing[myappId],
+                                            constants.MYAPP_MEM_CONSUMING: MYAPP_ALERT_counter[myappId][constants.MYAPP_MEM_CONSUMING] / MYAPP_ALERT_incrementing[myappId],
+                                            constants.APP_HEALTH: MYAPP_ALERT_counter[myappId][constants.APP_HEALTH] / (MYAPP_ALERT_incrementing[myappId]*2),
+                                            constants.DEVICE_REACHABILITY: MYAPP_ALERT_counter[myappId][constants.DEVICE_REACHABILITY] / MYAPP_ALERT_incrementing[myappId]}
             else:
                 tmp["ALERT_PERCENTAGE"] = {}
             result.append(tmp)

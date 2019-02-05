@@ -139,22 +139,11 @@ All the API not reported here, are not available yet.
  ```json
  {"start":{}}
  ```
-###### Device Events
- - `GET /api/v1/appmgr/devices/<devid>/events/` - Since FogDirector doesn't have a properly documented API, we assume some events type taken from the FogDirector Manual.
-
-###### Application Events (Audit)
- - `GET /api/v1/appmgr/audit` - provides information about app state change events, who performed them, when they were performed and what the operation was. These audit information can be filtered by device serial id, by app and version or even by the user who performed it (but the official documentation doesn't report the exact name to use this filters then the filters are not implemented).
- This API supports* the following URL parameter:
-    - `limit`
-    - `offset`
-    - `searchByAction`
 
 ###### Alerts
  - `GET /api/v1/appmgr/alerts` - provides the alerts about the infrastructure and applications status
 
-###### NOT YET IMPLEMENTED
- - `/api/v1/appmgr/devices/<devid>/apps/<myappdid>/logs` 
- - The Audit API is not fully supported
+
 
 ## Tested functions
 In order to run the tests, execute `PYTHONPATH=$PYTHONPATH:tests py.test`
