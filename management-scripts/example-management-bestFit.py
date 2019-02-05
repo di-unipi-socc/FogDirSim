@@ -72,7 +72,7 @@ DEPLOYMENT_NUMBER = 10
 
 decision_function = bestFit
 for i in range(0, 10):
-
+    reset_simulation(i)
     print("Trying to deploy", str(DEPLOYMENT_NUMBER), "number of devices. Tentativo", i)
     for i in range(0, DEVICES_NUMBER):
         deviceId = i+1      
