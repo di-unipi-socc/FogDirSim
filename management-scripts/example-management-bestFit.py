@@ -74,7 +74,7 @@ DEPLOYMENT_NUMBER = 150
 fallimenti = []
 print("STARTING BESTFIT PHASE")
 decision_function = bestFit
-for i in range(0, 30):
+for alessandro in range(0, 30):
     reset_simulation(i)
     fallimento = 0
     for i in range(0, DEVICES_NUMBER):
@@ -109,7 +109,7 @@ for i in range(0, 30):
 
     r = requests.get('http://localhost:5000/result/simulationcounter')
     fallimenti.append(fallimento)
-    print(i, ") DEPLOYED IN ", r.text, "fallimenti", fallimento, "media", sum(fallimenti)/float(len(fallimenti)))
+    print(alessandro, ") DEPLOYED IN ", r.text, "fallimenti", fallimento, "media", sum(fallimenti)/float(len(fallimenti)))
     continue
     count = 0
     last_count_alerted = 0
@@ -158,7 +158,7 @@ DEPLOYMENT_NUMBER = 150
 fallimenti = []
 
 decision_function = bestFit
-for i in range(0, 30):
+for alessandro in range(0, 30):
     reset_simulation(i)
     fallimento = 0
 
@@ -195,7 +195,7 @@ for i in range(0, 30):
         fg.start_app(dep)
     r = requests.get('http://localhost:5000/result/simulationcounter')
     fallimenti.append(fallimento)
-    print("DEPLOYED IN ", r.text, "fallimenti", fallimento, "media", sum(fallimenti)/float(len(fallimenti)))
+    print(alessandro,")DEPLOYED IN ", r.text, "fallimenti", fallimento, "media", sum(fallimenti)/float(len(fallimenti)))
     continue
     count = 0
     last_count_alerted = 0
