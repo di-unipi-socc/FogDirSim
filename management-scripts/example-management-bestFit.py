@@ -67,7 +67,7 @@ code = fg.authenticate("admin", "admin_123")
 if code == 401:
     print("Failed Authentication")
 
-DEVICES_NUMBER = 5
+DEVICES_NUMBER = 3
 DEPLOYMENT_NUMBER = 10
 
 decision_function = bestFit

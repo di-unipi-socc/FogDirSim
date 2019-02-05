@@ -69,11 +69,14 @@ code = fg.authenticate("admin", "admin_123")
 if code == 401:
     print("Failed Authentication")
 
-DEVICES_NUMBER = 5
+DEVICES_NUMBER = 3
 DEPLOYMENT_NUMBER = 10
 
 decision_function = bestFit
-for _ in range(0, 10):
+for i in range(0, 10):
+    reset_simulation(i)
+    print("Trying to deploy", str(DEPLOYMENT_NUMBER), "number of devices. Tentativo", i)
+
     for i in range(0, DEVICES_NUMBER):
         deviceId = i+1      
         _, device1 = fg.add_device("10.10.20."+str(deviceId), "cisco", "cisco")
@@ -104,6 +107,7 @@ for _ in range(0, 10):
         fg.start_app(dep)
     r = requests.get('http://localhost:5000/result/simulationcounter')
     print("DEPLOYED IN ", r.text)
+    continue
     count = 0
     last_count_alerted = 0
     try:
