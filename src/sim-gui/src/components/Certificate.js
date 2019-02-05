@@ -69,7 +69,7 @@ export default class Certificate extends React.Component {
                 <div className="container">
                     <div className="row">
                         <div className="col-sm">
-                            <Number title="Total Energy" start={this.state.prev_cost*0.72} value={this.state.cost*0.72} decimals={2} suffix=" kWh/month"/>
+                            <Number title="Energy Consumption" start={this.state.prev_cost} value={this.state.cost} decimals={2} suffix=" kWh (<i>monthly</i>)"/>
                         </div>
                         <div className="col-sm">
                             <Number title="Mean Uptime" start={this.state.prev_uptime*100} decimals={2} value={this.state.uptime*100} suffix=" %" />

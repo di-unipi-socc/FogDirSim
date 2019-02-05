@@ -329,7 +329,7 @@ def getDeviceSampling():
             tmp["AVERAGE_MEM_USED"] = DEVICE_MEM_USED_sum[deviceId] / float(resources_sampled_count[deviceId])
             tmp["AVERAGE_MYAPP_COUNT"] = NUMBER_OF_MYAPP_ON_DEVICE_counter_sum[deviceId] / float(resources_sampled_count[deviceId])
             tmp["DEVICE_DOWN_PROB_chaos"] = DEVICE_DOWN_counter_sum[deviceId] / fix_iter 
-            tmp["DEVICE_ENERGY_CONSUMPTION"] = DEVICE_ENERGY_CONSUMPTION_sum[deviceId] / float(resources_sampled_count[deviceId]) 
+            tmp["DEVICE_ENERGY_CONSUMPTION"] = (DEVICE_ENERGY_CONSUMPTION_sum[deviceId] / float(resources_sampled_count[deviceId]))*0.72 # 720/1000 = hours months / Kilo
             result.append(tmp)
     return result
 
