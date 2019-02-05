@@ -71,8 +71,9 @@ DEVICES_NUMBER = 5
 DEPLOYMENT_NUMBER = 10
 
 decision_function = bestFit
-for _ in range(0, 10):
-    print("Trying to deploy", str(DEPLOYMENT_NUMBER), "number of devices")
+for i in range(0, 10):
+
+    print("Trying to deploy", str(DEPLOYMENT_NUMBER), "number of devices. Tentativo", i)
     for i in range(0, DEVICES_NUMBER):
         deviceId = i+1      
         _, device1 = fg.add_device("10.10.20."+str(deviceId), "cisco", "cisco")
@@ -104,7 +105,7 @@ for _ in range(0, 10):
 
     r = requests.get('http://localhost:5000/result/simulationcounter')
     print("DEPLOYED IN ", r.text)
-    break
+    continue
     count = 0
     last_count_alerted = 0
     try:
@@ -143,7 +144,3 @@ for _ in range(0, 10):
     file.write(json.dumps(r))
     file.write("\n\n")
     file.close()
-
-file  = open("final_simulation_result.txt", "w")
-file.write(json.dumps(previous_simulation))
-file.close()
