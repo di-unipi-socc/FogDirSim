@@ -59,6 +59,7 @@ def reset_simulation(current_identifier):
         current_identifier: r
     })
     return r.json()
+
 reset_simulation(0)
 print("STARTING SIMULATION")
 
@@ -67,12 +68,12 @@ code = fg.authenticate("admin", "admin_123")
 if code == 401:
     print("Failed Authentication")
 
-DEVICES_NUMBER = 20
+DEVICES_NUMBER = 10
 DEPLOYMENT_NUMBER = 150
 
 decision_function = bestFit
 
-for DEPLOYMENT_NUMBER in range(150, 200, 10):
+for DEPLOYMENT_NUMBER in range(50, 200, 10):
     print("Trying to deploy", str(DEPLOYMENT_NUMBER), "number of devices")
     for i in range(0, DEVICES_NUMBER):
         deviceId = i+1      
