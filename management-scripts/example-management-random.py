@@ -23,7 +23,7 @@ def bestFit(cpu, mem, print_result=False):
     return best_fit["ipAddress"]
 
 def randomFit(start_range, end_range):
-    deviceId = int(random.random()*(end_range-1))+start_range
+    deviceId = random.randint(start_range, end_range)
     return "10.10.20."+str(deviceId)
 
 def firstFit(cpu, mem):
