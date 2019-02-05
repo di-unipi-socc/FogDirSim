@@ -21,7 +21,7 @@ def bestFit(cpu, mem, print_result=False):
         return None
     best_fit = devices[0]
     return best_fit["ipAddress"]
-    
+
 def randomFit():
     _, devices = fg.get_devices()
     r = random.randint(0, len(devices["data"]) - 1)
@@ -99,7 +99,7 @@ for i in range(0, 30):
             if trial == 100:
                 print(DEPLOYMENT_NUMBER, "are too high value to deploy")
             #print("*** Cannot deploy", dep,"to the building router", deviceIp, ".Try another ***")
-            fallimenti += 1
+            fallimento += 1
             deviceIp = decision_function(100, 32) #1, DEVICES_NUMBER)
             while deviceIp == None:
                 deviceIp = decision_function(100, 32) #, DEVICES_NUMBER)
@@ -186,7 +186,7 @@ for i in range(0, 30):
             if trial == 100:
                 print(DEPLOYMENT_NUMBER, "are too high value to deploy")
             #print("*** Cannot deploy", dep,"to the building router", deviceIp, ".Try another ***")
-            fallimenti += 1
+            fallimento += 1
             deviceIp = randomFit() #1, DEVICES_NUMBER)
             while deviceIp == None:
                 deviceIp = randomFit() #, DEVICES_NUMBER)
