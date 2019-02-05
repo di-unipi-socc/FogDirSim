@@ -22,9 +22,10 @@ def bestFit(cpu, mem, print_result=False):
     best_fit = devices[0]
     return best_fit["ipAddress"]
 
-def randomFit(start_range, end_range):
-    deviceId = random.randint(start_range, end_range)
-    return "10.10.20."+str(deviceId)
+def randomFit():
+    _, devices = fg.get_devices()
+    r = random.randint(0, len(devices["data"]) - 1)
+    return devices["data"][r]["ipAddress"]
 
 def firstFit(cpu, mem):
     _, devices = fg.get_devices()
@@ -68,13 +69,11 @@ code = fg.authenticate("admin", "admin_123")
 if code == 401:
     print("Failed Authentication")
 
-DEVICES_NUMBER = 10
-DEPLOYMENT_NUMBER = 150
+DEVICES_NUMBER = 5
+DEPLOYMENT_NUMBER = 10
 
 decision_function = bestFit
-
-for DEPLOYMENT_NUMBER in range(50, 200, 10):
-    print("Trying to deploy", str(DEPLOYMENT_NUMBER), "number of devices")
+for _ in range(0, 10):
     for i in range(0, DEVICES_NUMBER):
         deviceId = i+1      
         _, device1 = fg.add_device("10.10.20."+str(deviceId), "cisco", "cisco")
@@ -87,9 +86,9 @@ for DEPLOYMENT_NUMBER in range(50, 200, 10):
         # Creating myapp1 endpoint
         _, myapp1 = fg.create_myapp(localapp["localAppId"], dep)
 
-        deviceIp = randomFit(1, DEVICES_NUMBER) #, DEVICES_NUMBER)
+        deviceIp = randomFit() #, DEVICES_NUMBER)
         while deviceIp == None:
-            deviceIp = randomFit(1, DEVICES_NUMBER) #, DEVICES_NUMBER)
+            deviceIp = randomFit() #, DEVICES_NUMBER)
         code, res = fg.install_app(dep, [deviceIp], resources={"resources":{"profile":"c1.tiny","cpu":100,"memory":32,"network":[{"interface-name":"eth0","network-name":"iox-bridge0"}]}})
         trial = 0
         while code == 400:
@@ -97,13 +96,14 @@ for DEPLOYMENT_NUMBER in range(50, 200, 10):
             if trial == 100:
                 print(DEPLOYMENT_NUMBER, "are too high value to deploy")
             print("*** Cannot deploy", dep,"to the building router", deviceIp, ".Try another ***")
-            deviceIp = randomFit(1, DEVICES_NUMBER) #1, DEVICES_NUMBER)
+            deviceIp = randomFit() #1, DEVICES_NUMBER)
             while deviceIp == None:
-                deviceIp = randomFit(1, DEVICES_NUMBER) #, DEVICES_NUMBER)
+                deviceIp = randomFit() #, DEVICES_NUMBER)
             code, res = fg.install_app(dep, [deviceIp], resources={"resources":{"profile":"c1.tiny","cpu":100,"memory":32,"network":[{"interface-name":"eth0","network-name":"iox-bridge0"}]}})
         
         fg.start_app(dep)
-
+    r = requests.get('https://localhost:5000/result/simulationcounter')
+    print("DEPLOYED IN ", r.text)
     count = 0
     last_count_alerted = 0
     try:
@@ -120,12 +120,12 @@ for DEPLOYMENT_NUMBER in range(50, 200, 10):
                         continue
                     code, _ = fg.stop_app(dep)
                     code, _ = fg.uninstall_app(dep, alert["ipAddress"])
-                    devip =  randomFit(1, DEVICES_NUMBER)
+                    devip =  randomFit()
                     while devip == None:
-                        devip = randomFit(1,DEVICES_NUMBER)
+                        devip = randomFit()
                     code, _ = fg.install_app(dep, [devip]) 
                     while code == 400:
-                        devip =  randomFit(1, DEVICES_NUMBER)
+                        devip =  randomFit()
                         if devip == None:
                             continue
                         code, _ = fg.install_app(dep, [devip])
