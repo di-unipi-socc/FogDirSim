@@ -79,7 +79,7 @@ def create():
                 }
         db.Rdevices.insert_one(dev)
         devices.append(dev)
-    for i in range(0,5):
+    for i in range(0,15):
         deviceId = i+6
         dev = {
                     "ipAddress": "10.10.20."+str(deviceId),
