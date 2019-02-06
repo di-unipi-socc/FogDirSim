@@ -56,10 +56,14 @@ while True:
                 fd.start_app("dep1")
                 moved1 = True
             elif alert["appName"] == "dep2":
-                print("migrating dep2")
+                print("migrating dep2 from", alert["ipAddress"],"to",otherDevice(alert["ipAddress"]))
                 fd.stop_app("dep2")
-                fd.uninstall_app("dep2", alert["ipAddress"])
+                code, _ = fd.uninstall_app("dep2", alert["ipAddress"])
+                if code != 200:
+                    print("uninstalling returns", code)
                 code, _ = fd.install_app("dep2", [otherDevice(alert["ipAddress"])])
+                print("Install returns", code)
                 while code == 400:
                     fd.install_app("dep2", [otherDevice(alert["ipAddress"])])
+                    print("Install returns", code)
                 code, _ = fd.start_app("dep2")

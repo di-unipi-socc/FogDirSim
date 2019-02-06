@@ -130,12 +130,19 @@ class SimThread(Thread):
                         db.setDeviceAlive(deviceId)  
 
                     if db.deviceIsAlive(deviceId):
-                        sampled_free_cpu = sampleCPU(deviceId) - dev["usedCPU"] 
-                        sampled_free_mem = sampleMEM(deviceId) - dev["usedMEM"]
                         if not deviceId in current_infrastructure: # Adding sampling in any case if none is already inserted
+                            sampled_free_cpu = sampleCPU(deviceId) - dev["usedCPU"] 
+                            sampled_free_mem = sampleMEM(deviceId) - dev["usedMEM"]
                             current_infrastructure[deviceId] = {"free_cpu": sampled_free_cpu, "free_mem": sampled_free_mem}
+                        else:
+                            sampled_free_cpu = current_infrastructure[deviceId]["free_cpu"]
+                            sampled_free_mem = current_infrastructure[deviceId]["free_mem"]
+                        
                         if iter_count % SAMPLE_INTERVAL == 0:
+                            sampled_free_cpu = sampleCPU(deviceId) - dev["usedCPU"] 
+                            sampled_free_mem = sampleMEM(deviceId) - dev["usedMEM"]
                             current_infrastructure[deviceId] = {"free_cpu": sampled_free_cpu, "free_mem": sampled_free_mem}
+                        
                         # adding critical CPU, MEM
                         if sampled_free_cpu <= 0:
                             DEVICE_CRITICAL_CPU_counter_sum[deviceId] += 1
