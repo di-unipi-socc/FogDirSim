@@ -46,6 +46,7 @@ while True:
     _, alerts = fd.get_alerts()
     for alert in alerts["data"]:
         if "APP_HEALTH" == alert["type"]: # Device issues
+            print(alert["message"])
             if alert["appName"] == "dep1" and not moved1:
                 print("migrating dep1")
                 fd.stop_app("dep1")
@@ -59,11 +60,8 @@ while True:
                 print("migrating dep2 from", alert["ipAddress"],"to",otherDevice(alert["ipAddress"]))
                 fd.stop_app("dep2")
                 code, _ = fd.uninstall_app("dep2", alert["ipAddress"])
-                if code != 200:
-                    print("uninstalling returns", code)
                 code, _ = fd.install_app("dep2", [otherDevice(alert["ipAddress"])])
-                print("Install returns", code)
                 while code == 400:
-                    fd.install_app("dep2", [otherDevice(alert["ipAddress"])])
-                    print("Install returns", code)
+                    print("FAILED to migrate")
+                    code, response = fd.install_app("dep2", [otherDevice(alert["ipAddress"])])
                 code, _ = fd.start_app("dep2")
