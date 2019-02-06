@@ -69,12 +69,16 @@ code = fg.authenticate("admin", "admin_123")
 if code == 401:
     print("Failed Authentication")
 
-DEVICES_NUMBER = 3
-DEPLOYMENT_NUMBER = 10
+DEVICES_NUMBER = 20
+DEPLOYMENT_NUMBER = 150
+
+fallimenti = []
 
 decision_function = bestFit
 for i in range(0, 10):
     reset_simulation(i)
+    fallimento = 0
+
     print("Trying to deploy", str(DEPLOYMENT_NUMBER), "number of devices. Tentativo", i)
 
     for i in range(0, DEVICES_NUMBER):
@@ -98,7 +102,8 @@ for i in range(0, 10):
             trial += 1
             if trial == 100:
                 print(DEPLOYMENT_NUMBER, "are too high value to deploy")
-            print("*** Cannot deploy", dep,"to the building router", deviceIp, ".Try another ***")
+            #print("*** Cannot deploy", dep,"to the building router", deviceIp, ".Try another ***")
+            fallimenti += 1
             deviceIp = randomFit() #1, DEVICES_NUMBER)
             while deviceIp == None:
                 deviceIp = randomFit() #, DEVICES_NUMBER)
@@ -106,7 +111,8 @@ for i in range(0, 10):
         
         fg.start_app(dep)
     r = requests.get('http://localhost:5000/result/simulationcounter')
-    print("DEPLOYED IN ", r.text)
+    fallimenti.append(fallimento)
+    print("DEPLOYED IN ", r.text, "fallimenti", fallimento, "media", sum(fallimenti)/float(len(fallimenti)))
     continue
     count = 0
     last_count_alerted = 0
@@ -146,7 +152,3 @@ for i in range(0, 10):
     file.write(json.dumps(r))
     file.write("\n\n")
     file.close()
-
-file  = open("final_simulation_result.txt", "w")
-file.write(json.dumps(previous_simulation))
-file.close()

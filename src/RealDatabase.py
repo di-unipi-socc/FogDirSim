@@ -18,92 +18,80 @@ db = client.realDatabase
 
 # Building RealDatabase
 db.Rdevices.insert_one({
-            "ipAddress": "10.10.20.51",
-            "port": 8443,
-            "deviceId": 1,
-            "totalCPU": 2000,
-            "totalMEM": 128,
-            "totalVCPU": 2,
-            "maxVCPUPerApp": 2,
-            "chaos_down_prob": 0.01,
-            "chaos_revive_prob": 0.2,
-            "distributions": { 
-                "CPU": [
-                    {
-                        "timeStart": 0,
-                        "timeEnd": 24,
-                        "mean": 2000,
-                        "deviation": 39
-                    }
-                ],
-                "MEM": [
-                    {
-                        "timeStart": 0,
-                        "timeEnd": 24,
-                        "mean": 120,
-                        "deviation": 16
-                    }
-                ]
-            }
-        })
+  "ipAddress": "10.10.20.51",
+  "port": 8443,
+  "deviceId": 1,
+  "totalCPU": 200,
+  "totalMEM": 64,
+  "totalVCPU": 2,
+  "maxVCPUPerApp": 2,
+  "chaos_down_prob": 0.0,
+  "chaos_revive_prob": 0.0,
+  "distributions": { 
+    "CPU": [
+      {
+        "mean": 179.67,
+        "deviation": 40.24
+      }
+    ],
+    "MEM": [
+      {
+        "mean": 55.9,
+        "deviation": 16.56
+      }
+    ]
+  }
+})
 db.Rdevices.insert_one({
-            "ipAddress": "10.10.20.52",
-            "port": 8443,
-            "deviceId": 2,
-            "totalCPU": 1000,
-            "totalVCPU": 2,
-            "maxVCPUPerApp": 2,
-            "totalMEM": 128,
-            "chaos_down_prob": 0.4,
-            "chaos_revive_prob": 0.2,
-            "distributions": { 
-                "CPU": [
-                    {
-                        "timeStart": 0,
-                        "timeEnd": 24,
-                        "mean": 189,
-                        "deviation": 30
-                    }
-                ],
-                "MEM": [
-                    {
-                        "timeStart": 0,
-                        "timeEnd": 24,
-                        "mean": 105,
-                        "deviation": 32
-                    }
-                ]
-            }
-        })     
+  "ipAddress": "10.10.20.52",
+  "port": 8443,
+  "deviceId": 2,
+  "totalCPU": 200,
+  "totalMEM": 128,
+  "totalVCPU": 2,
+  "maxVCPUPerApp": 2,
+  "chaos_down_prob": 0.0,
+  "chaos_revive_prob": 0.0,
+  "distributions": { 
+    "CPU": [
+      {
+        "mean": 189.95,
+        "deviation": 30
+      }
+    ],
+    "MEM": [
+      {
+        "mean": 105.88,
+        "deviation": 32.03
+      }
+    ]
+  }
+})     
 db.Rdevices.insert_one({
-            "ipAddress": "10.10.20.53",
-            "port": 8443,
-            "deviceId": 3,
-            "totalCPU": 1000,
-            "totalVCPU": 2,
-            "maxVCPUPerApp": 2,
-            "totalMEM": 128,
-            "chaos_down_prob": 0.01,
-            "chaos_revive_prob": 0.2,
-            "distributions": { 
-                "CPU": [
-                    {
-                        "timeStart": 0,
-                        "timeEnd": 24,
-                        "mean": 330,
-                        "deviation": 78
-                    }
-                ],
-                "MEM": [
-                    {
-                        "timeStart": 0,
-                        "timeEnd": 24,
-                        "mean": 118,
-                        "deviation": 20
-                    }
-                ]
-            }
-        })
+  "ipAddress": "10.10.20.53",
+  "port": 8443,
+  "deviceId": 3,
+  "totalCPU": 400,
+  "totalMEM": 128,
+  "totalVCPU": 2,
+  "maxVCPUPerApp": 2,
+  "chaos_down_prob": 0.0,
+  "chaos_revive_prob": 0.0,
+  "distributions": { 
+    "CPU": [
+      {
+        "mean": 330.12,
+        "deviation": 78.29
+      }
+    ],
+    "MEM": [
+      {
+        "mean": 118.2,
+        "deviation": 20.71
+      }
+    ]
+  }
+})
 """
 
 # Devices based on Cisco® 890 Series Integrated Services Routers (ISRs) 

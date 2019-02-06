@@ -16,7 +16,7 @@ def device2_energy(cpu_usage, mem_usage):
     if cpu_usage < 1275:
         return 18
     return 25
-#energy_consumption["2"] = device2_energy
+energy_consumption["2"] = device2_energy
 #energy_consumption["3"] = (lambda *args: 100)
 
 # Costo medie energia: 0,25€/kW

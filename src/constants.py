@@ -1,3 +1,6 @@
+SAMPLE_INTERVAL = 1
+current_infrastructure = {}
+
 DEVICE_CRITICAL_CPU = 1
 DEVICE_CRITICAL_MEM = 2
 DEVICE_DOWN = 3
@@ -26,12 +29,15 @@ MYAPP_CPU_CONSUMING = "MYAPP_CPU_CONSUMING"
 MYAPP_MEM_CONSUMING = "MYAPP_MEM_CONSUMING"
 
 from misc.MagicalQueue import MagicalQueue
-from API_executor import Alerts, Applications, Audit, Authentication, Devices, DevicesEvents, Jobs, MyApps, MyAppsAction, TaggingDevices, Tags
 from flask import Flask
-
 def methodGetter(moduleName, functionName, *args, **kwargs):
     method = getattr(globals()[moduleName], functionName)
     return method(*args, **kwargs)
 
 queue = MagicalQueue(methodGetter)
 flaskApp = Flask(__name__, static_folder="sim-gui/build/static")
+
+
+from API_executor import Alerts, Applications, Audit, Authentication, Devices, DevicesEvents, Jobs, MyApps, MyAppsAction, TaggingDevices, Tags
+
+

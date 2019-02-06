@@ -2,11 +2,11 @@ from threading import Thread, Event, Lock
 import time, random
 import Database as db
 from Simulator.ResourceSampling import sampleCPU, sampleMEM, get_truncated_normal
-from constants import queue
+from constants import queue, SAMPLE_INTERVAL, current_infrastructure
 from config import profile_low, profile_normal, profile_high, getEnergyConsumed
 import constants
-iter_count = 0
 
+iter_count = 0
 device_lock = Lock()
 myapp_lock = Lock()
 itercount_lock = Lock()
@@ -28,6 +28,7 @@ DEVICE_ENERGY_CONSUMPTION_sum = {}
 MYAPP_DEVICE_START_counter = {}
 MYAPP_ALERT_counter = {}
 MYAPP_ALERT_incrementing = {}
+DEVICE_USAGE_RESOURCES_SAMPLED_incrementing = {}
 
 def reset_simulation_counters():
     global DEVICE_CRITICAL_CPU_counter_sum
@@ -66,6 +67,10 @@ def reset_simulation_counters():
     iter_count = 0
     global MYAPP_ALERT_incrementing
     MYAPP_ALERT_incrementing = {}
+    global DEVICE_USAGE_RESOURCES_SAMPLED_incrementing
+    DEVICE_USAGE_RESOURCES_SAMPLED_incrementing = {}
+    global current_infrastructure
+    current_infrastructure = {}
 
 myapp_ondevice_already_sampled = {}
 def resources_requested(sourceAppName):
@@ -99,11 +104,12 @@ class SimThread(Thread):
         self.shutdown_flag = Event()
     def run(self):
         global iter_count
+        global current_infrastructure
+        
         while not self.shutdown_flag.is_set():
             with itercount_lock:
                 iter_count += 1
             with device_lock:
-                device_sampled_values = {}
                 for dev in db.getDevices():
                     deviceId = dev["deviceId"]
                     # Initializing Variable
@@ -126,15 +132,20 @@ class SimThread(Thread):
                     if db.deviceIsAlive(deviceId):
                         sampled_free_cpu = sampleCPU(deviceId) - dev["usedCPU"] 
                         sampled_free_mem = sampleMEM(deviceId) - dev["usedMEM"]
-                        device_sampled_values[deviceId] = {"free_cpu": sampled_free_cpu, "free_mem": sampled_free_mem}
+                        if not deviceId in current_infrastructure: # Adding sampling in any case if none is already inserted
+                            current_infrastructure[deviceId] = {"free_cpu": sampled_free_cpu, "free_mem": sampled_free_mem}
+                        if iter_count % SAMPLE_INTERVAL == 0:
+                            current_infrastructure[deviceId] = {"free_cpu": sampled_free_cpu, "free_mem": sampled_free_mem}
                         # adding critical CPU, MEM
                         if sampled_free_cpu <= 0:
                             DEVICE_CRITICAL_CPU_counter_sum[deviceId] += 1
                         if sampled_free_mem <= 0:
                             DEVICE_CRITICAL_MEM_counter_sum[deviceId] += 1
                         # adding sampled resources
-                        device_cpu_used = dev["usedCPU"] + dev["totalCPU"] - sampled_free_cpu
-                        device_mem_used = dev["usedMEM"] + dev["totalMEM"] - sampled_free_mem
+                        usedCPU = dev["usedCPU"] if not deviceId in DEVICE_USAGE_RESOURCES_SAMPLED_incrementing else DEVICE_USAGE_RESOURCES_SAMPLED_incrementing[deviceId]["cpu"]
+                        usedCPU = dev["usedMEM"] if not deviceId in DEVICE_USAGE_RESOURCES_SAMPLED_incrementing else DEVICE_USAGE_RESOURCES_SAMPLED_incrementing[deviceId]["mem"]
+                        device_cpu_used = usedCPU + dev["totalCPU"] - sampled_free_cpu
+                        device_mem_used = usedCPU + dev["totalMEM"] - sampled_free_mem
                         DEVICE_CPU_USED_sum[deviceId] += device_cpu_used if device_cpu_used <= dev["totalCPU"] else dev["totalCPU"] 
                         DEVICE_MEM_USED_sum[deviceId] += device_mem_used if device_mem_used <= dev["totalMEM"] else dev["totalMEM"]
                         
@@ -183,6 +194,11 @@ class SimThread(Thread):
                         application_cpu_sampling = get_truncated_normal(mean=profile_values[0]*max_cpu, sd=profile_values[0]*max_cpu, low=0, upp=allocated_cpu+1).rvs()
                         application_mem_sampling = get_truncated_normal(mean=profile_values[0]*max_mem, sd=profile_values[0]*max_mem, low=0, upp=allocated_mem+1).rvs()
                         
+                        if not device["deviceId"] in DEVICE_USAGE_RESOURCES_SAMPLED_incrementing:
+                            DEVICE_USAGE_RESOURCES_SAMPLED_incrementing[device["deviceId"]] = {"cpu": 0, "mem": 0}
+                        DEVICE_USAGE_RESOURCES_SAMPLED_incrementing[device["deviceId"]]["cpu"] +=  application_cpu_sampling
+                        DEVICE_USAGE_RESOURCES_SAMPLED_incrementing[device["deviceId"]]["mem"] +=  application_mem_sampling
+
                         device_details = db.getDevice(device["deviceId"])
                         if device_details == None: # the devices is removed without deleting the application
                             continue
@@ -216,12 +232,18 @@ class SimThread(Thread):
                             }, from_sampling=True)
                             MYAPP_ALERT_counter[myappId][constants.DEVICE_REACHABILITY] += 1
                         else:
-                            if not myappId in myapp_jobs_up_counter:
-                                myapp_jobs_up_counter[myappId] = 1
+                            if job["status"] == "start":
+                                if not myappId in myapp_jobs_up_counter:
+                                    myapp_jobs_up_counter[myappId] = 1
+                                else:
+                                    myapp_jobs_up_counter[myappId] += 1
                             else:
-                                myapp_jobs_up_counter[myappId] += 1
-                            sampled_free_cpu = device_sampled_values[device["deviceId"]]["free_cpu"]
-                            sampled_free_mem = device_sampled_values[device["deviceId"]]["free_mem"]
+                                if not myappId in myapp_jobs_down_counter:
+                                    myapp_jobs_down_counter[myappId] = 1
+                                else:
+                                    myapp_jobs_down_counter[myappId] += 1
+                            sampled_free_cpu = current_infrastructure[device["deviceId"]]["free_cpu"]
+                            sampled_free_mem = current_infrastructure[device["deviceId"]]["free_mem"]
                             if sampled_free_cpu <= 0:
                                 db.addAlert({
                                     "deviceId": device["deviceId"],
@@ -229,14 +251,13 @@ class SimThread(Thread):
                                     "hostname": device_details["ipAddress"],
                                     "appName": myapp_details["name"],
                                     "severity": "critical",
-                                    "type": "status",
+                                    "type": constants.APP_HEALTH,
                                     "message": "The node on which this app is installed has critical problem with CPU resource",
                                     #"message": "The desired state of the app on this device was \"running\" but the actual state is \"stopped\"",
                                     "time": int(iter_count), # Relative
                                     "source": "Device periodic report",
                                     "action": "",
-                                    "status": "ACTIVE",
-                                    "simulation_type": constants.APP_HEALTH
+                                    "status": "ACTIVE"
                                 }, from_sampling=True)
                                 MYAPP_ALERT_counter[myappId][constants.APP_HEALTH] += 1
                             if sampled_free_mem <= 0:
@@ -253,7 +274,7 @@ class SimThread(Thread):
                                     "source": "Device periodic report",
                                     "action": "",
                                     "status": "ACTIVE",
-                                    "simulation_type": constants.APP_HEALTH
+                                    "type": constants.APP_HEALTH
                                 }, from_sampling=True)
                                 MYAPP_ALERT_counter[myappId][constants.APP_HEALTH] += 1
                             if application_cpu_sampling > max_cpu*0.95:
@@ -268,7 +289,7 @@ class SimThread(Thread):
                                     "source": "Device periodic report",
                                     "action": "",
                                     "status": "ACTIVE",
-                                    "simulation_type": constants.MYAPP_CPU_CONSUMING    
+                                    "type": constants.MYAPP_CPU_CONSUMING    
                                 }, from_sampling=True)
                                 MYAPP_ALERT_counter[myappId][constants.MYAPP_CPU_CONSUMING] += 1
                             if application_mem_sampling > max_mem*0.95:
@@ -283,7 +304,7 @@ class SimThread(Thread):
                                     "source": "Device periodic report",
                                     "action": "",
                                     "status": "ACTIVE",
-                                    "simulation_type": constants.MYAPP_MEM_CONSUMING
+                                    "type": constants.MYAPP_MEM_CONSUMING
                                 }, from_sampling=True)
                                 MYAPP_ALERT_counter[myappId][constants.MYAPP_MEM_CONSUMING] += 1
 

@@ -2,6 +2,7 @@ from API_executor.Authentication import invalidToken
 import time, json
 import Database as db
 from Simulator.ResourceSampling import sampleCPU, sampleMEM
+from constants import current_infrastructure
 
 def computeDeviceId(ip, port):
     return str(abs(hash(ip + str(port))))
@@ -32,11 +33,11 @@ def formatDeviceOutput(device):
         "name": "x86_64",
         "cartridges": [],
         "cpu": {
-            "available": sampleCPU(device["deviceId"])-device["usedCPU"],
+            "available": sampleCPU(device["deviceId"])-device["usedCPU"] if not device["deviceId"] in current_infrastructure else current_infrastructure[device["deviceId"]]["free_cpu"]-device["usedCPU"],
             "total": device["totalCPU"]
         },
         "memory": {
-            "available": sampleMEM(device["deviceId"]) - device["usedMEM"],
+            "available": sampleMEM(device["deviceId"])-device["usedMEM"] if not device["deviceId"] in current_infrastructure else current_infrastructure[device["deviceId"]]["free_mem"]-device["usedMEM"],
             "total": device["totalMEM"]
         },
         "disk": {
@@ -82,7 +83,7 @@ def formatDeviceOutput(device):
     res["networks"] = "NOT IMPLEMENTED YET"
     return res
 
-def post(args, data):
+def post(args, data, devices=None):
     if db.checkToken(args["x-token-id"]):
         if data == None or\
             data["ipAddress"] == None or\
