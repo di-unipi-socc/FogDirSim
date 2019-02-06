@@ -75,6 +75,7 @@ fallimenti = []
 print("STARTING BESTFIT PHASE")
 decision_function = bestFit
 for alessandro in range(0, 30):
+    break
     reset_simulation(alessandro)
     fallimento = 0
     for i in range(0, DEVICES_NUMBER):
@@ -161,8 +162,6 @@ decision_function = bestFit
 for alessandro in range(0, 30):
     reset_simulation(alessandro)
     fallimento = 0
-
-    print("Trying to deploy", str(DEPLOYMENT_NUMBER), "number of devices. Tentativo", i)
 
     for i in range(0, DEVICES_NUMBER):
         deviceId = i+1      
