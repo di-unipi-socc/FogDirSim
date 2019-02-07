@@ -37,7 +37,6 @@ def methodGetter(moduleName, functionName, *args, **kwargs):
 queue = MagicalQueue(methodGetter)
 flaskApp = Flask(__name__, static_folder="sim-gui/build/static")
 
-
 from API_executor import Alerts, Applications, Audit, Authentication, Devices, DevicesEvents, Jobs, MyApps, MyAppsAction, TaggingDevices, Tags
 
 
