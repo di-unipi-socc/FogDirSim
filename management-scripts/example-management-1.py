@@ -34,7 +34,7 @@ def randomFit():
 def firstFit(cpu, mem):
     _, devices = fd.get_devices()
     for dev in devices["data"]:
-        if dev["capabilities"]["nodes"][0]["cpu"]["available"] >= cpu and dev["capabilities"]["nodes"][0]["memory"]["available"]:
+        if dev["capabilities"]["nodes"][0]["cpu"]["available"] >= cpu and dev["capabilities"]["nodes"][0]["memory"]["available"] >= mem:
             return dev["ipAddress"]
     firstFit(cpu, mem)
 
@@ -58,7 +58,7 @@ def reset_simulation(current_identifier):
     previous_simulation.append({
         current_identifier: output
     })
-    file  = open("simulation_results.txt", "a")
+    file  = open("simulation_results_firstFit.txt", "a")
     file.write(str(current_identifier)+"\n")
     out = simplejson.dumps(output, indent=4, sort_keys=True)
     file.write(out)
@@ -87,6 +87,7 @@ print("STARTING BESTFIT PHASE")
 #                                   BESTFIT                                               #
 ###########################################################################################
 for simulation_count in range(0, 20):
+    break
     reset_simulation(simulation_count)
     fallimento = 0
     for i in range(0, DEVICES_NUMBER):
@@ -126,6 +127,7 @@ print("STARTING RANDOM PHASE")
 fallimenti = []
 iteration_count = []
 for simulation_count in range(0, 20):
+    break
     reset_simulation(simulation_count)
     fallimento = 0
 

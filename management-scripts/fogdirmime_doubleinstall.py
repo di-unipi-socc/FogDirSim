@@ -60,23 +60,28 @@ while True:
                     code, _ = fd.install_app("dep1", ["10.10.20.53"]) 
                 fd.start_app("dep1")
                 moved1 = True
-            elif alert["appName"] == "dep2":
-                if migrated2 == True:
-                    continue
-                migrated2 = True
-                print("dep2", alert["ipAddress"],"->",otherDevice(alert["ipAddress"]))
-                #code, _ = fd.uninstall_app("dep2", alert["ipAddress"])
+
                 if not installedOn1:
-                    code, _ = fd.install_app("dep2", [otherDevice(alert["ipAddress"])])
+                    print("INSTALLING 1")
                     installedOn1 = True
+                    fd.stop_app("dep2")
+                    code, _ = fd.install_app("dep2", ["10.10.20.51"])
                     count = 0
                     while code == 400:
-                        print("FAILED to migrate to",otherDevice(alert["ipAddress"]), count)
+                        print("FAILED to migrate to","10.10.20.51", count)
                         count+=1
                         if count == 20:
-                            print(fd.get_devices(searchByAnyMatch=otherDevice(alert["ipAddress"])))
+                            print(fd.get_devices(searchByAnyMatch="10.10.20.51"))
                             exit()
-                        code, response = fd.install_app("dep2", [otherDevice(alert["ipAddress"])])
+                        print("INSTALLING 1")
+                        code, response = fd.install_app("dep2", ["10.10.20.51"])  
+                    installedOn1 = True
+                    code, _ = fd.start_app("dep2")
+            #elif alert["appName"] == "dep2":
+            #    if migrated2 == True:
+            #        continue
+            #    migrated2 = True
+            #    print("dep2", alert["ipAddress"],"->",otherDevice(alert["ipAddress"]))
+            #    code, _ = fd.uninstall_app("dep2", alert["ipAddress"])
 
-                code, _ = fd.start_app("dep2")
-                fd.stop_app("dep2")
+                
