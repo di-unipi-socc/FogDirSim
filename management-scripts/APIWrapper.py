@@ -154,7 +154,7 @@ class FogDirector():
         r=requests.get(url,headers=headers,verify=False)
         return (200, r.json())
 
-    def create_myapp(self, localAppId, myappname, version=1):
+    def create_myapp(self, localAppId, myappname, version=1,  minjobs=0):
         if self.ssl:
             url = "https://%s/api/v1/appmgr/myapps" % self.ip
         else:
@@ -164,7 +164,7 @@ class FogDirector():
         data["name"] = myappname
         data["sourceAppName"] = localAppId+":"+str(version)
         data["version"] = version
-        r = requests.post(url, data=json.dumps(data), headers=headers, verify=False)
+        r = requests.post(url, data=json.dumps(data), headers=headers, verify=False, params={"minjobs": minjobs})
         if r.status_code != 201:
             return (r.status_code, r.raise_for_status())
         return (201, r.json())
@@ -182,7 +182,7 @@ class FogDirector():
             return (200, True)
 
 
-    def install_app(self, appname, devicesip, minjobs=0, resources={"resources":{"profile":"c1.tiny","cpu":100,"memory":32,"network":[{"interface-name":"eth0","network-name":"iox-bridge0"}]}}):
+    def install_app(self, appname, devicesip, resources={"resources":{"profile":"c1.tiny","cpu":100,"memory":32,"network":[{"interface-name":"eth0","network-name":"iox-bridge0"}]}}):
         _, myapp_present = self.is_myapp_present(appname)
         if myapp_present != True :
             return (404, "You have to create the myapp first")

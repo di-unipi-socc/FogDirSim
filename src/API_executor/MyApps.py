@@ -28,7 +28,8 @@ def post(args, data):
                 "description": "This simulator is not able to manage not LOCAL_APPSTORE applications"
             }, 400, {"Content-Type": "application/json"}
         if args["minjobs"] != None:
-            myapp = db.createMyApp(appname, sourceAppName, version, appType, minjobs=args["minjobs"])
+            minjob = int(args["minjobs"])
+            myapp = db.createMyApp(appname, sourceAppName, version, appType, minjobs=minjob)
         else:
             myapp = db.createMyApp(appname, sourceAppName, version, appType)
         del myapp["_id"]

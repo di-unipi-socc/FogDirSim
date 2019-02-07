@@ -255,7 +255,7 @@ class SimThread(Thread):
                                     myapp_jobs_down_counter[myappId] += 1
                             sampled_free_cpu = current_infrastructure[device["deviceId"]]["free_cpu"]
                             sampled_free_mem = current_infrastructure[device["deviceId"]]["free_mem"]
-                            if sampled_free_cpu <= 0:
+                            if sampled_free_cpu <= 0 and job["status"] == "start":
                                 db.addAlert({
                                     "deviceId": device["deviceId"],
                                     "ipAddress": device_details["ipAddress"],
@@ -271,7 +271,7 @@ class SimThread(Thread):
                                     "status": "ACTIVE"
                                 }, from_sampling=True)
                                 MYAPP_ALERT_counter[myappId][constants.APP_HEALTH] += 1
-                            if sampled_free_mem <= 0:
+                            if sampled_free_mem <= 0 and job["status"] == "start":
                                 myapp_details = db.getMyApp(job["myappId"])
                                 db.addAlert({
                                     "deviceId": device["deviceId"],
@@ -288,7 +288,7 @@ class SimThread(Thread):
                                     "type": constants.APP_HEALTH
                                 }, from_sampling=True)
                                 MYAPP_ALERT_counter[myappId][constants.APP_HEALTH] += 1
-                            if application_cpu_sampling > max_cpu*0.95:
+                            if application_cpu_sampling > max_cpu*0.95 and job["status"] == "start":
                                 db.addAlert({
                                     "deviceId": device["deviceId"],
                                     "ipAddress": device_details["ipAddress"],
@@ -303,7 +303,7 @@ class SimThread(Thread):
                                     "type": constants.MYAPP_CPU_CONSUMING    
                                 }, from_sampling=True)
                                 MYAPP_ALERT_counter[myappId][constants.MYAPP_CPU_CONSUMING] += 1
-                            if application_mem_sampling > max_mem*0.95:
+                            if application_mem_sampling > max_mem*0.95 and job["status"] == "start":
                                 db.addAlert({
                                     "deviceId": device["deviceId"],
                                     "ipAddress": device_details["ipAddress"],
@@ -335,9 +335,12 @@ class SimThread(Thread):
                         else: # If there are no instaces running
                             MYAPP_DOWN_counter[myappId] += 1
                     else:
-                        if myapp["minjobs"] <= myapp_jobs_up_counter[myappId]:
-                            MYAPP_UP_counter[myappId] += 1
-                        else:
+                        try:
+                            if myapp["minjobs"] <= myapp_jobs_up_counter[myappId]:
+                                MYAPP_UP_counter[myappId] += 1
+                            else:
+                                MYAPP_DOWN_counter[myappId] += 1
+                        except KeyError:
                             MYAPP_DOWN_counter[myappId] += 1
                 
             queue.execute_next_task() # Executes a task if present, otherwise returns immediately                   
