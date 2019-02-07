@@ -105,6 +105,7 @@ class SimThread(Thread):
     def run(self):
         global iter_count
         global current_infrastructure
+        global DEVICE_USAGE_RESOURCES_SAMPLED_incrementing
         
         while not self.shutdown_flag.is_set():
             with itercount_lock:
@@ -130,14 +131,14 @@ class SimThread(Thread):
                         db.setDeviceAlive(deviceId)  
 
                     if dev["alive"]:
-                        if not deviceId in current_infrastructure: # Adding sampling in any case if none is already inserted
+                        try:
+                            sampled_free_cpu = current_infrastructure[deviceId]["free_cpu"]
+                            sampled_free_mem = current_infrastructure[deviceId]["free_mem"]
+                        except KeyError: # Adding sampling in any case if none is already inserted
                             sampled_free_cpu = sampleCPU(deviceId) - dev["usedCPU"] 
                             sampled_free_mem = sampleMEM(deviceId) - dev["usedMEM"]
                             current_infrastructure[deviceId] = {"free_cpu": sampled_free_cpu, "free_mem": sampled_free_mem}
-                        else:
-                            sampled_free_cpu = current_infrastructure[deviceId]["free_cpu"]
-                            sampled_free_mem = current_infrastructure[deviceId]["free_mem"]
-                        
+                            
                         if iter_count % SAMPLE_INTERVAL == 0:
                             sampled_free_cpu = sampleCPU(deviceId) - dev["usedCPU"] 
                             sampled_free_mem = sampleMEM(deviceId) - dev["usedMEM"]
@@ -150,9 +151,9 @@ class SimThread(Thread):
                             DEVICE_CRITICAL_MEM_counter_sum[deviceId] += 1
                         # adding sampled resources
                         usedCPU = dev["usedCPU"] if not deviceId in DEVICE_USAGE_RESOURCES_SAMPLED_incrementing else DEVICE_USAGE_RESOURCES_SAMPLED_incrementing[deviceId]["cpu"]
-                        usedCPU = dev["usedMEM"] if not deviceId in DEVICE_USAGE_RESOURCES_SAMPLED_incrementing else DEVICE_USAGE_RESOURCES_SAMPLED_incrementing[deviceId]["mem"]
+                        usedMEM = dev["usedMEM"] if not deviceId in DEVICE_USAGE_RESOURCES_SAMPLED_incrementing else DEVICE_USAGE_RESOURCES_SAMPLED_incrementing[deviceId]["mem"]
                         device_cpu_used = usedCPU + dev["totalCPU"] - sampled_free_cpu
-                        device_mem_used = usedCPU + dev["totalMEM"] - sampled_free_mem
+                        device_mem_used = usedMEM + dev["totalMEM"] - sampled_free_mem
                         DEVICE_CPU_USED_sum[deviceId] += device_cpu_used if device_cpu_used <= dev["totalCPU"] else dev["totalCPU"] 
                         DEVICE_MEM_USED_sum[deviceId] += device_mem_used if device_mem_used <= dev["totalMEM"] else dev["totalMEM"]
                         
@@ -161,9 +162,10 @@ class SimThread(Thread):
                         consumed_energy = (getEnergyConsumed(deviceId, device_cpu_used, device_mem_used) - 
                                             getEnergyConsumed(deviceId, basal_cpu_usage, basal_mem_usage))
                         DEVICE_ENERGY_CONSUMPTION_sum[deviceId] += consumed_energy
-                        resources_sampled_count[deviceId] += 1
+            
                         # adding number of installed apps
-                        NUMBER_OF_MYAPP_ON_DEVICE_counter_sum[deviceId] += len(dev["installedApps"])            
+                        NUMBER_OF_MYAPP_ON_DEVICE_counter_sum[deviceId] += len(dev["installedApps"])    
+                        resources_sampled_count[deviceId] += 1        
                     else: 
                         DEVICE_DOWN_counter_sum[deviceId] += 1
                 
@@ -171,6 +173,7 @@ class SimThread(Thread):
                 db.deleteFromSamplingAlerts() # Cleaning all alerts inserted in previous simulation iter
                 myapp_jobs_up_counter = {}
                 myapp_jobs_down_counter = {}
+                DEVICE_USAGE_RESOURCES_SAMPLED_incrementing = {}
                 for job in db.getJobs():
                     myappId = job["myappId"]
                     
@@ -203,6 +206,7 @@ class SimThread(Thread):
                         
                         if not device["deviceId"] in DEVICE_USAGE_RESOURCES_SAMPLED_incrementing:
                             DEVICE_USAGE_RESOURCES_SAMPLED_incrementing[device["deviceId"]] = {"cpu": 0, "mem": 0}
+
                         DEVICE_USAGE_RESOURCES_SAMPLED_incrementing[device["deviceId"]]["cpu"] +=  application_cpu_sampling
                         DEVICE_USAGE_RESOURCES_SAMPLED_incrementing[device["deviceId"]]["mem"] +=  application_mem_sampling
 

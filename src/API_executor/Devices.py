@@ -19,6 +19,8 @@ def formatDeviceOutput(device):
     res["hostname"] = res["ne_id"]
     res["platformVersion"] = "1.7.0.7"
     res["status"] = "DISCOVERED"
+    res["usedCPU"] = device["usedCPU"]
+    res["usedMEM"] = device["usedMEM"]
     res["tags"] = device["tags"]
     res["apps"] = device["installedApps"] # TODO: compare with FogDirector output
     capabilities = {}
@@ -28,7 +30,7 @@ def formatDeviceOutput(device):
         "PAAS",
         "LXC"
     ]
-    capabilities["nodes"] = [] # TODO: Why this is an array? A device can use several nodes?
+    capabilities["nodes"] = []
     capabilities["nodes"].append({
         "name": "x86_64",
         "cartridges": [],

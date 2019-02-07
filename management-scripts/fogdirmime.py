@@ -1,5 +1,8 @@
 from APIWrapper import FogDirector
 import time, requests
+from infrastructure import fogdirmime_infra as infrastructure
+
+infrastructure.create()
 
 FOG_DIRECTOR_HOST = "127.0.0.1:5000"
 
@@ -40,13 +43,12 @@ fd.start_app("dep2")
 def otherDevice(current):
     return "10.10.20.51" if current == "10.10.20.52" else "10.10.20.52"
 
-
 moved1 = False
 while True:
     _, alerts = fd.get_alerts()
+    migrated2 = False
     for alert in alerts["data"]:
         if "APP_HEALTH" == alert["type"]: # Device issues
-            print(alert["message"])
             if alert["appName"] == "dep1" and not moved1:
                 print("migrating dep1")
                 fd.stop_app("dep1")
@@ -57,11 +59,20 @@ while True:
                 fd.start_app("dep1")
                 moved1 = True
             elif alert["appName"] == "dep2":
-                print("migrating dep2 from", alert["ipAddress"],"to",otherDevice(alert["ipAddress"]))
+                if migrated2 == True:
+                    continue
+                migrated2 = True
+                print("dep2", alert["ipAddress"],"->",otherDevice(alert["ipAddress"]))
                 fd.stop_app("dep2")
                 code, _ = fd.uninstall_app("dep2", alert["ipAddress"])
                 code, _ = fd.install_app("dep2", [otherDevice(alert["ipAddress"])])
+                count = 0
                 while code == 400:
-                    print("FAILED to migrate")
+                    print("FAILED to migrate to",otherDevice(alert["ipAddress"]), count)
+                    count+=1
+                    if count == 20:
+                        print(fd.get_devices(searchByAnyMatch=otherDevice(alert["ipAddress"])))
+                        exit()
                     code, response = fd.install_app("dep2", [otherDevice(alert["ipAddress"])])
+
                 code, _ = fd.start_app("dep2")

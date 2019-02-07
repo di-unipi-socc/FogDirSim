@@ -49,7 +49,7 @@ def main():
         historianThread.shutdown_flag.set()
         exit()
     signal.signal(signal.SIGINT, service_shutdown)
-    print("Creating Simulation Thread")
+
     simulatorThread = SimThread()
     historianThread = Historian()
     
@@ -97,7 +97,7 @@ def main():
     def get_energy_history():
             return jsonify(HistoryThread.get_energy_history())
     
-    @app.route("/simulationreset")
+    
     def reset_simulation():
         average_alerts = {}
         myapps = Simulator.SimThread.getMyAppsSampling()
@@ -121,7 +121,11 @@ def main():
                 Simulator.SimThread.reset_simulation_counters()
                 db.resetSimulation()
                 Simulator.HistoryThread.reset_history()
-        return jsonify(result)
+        return result
+
+    @app.route("/simulationreset")
+    def simulationreset():
+        return jsonify(reset_simulation())
 
     # Serve React App
     @app.route('/', defaults={'path': ''})
