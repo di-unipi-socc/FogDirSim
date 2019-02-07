@@ -44,6 +44,7 @@ def main():
     
     def service_shutdown(signum, frame):
         print('\nOh, ok, I\'ll shutdown all the thread in a second... Byeee!')
+        print(reset_simulation())
         simulatorThread.shutdown_flag.set()
         historianThread.shutdown_flag.set()
         exit()

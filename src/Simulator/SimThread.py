@@ -129,7 +129,7 @@ class SimThread(Thread):
                     if not dev["alive"] and r <= dev["chaos_revive_prob"]:
                         db.setDeviceAlive(deviceId)  
 
-                    if db.deviceIsAlive(deviceId):
+                    if dev["alive"]:
                         if not deviceId in current_infrastructure: # Adding sampling in any case if none is already inserted
                             sampled_free_cpu = sampleCPU(deviceId) - dev["usedCPU"] 
                             sampled_free_mem = sampleMEM(deviceId) - dev["usedMEM"]

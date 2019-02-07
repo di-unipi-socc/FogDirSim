@@ -2,7 +2,7 @@ from APIWrapper import FogDirector
 import time, random, math
 from infrastructure import ciscorouter_size300_low_res as infrastructure
 import requests
-import json, signal
+import simplejson, signal
 
 infrastructure.create()
 
@@ -41,11 +41,11 @@ def FTpi_like(cpu, mem):
 
 def service_shutdown(*args):
     print('\nOh, ok, I will print the simulation result.Byeee!')
-    r = reset_simulation("new")
-    file_name = input("Filename to save simulation result")
+    output = reset_simulation("new")
+    file_name = input("\nFilename to save simulation result: ")
     file  = open(file_name, "w")
     file.write("sim_count: "+str(count)+" - depl_num: "+str(DEPLOYMENT_NUMBER)+"\n")
-    file.write(json.dumps(r))
+    file.write(simplejson.loads(output), indent=4, sort_keys=True))
     file.write("\n\n")
     file.close()
     exit()
@@ -59,6 +59,11 @@ def reset_simulation(current_identifier):
     previous_simulation.append({
         current_identifier: r
     })
+    file  = open("simulation_results.txt", "a")
+    file.write(current_identifier+"\n")
+    file.write(simplejson.loads(output), indent=4, sort_keys=True))
+    file.write("\n\n")
+    file.close()
     return r.json()
 reset_simulation(0)
 print("STARTING SIMULATION")
@@ -68,13 +73,14 @@ code = fg.authenticate("admin", "admin_123")
 if code == 401:
     print("Failed Authentication")
 
-DEVICES_NUMBER = 5
-DEPLOYMENT_NUMBER = 15
+DEVICES_NUMBER = 10
+DEPLOYMENT_NUMBER = 70
 
 fallimenti = []
 print("STARTING BESTFIT PHASE")
+
 decision_function = bestFit
-for alessandro in range(0, 5):
+for alessandro in range(0, 15):
     reset_simulation(alessandro)
     fallimento = 0
     for i in range(0, DEVICES_NUMBER):
