@@ -38,19 +38,13 @@ def firstFit(cpu, mem):
             return dev["ipAddress"]
     firstFit(cpu, mem)
 
-def FTpi_like(cpu, mem):
-    # Not reasonable
-    for _ in range(0, 1000):
-        bestFit(cpu, mem) # requires 1 iteration for each counting => 1000 iteration for every device choice
-    return None
-
 previous_simulation = []
 def service_shutdown(*args):
     print('\nOh, ok, I will print the simulation result.Byeee!')
     reset_simulation("shutdown")
     file_name = input("\nFilename to save simulation result: ")
     file  = open(file_name, "w")
-    file.write(simplejson.loads(previous_simulation), indent=4, sort_keys=True)
+    file.write(simplejson.dumps(simplejson.loads(previous_simulation), indent=4, sort_keys=True))
     file.write("\n\n")
     file.close()
     exit()
@@ -65,8 +59,9 @@ def reset_simulation(current_identifier):
         current_identifier: output
     })
     file  = open("simulation_results.txt", "a")
-    file.write(current_identifier+"\n")
-    file.write(simplejson.loads(output), indent=4, sort_keys=True)
+    file.write(str(current_identifier)+"\n")
+    out = simplejson.dumps(output, indent=4, sort_keys=True)
+    file.write(out)
     file.write("\n\n")
     file.close()
     return output
@@ -81,8 +76,8 @@ code = fd.authenticate("admin", "admin_123")
 if code == 401:
     print("Failed Authentication")
 
-DEVICES_NUMBER = 5
-DEPLOYMENT_NUMBER = 10
+DEVICES_NUMBER = 15
+DEPLOYMENT_NUMBER = 110
 
 fallimenti = []
 iteration_count = []
@@ -119,10 +114,10 @@ for simulation_count in range(0, 20):
         fd.start_app(dep)
 
     r = requests.get('http://localhost:5000/result/simulationcounter')
-    iteration_end = r.text
+    iteration_end = int(r.text)
     fallimenti.append(fallimento)
     iteration_count.append(iteration_end)
-    print(simulation_count, ") DEPLOYED IN ", iteration_end, "fallimenti", fallimento, "media iterazioni", sum(iteration_count)/len(iteration_count), "media fallimenti", sum(fallimenti)/float(len(fallimenti)))
+    print(simulation_count, ") Iter_count:", iteration_end, "(mean:", sum(iteration_count)/len(iteration_count), ") - fails", fallimento, "(mean ", sum(fallimenti)/float(len(fallimenti)), ")")
 
 print("STARTING RANDOM PHASE")
 ###########################################################################################
@@ -159,47 +154,10 @@ for simulation_count in range(0, 20):
         fd.start_app(dep)
 
     r = requests.get('http://localhost:5000/result/simulationcounter')
-    iteration_end = r.text
+    iteration_end = int(r.text)
     fallimenti.append(fallimento)
     iteration_count.append(iteration_end)
-    print(simulation_count, ") DEPLOYED IN ", iteration_end, "fallimenti", fallimento, "media iterazioni", sum(iteration_count)/len(iteration_count), "media fallimenti", sum(fallimenti)/float(len(fallimenti)))
-
-print("STARTING BESTFIT PHASE")
-###########################################################################################
-#                                   BESTFIT                                               #
-###########################################################################################
-for simulation_count in range(0, 20):
-    reset_simulation(simulation_count)
-    fallimento = 0
-    for i in range(0, DEVICES_NUMBER):
-        deviceId = i+1      
-        _, device1 = fd.add_device("10.10.20."+str(deviceId), "cisco", "cisco")
-
-    # Uploading Application
-    code, localapp = fd.add_app("./NettestApp2V1_lxc.tar.gz", publish_on_upload=True)
-
-    for myapp_index in range(0, DEPLOYMENT_NUMBER):
-        dep = "dep"+str(myapp_index)
-        _, myapp1 = fd.create_myapp(localapp["localAppId"], dep)
-
-        deviceIp = bestFit(100, 32)
-        code, res = fd.install_app(dep, [deviceIp])
-        trial = 0
-        while code == 400:
-            trial += 1
-            if trial == 50:
-                print(DEPLOYMENT_NUMBER, "applications are too high value to deploy. (50 fails reached)")
-                exit()
-            fallimento += 1
-            deviceIp = bestFit(100, 32)
-            code, res = fd.install_app(dep, [deviceIp])
-        fd.start_app(dep)
-
-    r = requests.get('http://localhost:5000/result/simulationcounter')
-    iteration_end = r.text
-    fallimenti.append(fallimento)
-    iteration_count.append(iteration_end)
-    print(simulation_count, ") DEPLOYED IN ", iteration_end, "fallimenti", fallimento, "media iterazioni", sum(iteration_count)/len(iteration_count), "media fallimenti", sum(fallimenti)/float(len(fallimenti)))
+    print(simulation_count, ") Iter_count:", iteration_end, "(mean:", sum(iteration_count)/len(iteration_count), ") - fails", fallimento, "(mean ", sum(fallimenti)/float(len(fallimenti)), ")")
 
 print("STARTING FIRSTFIT PHASE")
 ###########################################################################################
@@ -236,7 +194,7 @@ for simulation_count in range(0, 20):
         fd.start_app(dep)
 
     r = requests.get('http://localhost:5000/result/simulationcounter')
-    iteration_end = r.text
+    iteration_end = int(r.text)
     fallimenti.append(fallimento)
     iteration_count.append(iteration_end)
-    print(simulation_count, ") DEPLOYED IN ", iteration_end, "fallimenti", fallimento, "media iterazioni", sum(iteration_count)/len(iteration_count), "media fallimenti", sum(fallimenti)/float(len(fallimenti)))
+    print(simulation_count, ") Iter_count:", iteration_end, "(mean:", sum(iteration_count)/len(iteration_count), ") - fails", fallimento, "(mean ", sum(fallimenti)/float(len(fallimenti)), ")")
