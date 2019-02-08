@@ -1,4 +1,4 @@
-SAMPLE_INTERVAL = 3
+SAMPLE_INTERVAL = 5
 current_infrastructure = {}
 
 DEVICE_CRITICAL_CPU = 1

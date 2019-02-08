@@ -4,6 +4,8 @@ from infrastructure import ciscorouters_10pz_5m10s as infrastructure
 import requests
 import simplejson, signal
 
+infrastructure.create()
+
 fd = FogDirector("127.0.0.1:5000")
 code = fd.authenticate("admin", "admin_123")
 
@@ -31,10 +33,10 @@ def reset_simulation():
     r = requests.get(url)
     output = r.json()
     try:
-        file  = open("simulation_results_firstFit.txt", "a")
+        file  = open("simulation_results_uptimeVSmyappsnumber.txt", "a")
         file.write("# Devices: "+str(DEVICE_NUMBER)+" - # Deployments: "+str(DEPLOYMENT_NUMBER)+" - # Successfully Installed: "+str(installed_apps)+"\n")
+        del output["uptime_history"]
         out = simplejson.dumps(output, indent=4, sort_keys=True)
-        del out["uptime_history"]
         file.write(out)
         file.write("\n\n")
         file.close()
@@ -60,7 +62,6 @@ def install_apps():
             trial += 1
             if trial == 50:
                 return i
-            fallimento += 1
             deviceIp = bestFit(100, 32)
             code, res = fd.install_app(dep, [deviceIp])
         fd.start_app(dep)
@@ -69,7 +70,13 @@ def install_apps():
 reset_simulation()
 for DEVICE_NUMBER in range(10, 40, 5):
     for DEPLOYMENT_NUMBER in range(10, 1000, 10):
+        print(DEVICE_NUMBER, DEPLOYMENT_NUMBER)
         add_devices()
         code, localapp = fd.add_app("./NettestApp2V1_lxc.tar.gz", publish_on_upload=True)
         installed_apps = install_apps()
         reset_simulation()
+
+        wait = 1000
+        while wait > 0:
+            fd.get_alerts()
+            wait -= 1
