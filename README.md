@@ -1,4 +1,4 @@
-# FogDirSimulator
+# FogDirSim
 
 Fog computing supports the deployment of IoT applications closer to their (human or machine) end-users. CISCO FogDirector is a tool that can be used to manage the entire life-cycle of IoT applications over Fog infrastructures by relying on RESTful APIs. FogDirSim is s prototype simulation environment, which is compliant to FogDirector APIs. 
 
@@ -8,7 +8,7 @@ It permits comparing different application management policies according to a se
 <img src="https://github.com/alessandro308/FogDirSimulator/blob/master/docs/img/home_screen_video.gif?raw=true" alt="Home Screen" />
 </center>
 
-## How it works?
+## How does it work?
 It simulates Fog Director giving the same [API of Fog Director](https://developer.cisco.com/docs/iox/#!fog-director-api-documentation/cisco-fog-director-rest-api) but executing all the operation only on a Database instead of on your infrastructure.
 
 This simulator loads the infrastructure from a given Database (a.k.a. RealDatabase). 
