@@ -27,6 +27,8 @@ def post(args, data, myappId):
                     else:
                         profile = constants.MYAPP_PROFILE_NORMAL
                     try:
+                        if not db.deviceIsAlive(devid):
+                            return {"Error": "Device does not reachable"}, 400, {"content-type: application/json"}
                         try:
                             db.checkAndAllocateResource(devid, resourceAsked["cpu"], resourceAsked["memory"])
                         except TypeError:

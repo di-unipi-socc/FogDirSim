@@ -67,7 +67,7 @@ if code == 401:
     print("Failed Authentication")
 
 DEVICES_NUMBER = 15
-DEPLOYMENT_NUMBER = 110
+DEPLOYMENT_NUMBER = 60
 
 fallimenti = []
 iteration_count = []

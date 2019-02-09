@@ -2,8 +2,8 @@ from threading import Thread, Event, Lock
 import time, random
 import Database as db
 from Simulator.ResourceSampling import sampleCPU, sampleMEM, get_truncated_normal
-from constants import queue, SAMPLE_INTERVAL, current_infrastructure
-from config import profile_low, profile_normal, profile_high, getEnergyConsumed
+from constants import queue
+from config import profile_low, profile_normal, profile_high, getEnergyConsumed, SAMPLE_INTERVAL
 import constants
 
 iter_count = 0
@@ -69,8 +69,7 @@ def reset_simulation_counters():
     MYAPP_ALERT_incrementing = {}
     global DEVICE_USAGE_RESOURCES_SAMPLED_incrementing
     DEVICE_USAGE_RESOURCES_SAMPLED_incrementing = {}
-    global current_infrastructure
-    current_infrastructure = {}
+    constants.current_infrastructure = {}
 
 myapp_ondevice_already_sampled = {}
 def resources_requested(sourceAppName):
@@ -104,7 +103,6 @@ class SimThread(Thread):
         self.shutdown_flag = Event()
     def run(self):
         global iter_count
-        global current_infrastructure
         global DEVICE_USAGE_RESOURCES_SAMPLED_incrementing
         
         while not self.shutdown_flag.is_set():
@@ -132,17 +130,17 @@ class SimThread(Thread):
 
                     if dev["alive"]:
                         try:
-                            sampled_free_cpu = current_infrastructure[deviceId]["free_cpu"]
-                            sampled_free_mem = current_infrastructure[deviceId]["free_mem"]
+                            sampled_free_cpu = constants.current_infrastructure[deviceId]["free_cpu"]
+                            sampled_free_mem = constants.current_infrastructure[deviceId]["free_mem"]
                         except KeyError: # Adding sampling in any case if none is already inserted
                             sampled_free_cpu = sampleCPU(deviceId) - dev["usedCPU"] 
                             sampled_free_mem = sampleMEM(deviceId) - dev["usedMEM"]
-                            current_infrastructure[deviceId] = {"free_cpu": sampled_free_cpu, "free_mem": sampled_free_mem}
+                            constants.current_infrastructure[deviceId] = {"free_cpu": sampled_free_cpu, "free_mem": sampled_free_mem}
                             
                         if iter_count % SAMPLE_INTERVAL == 0:
                             sampled_free_cpu = sampleCPU(deviceId) - dev["usedCPU"] 
                             sampled_free_mem = sampleMEM(deviceId) - dev["usedMEM"]
-                            current_infrastructure[deviceId] = {"free_cpu": sampled_free_cpu, "free_mem": sampled_free_mem}
+                            constants.current_infrastructure[deviceId] = {"free_cpu": sampled_free_cpu, "free_mem": sampled_free_mem}
                         
                         # adding critical CPU, MEM
                         if sampled_free_cpu <= 0:
@@ -253,8 +251,8 @@ class SimThread(Thread):
                                     myapp_jobs_down_counter[myappId] = 1
                                 else:
                                     myapp_jobs_down_counter[myappId] += 1
-                            sampled_free_cpu = current_infrastructure[device["deviceId"]]["free_cpu"]
-                            sampled_free_mem = current_infrastructure[device["deviceId"]]["free_mem"]
+                            sampled_free_cpu = constants.current_infrastructure[device["deviceId"]]["free_cpu"]
+                            sampled_free_mem = constants.current_infrastructure[device["deviceId"]]["free_mem"]
                             if sampled_free_cpu <= 0 and job["status"] == "start":
                                 db.addAlert({
                                     "deviceId": device["deviceId"],
