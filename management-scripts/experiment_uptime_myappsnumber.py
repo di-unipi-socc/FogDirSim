@@ -33,7 +33,7 @@ def reset_simulation():
     r = requests.get(url)
     output = r.json()
     try:
-        file  = open("simulation_results_uptimeVSmyappsnumber_2.txt", "a")
+        file  = open("simulation_results_uptimeVSmyappsnumber_3.txt", "a")
         file.write("# Devices: "+str(DEVICE_NUMBER)+" - # Deployments: "+str(DEPLOYMENT_NUMBER)+" - # Successfully Installed: "+str(installed_apps)+"\n")
         del output["uptime_history"]
         out = simplejson.dumps(output, indent=4, sort_keys=True)
@@ -61,7 +61,7 @@ def install_apps():
             trial = 0
             while code == 400:
                 trial += 1
-                if trial == 50:
+                if trial == 100:
                     return i
                 deviceIp = bestFit(100, 32)
                 code, res = fd.install_app(dep, [deviceIp])
@@ -79,8 +79,9 @@ for DEVICE_NUMBER in range(10, 40, 5):
         code, localapp = fd.add_app("./NettestApp2V1_lxc.tar.gz", publish_on_upload=True)
         installed_apps = install_apps()
         reset_simulation()
-
-        wait = 1000
+        if installed_apps < DEPLOYMENT_NUMBER:
+            break
+        wait = 2000
         while wait > 0:
             fd.get_alerts()
             wait -= 1
