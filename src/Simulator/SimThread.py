@@ -338,7 +338,6 @@ class SimThread(Thread):
                         
 def getDeviceSampling():
     with device_lock:
-        devices = db.getDevices()
         result = []
         fix_iter = float(iter_count)
         for deviceId in sampled_devices:
