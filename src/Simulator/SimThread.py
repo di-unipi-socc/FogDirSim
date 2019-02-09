@@ -17,10 +17,8 @@ def new_device_array():
     return array.array("f", [0, 0, 0, 0, 0, 0, 1, 0])
 
 devices_samples = defaultdict(new_device_array)
-
 sampled_devices = []
-
-# Access position
+# Device access position
 DEVICE_CRITICAL_CPU_counter_sum = 0
 DEVICE_CRITICAL_MEM_counter_sum = 1
 NUMBER_OF_MYAPP_ON_DEVICE_counter_sum = 2
@@ -30,11 +28,18 @@ DEVICE_DOWN_counter_sum = 5
 resources_sampled_count = 6
 DEVICE_ENERGY_CONSUMPTION_sum = 7
 
-MYAPP_UP_counter = {}
-MYAPP_DOWN_counter = {}
+def new_myapps_array():
+    return array.array("I", [1, 0, 0, 0])
+myapps_samples = defaultdict(new_myapps_array)
+# Myapps access position
+MYAPP_LIFETIME = 0
+MYAPP_UP_counter = 1
+MYAPP_DOWN_counter = 2
+MYAPP_ALERT_incrementing = 3
+
+
 MYAPP_CPU_CONSUMING_counter = {}
 MYAPP_MEM_CONSUMING_counter = {}
-MYAPP_LIFETIME = {}
 MYAPP_ON_DEVICE_counter = {}
 
 MYAPP_DEVICE_START_counter = {}
@@ -46,20 +51,14 @@ DEVICE_REACHABILITY_index = 1
 MYAPP_CPU_CONSUMING_index = 2
 MYAPP_MEM_CONSUMING_index = 3
 MYAPP_ALERT_counter = defaultdict(fourIntArray)
-MYAPP_ALERT_incrementing = {}
+
 DEVICE_USAGE_RESOURCES_SAMPLED_incrementing = defaultdict(twoarray)
 
 def reset_simulation_counters():
-    global MYAPP_UP_counter
-    MYAPP_UP_counter = {}
-    global MYAPP_DOWN_counter
-    MYAPP_DOWN_counter = {}
     global MYAPP_CPU_CONSUMING_counter
     MYAPP_CPU_CONSUMING_counter = {}
     global MYAPP_MEM_CONSUMING_counter
     MYAPP_MEM_CONSUMING_counter = {}
-    global MYAPP_LIFETIME
-    MYAPP_LIFETIME = {}
     global MYAPP_ON_DEVICE_counter
     MYAPP_ON_DEVICE_counter = {}
     global MYAPP_DEVICE_START_counter
@@ -68,13 +67,15 @@ def reset_simulation_counters():
     MYAPP_ALERT_counter = defaultdict(fourIntArray)
     global iter_count
     iter_count = 0
-    global MYAPP_ALERT_incrementing
-    MYAPP_ALERT_incrementing = {}
     global DEVICE_USAGE_RESOURCES_SAMPLED_incrementing
     DEVICE_USAGE_RESOURCES_SAMPLED_incrementing = defaultdict(twoarray)
     constants.current_infrastructure = defaultdict(twoarray)
     global sampled_devices
     sampled_devices = []
+    global myapps_samples
+    myapps_samples = defaultdict(new_myapps_array)
+    global devices_samples
+    devices_samples = defaultdict(new_device_array)
 
 myapp_ondevice_already_sampled = {}
 def resources_requested(sourceAppName):
@@ -176,8 +177,7 @@ class SimThread(Thread):
                         MYAPP_MEM_CONSUMING_counter[myappId] = {}
                         MYAPP_DEVICE_START_counter[myappId] = {}
                         myapp_ondevice_already_sampled[myappId] = {}
-                        MYAPP_ALERT_incrementing[myappId] = 0
-                    MYAPP_ALERT_incrementing[myappId] += 1 # keeps trace of jobs in order to averaging the alerting counts
+                    myapps_samples[myappId][MYAPP_ALERT_incrementing] += 1 # keeps trace of jobs in order to averaging the alerting counts
 
                     myapp_details = db.getMyApp(myappId)
                     localapp_resources = resources_requested(myapp_details["sourceAppName"])
@@ -187,13 +187,13 @@ class SimThread(Thread):
                     for device in job["payload"]["devices"]:
                         if not device["deviceId"] in MYAPP_ON_DEVICE_counter[myappId]: # Inizializer
                             MYAPP_ON_DEVICE_counter[myappId][device["deviceId"]] = 0
-                            MYAPP_DEVICE_START_counter[myappId] [device["deviceId"]] = 0
+                            MYAPP_DEVICE_START_counter[myappId][device["deviceId"]] = 0
 
                         profile_values = get_profile_values(job["profile"])
                         allocated_cpu = device["resourceAsk"]["resources"]["cpu"]
                         allocated_mem = device["resourceAsk"]["resources"]["memory"]
-                        application_cpu_sampling = get_truncated_normal(mean=profile_values[0]*max_cpu, sd=profile_values[0]*max_cpu, low=0, upp=allocated_cpu+1).rvs()
-                        application_mem_sampling = get_truncated_normal(mean=profile_values[0]*max_mem, sd=profile_values[0]*max_mem, low=0, upp=allocated_mem+1).rvs()
+                        application_cpu_sampling = get_truncated_normal(mean=profile_values[0]*max_cpu, sd=profile_values[1]*max_cpu, low=0, upp=allocated_cpu+1).rvs()
+                        application_mem_sampling = get_truncated_normal(mean=profile_values[0]*max_mem, sd=profile_values[1]*max_mem, low=0, upp=allocated_mem+1).rvs()
 
                         DEVICE_USAGE_RESOURCES_SAMPLED_incrementing[device["deviceId"]][0] +=  application_cpu_sampling
                         DEVICE_USAGE_RESOURCES_SAMPLED_incrementing[device["deviceId"]][1] +=  application_mem_sampling
@@ -312,27 +312,22 @@ class SimThread(Thread):
 
                 for myapp in db.getMyApps():
                     myappId = myapp["myappId"]
-                    if not myappId in MYAPP_LIFETIME: # Inizializer
-                        MYAPP_LIFETIME[myappId] = 0
-                        MYAPP_DOWN_counter[myappId] = 0
-                        MYAPP_UP_counter[myappId] = 0
-
-                    MYAPP_LIFETIME[myappId] += 1
+                    myapps_samples[myappId][MYAPP_LIFETIME] += 1
                     if myapp["minjobs"] == 0: # 0 is assumed to be "all jobs have to be run"
                         if myappId in myapp_jobs_down_counter and myapp_jobs_down_counter[myappId] > 0: # If at least one job in donw
-                            MYAPP_DOWN_counter[myappId] += 1
+                            myapps_samples[myappId][MYAPP_DOWN_counter] += 1
                         elif myappId in myapp_jobs_up_counter and myapp_jobs_up_counter[myappId] > 0:
-                            MYAPP_UP_counter[myappId] += 1
+                            myapps_samples[myappId][MYAPP_UP_counter] += 1
                         else: # If there are no instaces running
-                            MYAPP_DOWN_counter[myappId] += 1
+                             myapps_samples[myappId][MYAPP_DOWN_counter] += 1
                     else:
                         try:
                             if myapp["minjobs"] <= myapp_jobs_up_counter[myappId]:
-                                MYAPP_UP_counter[myappId] += 1
+                                myapps_samples[myappId][MYAPP_UP_counter] += 1
                             else:
-                                MYAPP_DOWN_counter[myappId] += 1
+                                myapps_samples[myappId][MYAPP_DOWN_counter] += 1
                         except KeyError:
-                            MYAPP_DOWN_counter[myappId] += 1
+                             myapps_samples[myappId][MYAPP_DOWN_counter] += 1
                 
             queue.execute_next_task() # Executes a task if present, otherwise returns immediately                   
                         
@@ -368,28 +363,26 @@ def getMyAppsSampling():
             tmp = {}
             tmp["myappId"] = myappId
             tmp["name"] = myapp["name"]
-            if myappId in MYAPP_UP_counter:
-                tmp["UP_PERCENTAGE"] = MYAPP_UP_counter[myappId] / float(MYAPP_LIFETIME[myappId])
-            else:
-                tmp["UP_PERCENTAGE"] = 0
-            if myappId in MYAPP_DOWN_counter:
-                tmp["DOWN_PERCENTAGE"] = MYAPP_DOWN_counter[myappId] / float(MYAPP_LIFETIME[myappId])
-            else: 
-                tmp["DOWN_PERCENTAGE"] = 0
+
+            tmp["UP_PERCENTAGE"] =  myapps_samples[myappId][MYAPP_UP_counter] / float( myapps_samples[myappId][MYAPP_LIFETIME])
+            tmp["DOWN_PERCENTAGE"] =  myapps_samples[myappId][MYAPP_DOWN_counter] / float( myapps_samples[myappId][MYAPP_LIFETIME])
+
             if myappId in MYAPP_ON_DEVICE_counter:
-                tmp["ON_DEVICE_PERCENTAGE"] = {k: (v / float(MYAPP_LIFETIME[myappId])) 
+                tmp["ON_DEVICE_PERCENTAGE"] = {k: (v / float( myapps_samples[myappId][MYAPP_LIFETIME])) 
                                                     for k,v in MYAPP_ON_DEVICE_counter[myappId].items()}
-                tmp["ON_DEVICE_START_TIME"] = {k: (v/float(MYAPP_LIFETIME[myappId]))
+                tmp["ON_DEVICE_START_TIME"] = {k: (v/float(myapps_samples[myappId][MYAPP_LIFETIME]))
                                                     for k,v in MYAPP_DEVICE_START_counter[myappId].items()}
             else:
                 tmp["ON_DEVICE_PERCENTAGE"] = {}
-            if myappId in MYAPP_ALERT_counter:
-                tmp["ALERT_PERCENTAGE"] = {constants.MYAPP_CPU_CONSUMING: MYAPP_ALERT_counter[myappId][MYAPP_CPU_CONSUMING_index] / MYAPP_ALERT_incrementing[myappId],
-                                            constants.MYAPP_MEM_CONSUMING: MYAPP_ALERT_counter[myappId][MYAPP_MEM_CONSUMING_index] / MYAPP_ALERT_incrementing[myappId],
-                                            constants.APP_HEALTH: MYAPP_ALERT_counter[myappId][APP_HEALTH_index] / (MYAPP_ALERT_incrementing[myappId]*2),
-                                            constants.DEVICE_REACHABILITY: MYAPP_ALERT_counter[myappId][DEVICE_REACHABILITY_index] / MYAPP_ALERT_incrementing[myappId]}
-            else:
+
+            try:
+                tmp["ALERT_PERCENTAGE"] = {constants.MYAPP_CPU_CONSUMING: MYAPP_ALERT_counter[myappId][MYAPP_CPU_CONSUMING_index] / myapps_samples[myappId][MYAPP_ALERT_incrementing],
+                                        constants.MYAPP_MEM_CONSUMING: MYAPP_ALERT_counter[myappId][MYAPP_MEM_CONSUMING_index] / myapps_samples[myappId][MYAPP_ALERT_incrementing],
+                                        constants.APP_HEALTH: MYAPP_ALERT_counter[myappId][APP_HEALTH_index] / (myapps_samples[myappId][MYAPP_ALERT_incrementing]*2),
+                                        constants.DEVICE_REACHABILITY: MYAPP_ALERT_counter[myappId][DEVICE_REACHABILITY_index] / myapps_samples[myappId][MYAPP_ALERT_incrementing]}
+            except ZeroDivisionError:
                 tmp["ALERT_PERCENTAGE"] = {}
+ 
             result.append(tmp)
     return result
 
