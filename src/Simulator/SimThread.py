@@ -7,6 +7,7 @@ from Simulator.ResourceSampling import sampleCPU, sampleMEM, get_truncated_norma
 from constants import queue, twoarray, current_infrastructure
 from config import profile_low, profile_normal, profile_high, getEnergyConsumed, SAMPLE_INTERVAL
 import constants
+from Simulator import HistoryThread
 
 iter_count = 0
 device_lock = Lock()
@@ -76,6 +77,8 @@ def reset_simulation_counters():
     myapps_samples = defaultdict(new_myapps_array)
     global devices_samples
     devices_samples = defaultdict(new_device_array)
+    HistoryThread.uptime_history = []
+    HistoryThread.energy_history = []
 
 myapp_ondevice_already_sampled = {}
 def resources_requested(sourceAppName):
@@ -114,6 +117,7 @@ class SimThread(Thread):
         while not self.shutdown_flag.is_set():
             with itercount_lock:
                 iter_count += 1
+            total_consumed_energy = 0    
             with device_lock:
                 for dev in db.getDevices():
                     deviceId = dev["deviceId"]
@@ -155,6 +159,7 @@ class SimThread(Thread):
                         basal_mem_usage = dev["totalMEM"] - sampled_free_mem
                         consumed_energy = (getEnergyConsumed(deviceId, device_cpu_used, device_mem_used) - 
                                             getEnergyConsumed(deviceId, basal_cpu_usage, basal_mem_usage))
+                        total_consumed_energy += consumed_energy
                         devices_samples[deviceId][DEVICE_ENERGY_CONSUMPTION_sum] += consumed_energy
             
                         # adding number of installed apps
@@ -162,7 +167,11 @@ class SimThread(Thread):
                         devices_samples[deviceId][resources_sampled_count] += 1        
                     else: 
                         devices_samples[deviceId][DEVICE_DOWN_counter_sum] += 1
-                
+            
+            if iter_count % SAMPLE_INTERVAL == 0:
+                with HistoryThread.lock:
+                    HistoryThread.energy_history.append(total_consumed_energy)
+
             with myapp_lock:
                 db.deleteFromSamplingAlerts() # Cleaning all alerts inserted in previous simulation iter
                 myapp_jobs_up_counter = {}
@@ -310,7 +319,10 @@ class SimThread(Thread):
                                 }, from_sampling=True)
                                 MYAPP_ALERT_counter[myappId][MYAPP_MEM_CONSUMING_index] += 1
 
+                system_uptime = 0
+                active_myapps = 0
                 for myapp in db.getMyApps():
+                    active_myapps += 1
                     myappId = myapp["myappId"]
                     myapps_samples[myappId][MYAPP_LIFETIME] += 1
                     if myapp["minjobs"] == 0: # 0 is assumed to be "all jobs have to be run"
@@ -328,7 +340,14 @@ class SimThread(Thread):
                                 myapps_samples[myappId][MYAPP_DOWN_counter] += 1
                         except KeyError:
                              myapps_samples[myappId][MYAPP_DOWN_counter] += 1
-                
+                    system_uptime += (myapps_samples[myappId][MYAPP_UP_counter] / float( myapps_samples[myappId][MYAPP_LIFETIME]))
+            
+            if iter_count % SAMPLE_INTERVAL == 0:
+                with HistoryThread.lock:
+                    if active_myapps == 0:
+                        HistoryThread.uptime_history.append(1)
+                    else:
+                        HistoryThread.uptime_history.append(system_uptime/active_myapps)
             queue.execute_next_task() # Executes a task if present, otherwise returns immediately                   
                         
 def getDeviceSampling():

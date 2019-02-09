@@ -99,6 +99,7 @@ def post(args, request, uploadDir, filename):
         try:
             with open("package.yaml", 'r') as stream:
                 app_data = yaml.load(stream)
+                
         except IOError:
             return file_error_string, 400, {"Content-Type": "application/xml"} 
         os.chdir("../")

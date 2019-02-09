@@ -1,6 +1,6 @@
 from APIWrapper import FogDirector
 import time, random, math
-from infrastructure import ciscorouters_10pz_5m10s as infrastructure
+from infrastructure import ciscorouters_15pz_5m10s as infrastructure
 import requests
 import simplejson, signal
 

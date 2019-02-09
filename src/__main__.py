@@ -14,7 +14,6 @@ from API_gateway.Jobs import Jobs
 from API_gateway.Alerts import Alerts
 import Database as db
 from Simulator.SimThread import SimThread
-from Simulator.HistoryThread import Historian
 from Simulator import HistoryThread
 import signal, threading, time, Simulator
 import constants
@@ -44,17 +43,12 @@ def main():
     
     def service_shutdown(signum, frame):
         print('\nOh, ok, I\'ll shutdown all the thread in a second... Byeee!')
-        print(reset_simulation())
         simulatorThread.shutdown_flag.set()
-        historianThread.shutdown_flag.set()
         exit()
     signal.signal(signal.SIGINT, service_shutdown)
 
     simulatorThread = SimThread()
-    historianThread = Historian()
-    
     simulatorThread.start()
-    historianThread.start()
 
     @app.route("/result/devices")
     def result_device():
