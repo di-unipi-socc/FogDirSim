@@ -50,21 +50,25 @@ def add_devices():
 
 def install_apps():
     for i in range(0, DEPLOYMENT_NUMBER):
-        dep = "dep"+str(i)
-        _, myapp = fd.create_myapp(localapp["localAppId"], dep)
+        try:
+            dep = "dep"+str(i)
+            _, myapp = fd.create_myapp(localapp["localAppId"], dep)
 
-        deviceIp = bestFit(100, 32)
-        if deviceIp == None:
-            return i
-        code, res = fd.install_app(dep, [deviceIp])
-        trial = 0
-        while code == 400:
-            trial += 1
-            if trial == 50:
-                return i
             deviceIp = bestFit(100, 32)
+            if deviceIp == None:
+                return i
             code, res = fd.install_app(dep, [deviceIp])
-        fd.start_app(dep)
+            trial = 0
+            while code == 400:
+                trial += 1
+                if trial == 50:
+                    return i
+                deviceIp = bestFit(100, 32)
+                code, res = fd.install_app(dep, [deviceIp])
+            fd.start_app(dep)
+        except KeyboardInterrupt:
+            print(i)
+            return i
     return DEPLOYMENT_NUMBER
 
 reset_simulation()
