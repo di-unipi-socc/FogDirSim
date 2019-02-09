@@ -1,0 +1,583 @@
+# Devices: 10 - # Deployments: 20 - # Successfully Installed: 20
+{
+    "alerts": {
+        "APP_HEALTH": 0.016559314530278417,
+        "DEVICE_REACHABILITY": 0.0,
+        "MYAPP_CPU_CONSUMING": 0.0,
+        "MYAPP_MEM_CONSUMING": 0.0
+    },
+    "energy": 4.500474174241414,
+    "iteration_count": "1371",
+    "uptime": 0.8497147479855359
+}
+
+0
+{
+    "alerts": {},
+    "energy": 0,
+    "iteration_count": "3",
+    "uptime": 1,
+    "uptime_history": []
+}
+
+shutdown
+{
+    "alerts": {},
+    "energy": 0.0,
+    "iteration_count": "91",
+    "uptime": 0.0,
+    "uptime_history": [
+        0.0
+    ]
+}
+
+0
+{
+    "alerts": {},
+    "energy": 0,
+    "iteration_count": "3",
+    "uptime": 1,
+    "uptime_history": []
+}
+
+shutdown
+{
+    "alerts": {},
+    "energy": 0.0,
+    "iteration_count": "66",
+    "uptime": 0.0,
+    "uptime_history": [
+        1
+    ]
+}
+
+0
+{
+    "alerts": {},
+    "energy": 0,
+    "iteration_count": "3",
+    "uptime": 1,
+    "uptime_history": []
+}
+
+0
+{
+    "alerts": {},
+    "energy": 0,
+    "iteration_count": "4",
+    "uptime": 1,
+    "uptime_history": []
+}
+
+0
+{
+    "alerts": {},
+    "energy": 0,
+    "iteration_count": "3",
+    "uptime": 1,
+    "uptime_history": []
+}
+
+0
+{
+    "alerts": {},
+    "energy": 0,
+    "iteration_count": "3",
+    "uptime": 1,
+    "uptime_history": []
+}
+
+0
+{
+    "alerts": {},
+    "energy": 0,
+    "iteration_count": "3",
+    "uptime": 1,
+    "uptime_history": []
+}
+
+0
+{
+    "alerts": {},
+    "energy": 0,
+    "iteration_count": "3",
+    "uptime": 1,
+    "uptime_history": []
+}
+
+0
+{
+    "alerts": {},
+    "energy": 0,
+    "iteration_count": "3",
+    "uptime": 1,
+    "uptime_history": []
+}
+
+0
+{
+    "alerts": {},
+    "energy": 0,
+    "iteration_count": "1",
+    "uptime": 1,
+    "uptime_history": [
+        1
+    ]
+}
+
+0
+{
+    "alerts": {},
+    "energy": 0,
+    "iteration_count": "1",
+    "uptime": 1,
+    "uptime_history": [
+        1
+    ]
+}
+
+0
+{
+    "alerts": {},
+    "energy": 0,
+    "iteration_count": "1",
+    "uptime": 1,
+    "uptime_history": []
+}
+
+0
+{
+    "alerts": {},
+    "energy": 0,
+    "iteration_count": "1",
+    "uptime": 1,
+    "uptime_history": [
+        1
+    ]
+}
+
+0
+{
+    "alerts": {},
+    "energy": 0,
+    "iteration_count": "1",
+    "uptime": 1,
+    "uptime_history": []
+}
+
+0
+{
+    "alerts": {},
+    "energy": 0,
+    "iteration_count": "1",
+    "uptime": 1,
+    "uptime_history": [
+        1
+    ]
+}
+
+shutdown
+{
+    "alerts": {},
+    "energy": 0.0,
+    "iteration_count": "19",
+    "uptime": 0.0,
+    "uptime_history": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0.0,
+        0.0
+    ]
+}
+
+shutdown
+{
+    "alerts": {},
+    "energy": 0,
+    "iteration_count": "0",
+    "uptime": 1,
+    "uptime_history": [
+        1
+    ]
+}
+
+0
+{
+    "alerts": {},
+    "energy": 0,
+    "iteration_count": "1",
+    "uptime": 1,
+    "uptime_history": []
+}
+
+shutdown
+{
+    "alerts": {},
+    "energy": 0.0,
+    "iteration_count": "12",
+    "uptime": 1,
+    "uptime_history": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+    ]
+}
+
+0
+{
+    "alerts": {},
+    "energy": 0,
+    "iteration_count": "1",
+    "uptime": 1,
+    "uptime_history": [
+        1
+    ]
+}
+
+shutdown
+{
+    "alerts": {},
+    "energy": 0.0,
+    "iteration_count": "19",
+    "uptime": 0.0,
+    "uptime_history": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0.0,
+        0.0
+    ]
+}
+
+0
+{
+    "alerts": {},
+    "energy": 0,
+    "iteration_count": "1",
+    "uptime": 1,
+    "uptime_history": []
+}
+
+shutdown
+{
+    "alerts": {},
+    "energy": 0.0,
+    "iteration_count": "27",
+    "uptime": 0.0,
+    "uptime_history": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+    ]
+}
+
+shutdown
+{
+    "alerts": {},
+    "energy": 0,
+    "iteration_count": "1",
+    "uptime": 1,
+    "uptime_history": [
+        1
+    ]
+}
+
+0
+{
+    "alerts": {},
+    "energy": 0,
+    "iteration_count": "1",
+    "uptime": 1,
+    "uptime_history": []
+}
+
+0
+{
+    "alerts": {},
+    "energy": 0,
+    "iteration_count": "3",
+    "uptime": 1,
+    "uptime_history": []
+}
+
+0
+{
+    "alerts": {},
+    "energy": 0,
+    "iteration_count": "3",
+    "uptime": 1,
+    "uptime_history": []
+}
+
+shutdown
+{
+    "alerts": {},
+    "energy": 0.0,
+    "iteration_count": "31",
+    "uptime": 1,
+    "uptime_history": []
+}
+
+shutdown
+{
+    "alerts": {},
+    "energy": 0,
+    "iteration_count": "0",
+    "uptime": 1,
+    "uptime_history": []
+}
+
+0
+{
+    "alerts": {},
+    "energy": 0,
+    "iteration_count": "2",
+    "uptime": 1,
+    "uptime_history": [
+        1
+    ]
+}
+
+0
+{
+    "alerts": {},
+    "energy": 0,
+    "iteration_count": "2",
+    "uptime": 1,
+    "uptime_history": [
+        1
+    ]
+}
+
+0
+{
+    "alerts": {},
+    "energy": 0,
+    "iteration_count": "2",
+    "uptime": 1,
+    "uptime_history": [
+        1
+    ]
+}
+
+shutdown
+{
+    "alerts": {},
+    "energy": 0.0,
+    "iteration_count": "33",
+    "uptime": 0.0,
+    "uptime_history": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+    ]
+}
+
+0
+{
+    "alerts": {},
+    "energy": 0,
+    "iteration_count": "2",
+    "uptime": 1,
+    "uptime_history": [
+        1
+    ]
+}
+
+0
+{
+    "alerts": {},
+    "energy": 0,
+    "iteration_count": "2",
+    "uptime": 1,
+    "uptime_history": [
+        1
+    ]
+}
+
+0
+{
+    "alerts": {},
+    "energy": 0,
+    "iteration_count": "2",
+    "uptime": 1,
+    "uptime_history": [
+        1
+    ]
+}
+
+shutdown
+{
+    "alerts": {},
+    "energy": 0.0,
+    "iteration_count": "15",
+    "uptime": 1,
+    "uptime_history": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+    ]
+}
+
+shutdown
+{
+    "alerts": {},
+    "energy": 0,
+    "iteration_count": "2",
+    "uptime": 1,
+    "uptime_history": [
+        1
+    ]
+}
+
+0
+{
+    "alerts": {},
+    "energy": 0,
+    "iteration_count": "2",
+    "uptime": 1,
+    "uptime_history": [
+        1
+    ]
+}
+
+shutdown
+{
+    "alerts": {},
+    "energy": 0.0,
+    "iteration_count": "35",
+    "uptime": 0.30370370370370375,
+    "uptime_history": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0.0,
+        0.0,
+        0.0,
+        0.15,
+        0.23076923076923078,
+        0.22916666666666666
+    ]
+}
+
+0
+{
+    "alerts": {},
+    "energy": 0,
+    "iteration_count": "3",
+    "uptime": 1,
+    "uptime_history": [
+        1
+    ]
+}
+
+0
+{
+    "alerts": {},
+    "energy": 0,
+    "iteration_count": "3",
+    "uptime": 1,
+    "uptime_history": [
+        1
+    ]
+}
+
+shutdown
+{
+    "alerts": {},
+    "energy": 0.0,
+    "iteration_count": "26",
+    "uptime": 0.0625,
+    "uptime_history": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0.0,
+        0.0,
+        0.0
+    ]
+}
+
+0
+{
+    "alerts": {},
+    "energy": 0,
+    "iteration_count": "3",
+    "uptime": 1,
+    "uptime_history": [
+        1
+    ]
+}
+
+0
+{
+    "alerts": {},
+    "energy": 0,
+    "iteration_count": "3",
+    "uptime": 1,
+    "uptime_history": [
+        1
+    ]
+}
+
+0
+{
+    "alerts": {},
+    "energy": 0,
+    "iteration_count": "4",
+    "uptime": 1,
+    "uptime_history": []
+}
+
+0
+{
+    "alerts": {},
+    "energy": 0,
+    "iteration_count": "4",
+    "uptime": 1,
+    "uptime_history": []
+}
+

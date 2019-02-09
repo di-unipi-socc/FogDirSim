@@ -116,11 +116,12 @@ def main():
             "alerts": average_alerts,
             "iteration_count": sim_count()
         }
-        with Simulator.SimThread.device_lock:
-            with Simulator.SimThread.myapp_lock:
-                Simulator.SimThread.reset_simulation_counters()
-                db.resetSimulation()
-                Simulator.HistoryThread.reset_history()
+        with Simulator.SimThread.itercount_lock:
+            with Simulator.SimThread.device_lock:
+                with Simulator.SimThread.myapp_lock:
+                    Simulator.SimThread.reset_simulation_counters()
+                    db.resetSimulation()
+                    Simulator.HistoryThread.reset_history()
         return result
 
     @app.route("/simulationreset")

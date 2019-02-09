@@ -1,6 +1,6 @@
 from APIWrapper import FogDirector
 import time, random, math
-from infrastructure import ciscorouters_10pz_5m10s as infrastructure
+from infrastructure import ciscorouters_15pz_5m10s as infrastructure
 import requests
 import simplejson, signal
 
@@ -17,6 +17,7 @@ def bestFit(cpu, mem):
         trial += 1
         if trial == 100:
             print("BESTFIT is not able to find a device (100 trial reached)")
+            _, devices = fd.get_devices()
             exit()
         _, devices = fd.get_devices()
         devices = [ dev for dev in devices["data"] if dev["capabilities"]["nodes"][0]["cpu"]["available"] >= cpu 
@@ -39,17 +40,6 @@ def firstFit(cpu, mem):
     firstFit(cpu, mem)
 
 previous_simulation = []
-def service_shutdown(*args):
-    print('\nOh, ok, I will print the simulation result.Byeee!')
-    reset_simulation("shutdown")
-    file_name = input("\nFilename to save simulation result: ")
-    file  = open(file_name, "w")
-    file.write(simplejson.dumps(simplejson.loads(previous_simulation), indent=4, sort_keys=True))
-    file.write("\n\n")
-    file.close()
-    exit()
-
-signal.signal(signal.SIGINT, service_shutdown)
 
 def reset_simulation(current_identifier):
     url = "http://%s/simulationreset" % "127.0.0.1:5000"
@@ -87,7 +77,7 @@ print("STARTING BESTFIT PHASE")
 #                                   BESTFIT                                               #
 ###########################################################################################
 for simulation_count in range(0, 20):
-    break
+    start = time.time()
     reset_simulation(simulation_count)
     fallimento = 0
     for i in range(0, DEVICES_NUMBER):
@@ -118,6 +108,7 @@ for simulation_count in range(0, 20):
     iteration_end = int(r.text)
     fallimenti.append(fallimento)
     iteration_count.append(iteration_end)
+    print("TIME", time.time() - start)
     print(simulation_count, ") Iter_count:", iteration_end, "(mean:", sum(iteration_count)/len(iteration_count), ") - fails", fallimento, "(mean ", sum(fallimenti)/float(len(fallimenti)), ")")
 
 print("STARTING RANDOM PHASE")
@@ -127,7 +118,6 @@ print("STARTING RANDOM PHASE")
 fallimenti = []
 iteration_count = []
 for simulation_count in range(0, 20):
-    break
     reset_simulation(simulation_count)
     fallimento = 0
 

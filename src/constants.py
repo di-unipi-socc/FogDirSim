@@ -1,6 +1,5 @@
 from collections import defaultdict
 from array import array
-SAMPLE_INTERVAL = 5
 
 def twoarray():
     return array("f", [0, 0])

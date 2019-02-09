@@ -2,7 +2,7 @@ from API_executor.Authentication import invalidToken
 import time, json
 import Database as db
 from Simulator.ResourceSampling import sampleCPU, sampleMEM
-from constants import current_infrastructure
+import constants
 
 def computeDeviceId(ip, port):
     return str(abs(hash(ip + str(port))))
@@ -35,11 +35,11 @@ def formatDeviceOutput(device):
         "name": "x86_64",
         "cartridges": [],
         "cpu": {
-            "available": current_infrastructure[device["deviceId"]][0]-device["usedCPU"],
+            "available": constants.current_infrastructure[device["deviceId"]][0] - device["usedCPU"],
             "total": device["totalCPU"]
         },
         "memory": {
-            "available": current_infrastructure[device["deviceId"]][1]-device["usedMEM"],
+            "available": constants.current_infrastructure[device["deviceId"]][1] - device["usedMEM"],
             "total": device["totalMEM"]
         },
         "disk": {

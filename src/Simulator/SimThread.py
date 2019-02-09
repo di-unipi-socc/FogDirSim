@@ -4,8 +4,8 @@ from collections import defaultdict
 import array
 import Database as db
 from Simulator.ResourceSampling import sampleCPU, sampleMEM, get_truncated_normal
-from constants import queue, SAMPLE_INTERVAL, current_infrastructure, twoarray
-from config import profile_low, profile_normal, profile_high, getEnergyConsumed
+from constants import queue, twoarray, current_infrastructure
+from config import profile_low, profile_normal, profile_high, getEnergyConsumed, SAMPLE_INTERVAL
 import constants
 
 iter_count = 0
@@ -14,7 +14,7 @@ myapp_lock = Lock()
 itercount_lock = Lock()
 
 def new_device_array():
-    return array.array("f", [0, 0, 0, 0, 0, 0, 0, 0])
+    return array.array("f", [0, 0, 0, 0, 0, 0, 1, 0])
 
 devices_samples = defaultdict(new_device_array)
 
@@ -72,8 +72,9 @@ def reset_simulation_counters():
     MYAPP_ALERT_incrementing = {}
     global DEVICE_USAGE_RESOURCES_SAMPLED_incrementing
     DEVICE_USAGE_RESOURCES_SAMPLED_incrementing = defaultdict(twoarray)
-    global current_infrastructure
-    current_infrastructure = defaultdict(twoarray)
+    constants.current_infrastructure = defaultdict(twoarray)
+    global sampled_devices
+    sampled_devices = []
 
 myapp_ondevice_already_sampled = {}
 def resources_requested(sourceAppName):
@@ -107,7 +108,6 @@ class SimThread(Thread):
         self.shutdown_flag = Event()
     def run(self):
         global iter_count
-        global current_infrastructure
         global DEVICE_USAGE_RESOURCES_SAMPLED_incrementing
         
         while not self.shutdown_flag.is_set():
@@ -119,10 +119,10 @@ class SimThread(Thread):
                     if not deviceId in sampled_devices:
                         sampled_devices.append(deviceId)
                         # If new devices, sample probability even if not in run for sampling
-                        sampled_free_cpu = sampleCPU(deviceId) - dev["usedCPU"] 
+                        sampled_free_cpu = sampleCPU(deviceId) - dev["usedCPU"]
                         sampled_free_mem = sampleMEM(deviceId) - dev["usedMEM"]
-                        current_infrastructure[deviceId][0] = sampled_free_cpu
-                        current_infrastructure[deviceId][1] = sampled_free_mem
+                        constants.current_infrastructure[deviceId][0] = sampled_free_cpu
+                        constants.current_infrastructure[deviceId][1] = sampled_free_mem
                     
                     r = random.random()
                     if dev["alive"] and r <= dev["chaos_down_prob"]:
@@ -134,9 +134,8 @@ class SimThread(Thread):
                         if iter_count % SAMPLE_INTERVAL == 0:
                             sampled_free_cpu = sampleCPU(deviceId) - dev["usedCPU"] 
                             sampled_free_mem = sampleMEM(deviceId) - dev["usedMEM"]
-                            current_infrastructure[deviceId][0] = sampled_free_cpu
-                            current_infrastructure[deviceId][1] = sampled_free_mem
-                        
+                            constants.current_infrastructure[deviceId][0] = sampled_free_cpu
+                            constants.current_infrastructure[deviceId][1] = sampled_free_mem
                         # adding critical CPU, MEM
                         if sampled_free_cpu <= 0:
                             devices_samples[deviceId][DEVICE_CRITICAL_CPU_counter_sum] += 1
@@ -245,8 +244,8 @@ class SimThread(Thread):
                                     myapp_jobs_down_counter[myappId] = 1
                                 else:
                                     myapp_jobs_down_counter[myappId] += 1
-                            sampled_free_cpu = current_infrastructure[device["deviceId"]][0]
-                            sampled_free_mem = current_infrastructure[device["deviceId"]][1]
+                            sampled_free_cpu = constants.current_infrastructure[device["deviceId"]][0]
+                            sampled_free_mem = constants.current_infrastructure[device["deviceId"]][1]
                             if sampled_free_cpu <= 0 and job["status"] == "start":
                                 db.addAlert({
                                     "deviceId": device["deviceId"],
