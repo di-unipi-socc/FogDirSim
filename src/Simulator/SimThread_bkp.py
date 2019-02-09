@@ -1,10 +1,8 @@
 from threading import Thread, Event, Lock
 import time, random
-from collections import defaultdict
-import array
 import Database as db
 from Simulator.ResourceSampling import sampleCPU, sampleMEM, get_truncated_normal
-from constants import queue, SAMPLE_INTERVAL, current_infrastructure, twoarray
+from constants import queue, SAMPLE_INTERVAL, current_infrastructure
 from config import profile_low, profile_normal, profile_high, getEnergyConsumed
 import constants
 
@@ -13,36 +11,40 @@ device_lock = Lock()
 myapp_lock = Lock()
 itercount_lock = Lock()
 
-def new_device_array():
-    return array.array("f", [0, 0, 0, 0, 0, 0, 0, 0])
-
-devices_samples = defaultdict(new_device_array)
-
-sampled_devices = []
-
-# Access position
-DEVICE_CRITICAL_CPU_counter_sum = 0
-DEVICE_CRITICAL_MEM_counter_sum = 1
-NUMBER_OF_MYAPP_ON_DEVICE_counter_sum = 2
-DEVICE_CPU_USED_sum = 3
-DEVICE_MEM_USED_sum = 4
-DEVICE_DOWN_counter_sum = 5
-resources_sampled_count = 6
-DEVICE_ENERGY_CONSUMPTION_sum = 7
-
+DEVICE_CRITICAL_CPU_counter_sum = {} 
+DEVICE_CRITICAL_MEM_counter_sum = {}
+DEVICE_CPU_USED_sum = {}
+DEVICE_MEM_USED_sum = {}
+resources_sampled_count = {}
+NUMBER_OF_MYAPP_ON_DEVICE_counter_sum = {}
+DEVICE_DOWN_counter_sum = {}
 MYAPP_UP_counter = {}
 MYAPP_DOWN_counter = {}
 MYAPP_CPU_CONSUMING_counter = {}
 MYAPP_MEM_CONSUMING_counter = {}
 MYAPP_LIFETIME = {}
 MYAPP_ON_DEVICE_counter = {}
-
+DEVICE_ENERGY_CONSUMPTION_sum = {}
 MYAPP_DEVICE_START_counter = {}
 MYAPP_ALERT_counter = {}
 MYAPP_ALERT_incrementing = {}
 DEVICE_USAGE_RESOURCES_SAMPLED_incrementing = {}
 
 def reset_simulation_counters():
+    global DEVICE_CRITICAL_CPU_counter_sum
+    DEVICE_CRITICAL_CPU_counter_sum = {} 
+    global DEVICE_CRITICAL_MEM_counter_sum
+    DEVICE_CRITICAL_MEM_counter_sum = {}
+    global DEVICE_CPU_USED_sum
+    DEVICE_CPU_USED_sum = {}
+    global DEVICE_MEM_USED_sum
+    DEVICE_MEM_USED_sum = {}
+    global resources_sampled_count
+    resources_sampled_count = {}
+    global NUMBER_OF_MYAPP_ON_DEVICE_counter_sum
+    NUMBER_OF_MYAPP_ON_DEVICE_counter_sum = {}
+    global DEVICE_DOWN_counter_sum
+    DEVICE_DOWN_counter_sum = {}
     global MYAPP_UP_counter
     MYAPP_UP_counter = {}
     global MYAPP_DOWN_counter
@@ -55,6 +57,8 @@ def reset_simulation_counters():
     MYAPP_LIFETIME = {}
     global MYAPP_ON_DEVICE_counter
     MYAPP_ON_DEVICE_counter = {}
+    global DEVICE_ENERGY_CONSUMPTION_sum
+    DEVICE_ENERGY_CONSUMPTION_sum = {}
     global MYAPP_DEVICE_START_counter
     MYAPP_DEVICE_START_counter = {}
     global MYAPP_ALERT_counter
@@ -66,7 +70,7 @@ def reset_simulation_counters():
     global DEVICE_USAGE_RESOURCES_SAMPLED_incrementing
     DEVICE_USAGE_RESOURCES_SAMPLED_incrementing = {}
     global current_infrastructure
-    current_infrastructure = defaultdict(twoarray)
+    current_infrastructure = {}
 
 myapp_ondevice_already_sampled = {}
 def resources_requested(sourceAppName):
@@ -109,14 +113,17 @@ class SimThread(Thread):
             with device_lock:
                 for dev in db.getDevices():
                     deviceId = dev["deviceId"]
-                    if not deviceId in sampled_devices:
-                        sampled_devices.append(deviceId)
-                        # If new devices, sample probability even if not in run for sampling
-                        sampled_free_cpu = sampleCPU(deviceId) - dev["usedCPU"] 
-                        sampled_free_mem = sampleMEM(deviceId) - dev["usedMEM"]
-                        current_infrastructure[deviceId][0] = sampled_free_cpu
-                        current_infrastructure[deviceId][1] = sampled_free_mem
-                    
+                    # Initializing Variable
+                    if not deviceId in DEVICE_CRITICAL_CPU_counter_sum:
+                        DEVICE_CRITICAL_CPU_counter_sum[deviceId] = 0              
+                        DEVICE_CRITICAL_MEM_counter_sum[deviceId] = 0
+                        DEVICE_CPU_USED_sum[deviceId] = 0
+                        DEVICE_MEM_USED_sum[deviceId] = 0
+                        NUMBER_OF_MYAPP_ON_DEVICE_counter_sum[deviceId] = 0
+                        DEVICE_DOWN_counter_sum[deviceId] = 0
+                        resources_sampled_count[deviceId] = 0
+                        DEVICE_ENERGY_CONSUMPTION_sum[deviceId] = 0 
+
                     r = random.random()
                     if dev["alive"] and r <= dev["chaos_down_prob"]:
                         db.setDeviceDown(deviceId)
@@ -124,37 +131,43 @@ class SimThread(Thread):
                         db.setDeviceAlive(deviceId)  
 
                     if dev["alive"]:
+                        try:
+                            sampled_free_cpu = current_infrastructure[deviceId]["free_cpu"]
+                            sampled_free_mem = current_infrastructure[deviceId]["free_mem"]
+                        except KeyError: # Adding sampling in any case if none is already inserted
+                            sampled_free_cpu = sampleCPU(deviceId) - dev["usedCPU"] 
+                            sampled_free_mem = sampleMEM(deviceId) - dev["usedMEM"]
+                            current_infrastructure[deviceId] = {"free_cpu": sampled_free_cpu, "free_mem": sampled_free_mem}
+                            
                         if iter_count % SAMPLE_INTERVAL == 0:
                             sampled_free_cpu = sampleCPU(deviceId) - dev["usedCPU"] 
                             sampled_free_mem = sampleMEM(deviceId) - dev["usedMEM"]
-                            current_infrastructure[deviceId][0] = sampled_free_cpu
-                            current_infrastructure[deviceId][1] = sampled_free_mem
+                            current_infrastructure[deviceId] = {"free_cpu": sampled_free_cpu, "free_mem": sampled_free_mem}
                         
                         # adding critical CPU, MEM
                         if sampled_free_cpu <= 0:
-                            devices_samples[deviceId][DEVICE_CRITICAL_CPU_counter_sum] += 1
+                            DEVICE_CRITICAL_CPU_counter_sum[deviceId] += 1
                         if sampled_free_mem <= 0:
-                            devices_samples[deviceId][DEVICE_CRITICAL_MEM_counter_sum] += 1
+                            DEVICE_CRITICAL_MEM_counter_sum[deviceId] += 1
                         # adding sampled resources
                         usedCPU = dev["usedCPU"] if not deviceId in DEVICE_USAGE_RESOURCES_SAMPLED_incrementing else DEVICE_USAGE_RESOURCES_SAMPLED_incrementing[deviceId]["cpu"]
                         usedMEM = dev["usedMEM"] if not deviceId in DEVICE_USAGE_RESOURCES_SAMPLED_incrementing else DEVICE_USAGE_RESOURCES_SAMPLED_incrementing[deviceId]["mem"]
                         device_cpu_used = usedCPU + dev["totalCPU"] - sampled_free_cpu
                         device_mem_used = usedMEM + dev["totalMEM"] - sampled_free_mem
-
-                        devices_samples[deviceId][DEVICE_CPU_USED_sum] += device_cpu_used if device_cpu_used <= dev["totalCPU"] else dev["totalCPU"] 
-                        devices_samples[deviceId][DEVICE_MEM_USED_sum] += device_mem_used if device_mem_used <= dev["totalMEM"] else dev["totalMEM"]
+                        DEVICE_CPU_USED_sum[deviceId] += device_cpu_used if device_cpu_used <= dev["totalCPU"] else dev["totalCPU"] 
+                        DEVICE_MEM_USED_sum[deviceId] += device_mem_used if device_mem_used <= dev["totalMEM"] else dev["totalMEM"]
                         
                         basal_cpu_usage = dev["totalCPU"] - sampled_free_cpu
                         basal_mem_usage = dev["totalMEM"] - sampled_free_mem
                         consumed_energy = (getEnergyConsumed(deviceId, device_cpu_used, device_mem_used) - 
                                             getEnergyConsumed(deviceId, basal_cpu_usage, basal_mem_usage))
-                        devices_samples[deviceId][DEVICE_ENERGY_CONSUMPTION_sum] += consumed_energy
+                        DEVICE_ENERGY_CONSUMPTION_sum[deviceId] += consumed_energy
             
                         # adding number of installed apps
-                        devices_samples[deviceId][NUMBER_OF_MYAPP_ON_DEVICE_counter_sum] += len(dev["installedApps"])    
-                        devices_samples[deviceId][resources_sampled_count] += 1        
+                        NUMBER_OF_MYAPP_ON_DEVICE_counter_sum[deviceId] += len(dev["installedApps"])    
+                        resources_sampled_count[deviceId] += 1        
                     else: 
-                        devices_samples[deviceId][DEVICE_DOWN_counter_sum] += 1
+                        DEVICE_DOWN_counter_sum[deviceId] += 1
                 
             with myapp_lock:
                 db.deleteFromSamplingAlerts() # Cleaning all alerts inserted in previous simulation iter
@@ -240,8 +253,8 @@ class SimThread(Thread):
                                     myapp_jobs_down_counter[myappId] = 1
                                 else:
                                     myapp_jobs_down_counter[myappId] += 1
-                            sampled_free_cpu = current_infrastructure[device["deviceId"]][0]
-                            sampled_free_mem = current_infrastructure[device["deviceId"]][1]
+                            sampled_free_cpu = current_infrastructure[device["deviceId"]]["free_cpu"]
+                            sampled_free_mem = current_infrastructure[device["deviceId"]]["free_mem"]
                             if sampled_free_cpu <= 0 and job["status"] == "start":
                                 db.addAlert({
                                     "deviceId": device["deviceId"],
@@ -337,7 +350,7 @@ def getDeviceSampling():
         devices = db.getDevices()
         result = []
         fix_iter = float(iter_count)
-        for deviceId in sampled_devices:
+        for deviceId in DEVICE_CRITICAL_CPU_counter_sum.keys():
             dev = db.getDevice(deviceId)
             tmp = {}
             tmp["deviceId"] = deviceId
@@ -345,13 +358,13 @@ def getDeviceSampling():
             tmp["port"] = dev["port"]
             tmp["totalCPU"] = dev["totalCPU"]
             tmp["totalMEM"] = dev["totalMEM"]
-            tmp["CRITICAL_CPU_PERCENTAGE"] = devices_samples[deviceId][DEVICE_CRITICAL_CPU_counter_sum] / float(devices_samples[deviceId][resources_sampled_count])
-            tmp["CRITICAL_MEM_PERCENTAGE"] = devices_samples[deviceId][DEVICE_CRITICAL_MEM_counter_sum] / float(devices_samples[deviceId][resources_sampled_count])
-            tmp["AVERAGE_CPU_USED"] = devices_samples[deviceId][DEVICE_CPU_USED_sum] / float(devices_samples[deviceId][resources_sampled_count])
-            tmp["AVERAGE_MEM_USED"] = devices_samples[deviceId][DEVICE_MEM_USED_sum] / float(devices_samples[deviceId][resources_sampled_count])
-            tmp["AVERAGE_MYAPP_COUNT"] = devices_samples[deviceId][NUMBER_OF_MYAPP_ON_DEVICE_counter_sum] / float(devices_samples[deviceId][resources_sampled_count])
-            tmp["DEVICE_DOWN_PROB_chaos"] = devices_samples[deviceId][DEVICE_DOWN_counter_sum] / fix_iter 
-            tmp["DEVICE_ENERGY_CONSUMPTION"] = (devices_samples[deviceId][DEVICE_ENERGY_CONSUMPTION_sum] / float(devices_samples[deviceId][resources_sampled_count]))*0.72 # 720/1000 = hours months / Kilo
+            tmp["CRITICAL_CPU_PERCENTAGE"] = DEVICE_CRITICAL_CPU_counter_sum[deviceId] / float(resources_sampled_count[deviceId])
+            tmp["CRITICAL_MEM_PERCENTAGE"] = DEVICE_CRITICAL_MEM_counter_sum[deviceId] / float(resources_sampled_count[deviceId])
+            tmp["AVERAGE_CPU_USED"] = DEVICE_CPU_USED_sum[deviceId] / float(resources_sampled_count[deviceId])
+            tmp["AVERAGE_MEM_USED"] = DEVICE_MEM_USED_sum[deviceId] / float(resources_sampled_count[deviceId])
+            tmp["AVERAGE_MYAPP_COUNT"] = NUMBER_OF_MYAPP_ON_DEVICE_counter_sum[deviceId] / float(resources_sampled_count[deviceId])
+            tmp["DEVICE_DOWN_PROB_chaos"] = DEVICE_DOWN_counter_sum[deviceId] / fix_iter 
+            tmp["DEVICE_ENERGY_CONSUMPTION"] = (DEVICE_ENERGY_CONSUMPTION_sum[deviceId] / float(resources_sampled_count[deviceId]))*0.72 # 720/1000 = hours months / Kilo
             result.append(tmp)
     return result
 

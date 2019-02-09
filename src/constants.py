@@ -1,5 +1,10 @@
+from collections import defaultdict
+from array import array
 SAMPLE_INTERVAL = 5
-current_infrastructure = {}
+
+def twoarray():
+    return array("f", [0, 0])
+current_infrastructure = defaultdict(twoarray)
 
 DEVICE_CRITICAL_CPU = 1
 DEVICE_CRITICAL_MEM = 2
@@ -18,7 +23,7 @@ APP_ON_DEVICE = 10
 APP_ON_DEVICE_WITH_NO_RESOURCES_CPU = 11
 APP_ON_DEVICE_WITH_NO_RESOURCES_MEM = 12
 
-MYAPP_PROFILE_LOW = "relax"
+MYAPP_PROFILE_LOW = "quiet"
 MYAPP_PROFILE_NORMAL = "normal"
 MYAPP_PROFILE_HIGH = "angry"
 
