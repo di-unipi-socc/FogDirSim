@@ -376,9 +376,13 @@ def getMyAppsSampling():
     with myapp_lock:
         myapps = db.getMyApps()
         result = []
-        fix_iter = float(iter_count)
         for myapp in myapps:
-            myappId = myapp["myappId"]
+            try:
+                myappId = myapp["myappId"]
+            except KeyError:
+                print("OOPS, something gone wrong!")
+                print(myapp)
+                continue
             tmp = {}
             tmp["myappId"] = myappId
             tmp["name"] = myapp["name"]
