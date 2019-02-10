@@ -99,9 +99,9 @@ def getDevices(limit=100, offset=0, searchByTag=None, searchByAnyMatch=None):
                         return false;
                     };
                     return deepIterate(this, "%s")}""" % str(searchByAnyMatch)
-        devs = db.devices.find({"$where": func }).skip(offset).limit(limit).noCursorTimeout()
+        devs = db.devices.find({"$where": func }, no_cursor_timeout=True).skip(offset).limit(limit)
         return devs
-    return db.devices.find().skip(offset).limit(limit).noCursorTimeout()
+    return db.devices.find(no_cursor_timeout=True).skip(offset).limit(limit)
 
 lock = threading.Lock()
 def checkAndAllocateResource(devid, cpu, mem):
@@ -219,8 +219,8 @@ def getMyApp(myappid):
 def getMyApps(searchByName=None):
     with myapp_lock:
         if searchByName != None:
-            return db.myapps.find({"name": searchByName}).noCursorTimeout()
-        return db.myapps.find().noCursorTimeout()
+            return db.myapps.find({"name": searchByName}, no_cursor_timeout=True)
+        return db.myapps.find(no_cursor_timeout=True)
     
 # Jobs App
 def addJobs(myappid, devices, profile=constants.MYAPP_PROFILE_NORMAL, status="DEPLOY",payload={}):
@@ -246,7 +246,7 @@ def uninstallJob(myappId, deviceId):
 def getJobs(myappid = None):
     if myappid == None:
         return db.jobs.find()
-    return db.jobs.find({"myappId": str(myappid)}).noCursorTimeout()
+    return db.jobs.find({"myappId": str(myappid)}, no_cursor_timeout=True)
     
 
 # Logs
