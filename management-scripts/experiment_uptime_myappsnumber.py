@@ -72,7 +72,7 @@ def install_apps():
     return DEPLOYMENT_NUMBER
 
 reset_simulation()
-for DEVICE_NUMBER in range(10, 40, 5):
+for DEVICE_NUMBER in range(30, 40, 5):
     for DEPLOYMENT_NUMBER in range(10, 300, 10):
         print(DEVICE_NUMBER, DEPLOYMENT_NUMBER)
         add_devices()
