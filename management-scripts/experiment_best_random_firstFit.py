@@ -41,7 +41,7 @@ def firstFit(cpu, mem):
         for dev in devices["data"]:
             if dev["capabilities"]["nodes"][0]["cpu"]["available"] >= cpu and dev["capabilities"]["nodes"][0]["memory"]["available"] >= mem:
                 return dev["ipAddress"]
-                
+
 previous_simulation = []
 
 def reset_simulation(current_identifier):
@@ -99,7 +99,7 @@ for simulation_count in range(0, 15):
         deviceIp = bestFit(100, 32)
         code, res = fd.install_app(dep, [deviceIp])
         while code == 400:
-            if simulation_counter() < 10000:
+            if simulation_counter() > 10000:
                 print("NOT ABLET TO REDEPLOY APPLICATION: ", dep)
                 exit()
             fallimento += 1
@@ -123,7 +123,7 @@ for simulation_count in range(0, 15):
                 code, _ = fd.install_app(dep, [new_device]) 
                 while code == 400:
                     fallimento += 1
-                    if simulation_counter() < 10000:
+                    if simulation_counter() > 10000:
                         print("NOT ABLET TO REDEPLOY APPLICATION: ", dep)
                         exit()
                     new_device = bestFit(100, 32)
@@ -194,7 +194,7 @@ for simulation_count in range(0, 15):
                 code, _ = fd.install_app(dep, [new_device]) 
                 while code == 400:
                     fallimento += 1
-                    if simulation_counter() < 10000:
+                    if simulation_counter() > 10000:
                         print("NOT ABLET TO REDEPLOY APPLICATION: ", dep)
                         exit()
                     new_device = randomFit()
@@ -262,7 +262,7 @@ for simulation_count in range(0, 15):
                 new_device = firstFit(100, 32)
                 code, _ = fd.install_app(dep, [new_device]) 
                 while code == 400:
-                    if simulation_counter() < 10000:
+                    if simulation_counter() > 10000:
                         print("NOT ABLET TO REDEPLOY APPLICATION: ", dep)
                         exit()
                     fallimento += 1
