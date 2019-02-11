@@ -134,4 +134,5 @@ def main():
 
 if __name__ == "__main__":
     app = main()
+    print("STARTING SERVER ON PORT", os.environ.get('SERVER_PORT', 5000))
     app.run(debug=True, use_reloader=False, threaded=True, host="0.0.0.0",port=os.environ.get('SERVER_PORT', 5000))
