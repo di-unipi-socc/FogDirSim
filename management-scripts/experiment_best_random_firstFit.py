@@ -35,13 +35,13 @@ def randomFit():
     r = random.randint(0, len(devices["data"]) - 1)
     return devices["data"][r]["ipAddress"]
 
-def firstFit(cpu, mem):
-    _, devices = fd.get_devices()
-    for dev in devices["data"]:
-        if dev["capabilities"]["nodes"][0]["cpu"]["available"] >= cpu and dev["capabilities"]["nodes"][0]["memory"]["available"] >= mem:
-            return dev["ipAddress"]
-    firstFit(cpu, mem)
-
+def firstFit(cpu, mem): 
+    while simulation_counter() < 10000:
+        _, devices = fd.get_devices()
+        for dev in devices["data"]:
+            if dev["capabilities"]["nodes"][0]["cpu"]["available"] >= cpu and dev["capabilities"]["nodes"][0]["memory"]["available"] >= mem:
+                return dev["ipAddress"]
+                
 previous_simulation = []
 
 def reset_simulation(current_identifier):
