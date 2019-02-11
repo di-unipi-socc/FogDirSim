@@ -126,6 +126,9 @@ for simulation_count in range(0, 15):
                 code, _ = fd.install_app(dep, [new_device]) 
                 while code == 400:
                     fallimento += 1
+                    if simulation_counter() < 10000:
+                        print("NOT ABLET TO REDEPLOY APPLICATION: ", dep)
+                        exit()
                     new_device = bestFit(100, 32)
                     code, _ = fd.install_app(dep, [new_device]) 
                 print("migrating", dep, "from", alert["ipAddress"], "to", new_device)
@@ -169,15 +172,15 @@ for simulation_count in range(0, 15):
         trial = 0
         while code == 400:
             trial += 1
-            if trial == 1000:
-                print(DEPLOYMENT_NUMBER, "are too high value to deploy. (1000 fails reached)")
-                continue
+            if simulation_counter() < 5000:
+                print("NOT ABLET TO DEPLOY ALL APPLICATIONs. Deployed number: ", myapp_index)
+                exit()
             fallimento += 1
             deviceIp = randomFit()
             code, res = fd.install_app(dep, [deviceIp])
         fd.start_app(dep)
 
-    while simulation_counter() < 15000:
+    while simulation_counter() < 10000:
         _, alerts = fd.get_alerts()
         migrated = []
         for alert in alerts["data"]:
@@ -194,6 +197,9 @@ for simulation_count in range(0, 15):
                 code, _ = fd.install_app(dep, [new_device]) 
                 while code == 400:
                     fallimento += 1
+                    if simulation_counter() < 10000:
+                        print("NOT ABLET TO REDEPLOY APPLICATION: ", dep)
+                        exit()
                     new_device = randomFit()
                     code, _ = fd.install_app(dep, [new_device]) 
                 print("migrating", dep, "from", alert["ipAddress"], "to", new_device)
@@ -236,15 +242,15 @@ for simulation_count in range(0, 15):
         trial = 0
         while code == 400:
             trial += 1
-            if trial == 100:
-                print(DEPLOYMENT_NUMBER, "are too high value to deploy. (100 fails reached)")
-                continue
+            if simulation_counter() < 5000:
+                print("NOT ABLET TO DEPLOY ALL APPLICATIONs. Deployed number: ", myapp_index)
+                exit()
             fallimento += 1
             deviceIp = firstFit(100, 32)
             code, res = fd.install_app(dep, [deviceIp])
         fd.start_app(dep)
 
-    while simulation_counter() < 15000:
+    while simulation_counter() < 10000:
         _, alerts = fd.get_alerts()
         migrated = []
         for alert in alerts["data"]:
@@ -259,6 +265,9 @@ for simulation_count in range(0, 15):
                 new_device = firstFit(100, 32)
                 code, _ = fd.install_app(dep, [new_device]) 
                 while code == 400:
+                    if simulation_counter() < 10000:
+                        print("NOT ABLET TO REDEPLOY APPLICATION: ", dep)
+                        exit()
                     fallimento += 1
                     new_device = firstFit(100, 32)
                     code, _ = fd.install_app(dep, [new_device]) 
