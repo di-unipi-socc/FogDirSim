@@ -4,7 +4,7 @@ from infrastructure import ciscorouters_20pz_5b5m10s as infrastructure
 import requests
 import simplejson, signal
 
-port = os.environ.get('SERVER_PORT', 5000)
+port = os.environ.get('SERVER_PORT', "5000")
 
 infrastructure.create()
 
