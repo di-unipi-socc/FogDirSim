@@ -1,13 +1,15 @@
 from APIWrapper import FogDirector
-import time, random, math
+import time, random, math, os
 from infrastructure import ciscorouters_20pz_5b5m10s as infrastructure
 import requests
 import simplejson, signal
 
+port = os.environ.get('SERVER_PORT', 5000)
+
 infrastructure.create()
 
 def simulation_counter():
-    r = requests.get('http://localhost:5000/result/simulationcounter')
+    r = requests.get('http://localhost:'+port+'/result/simulationcounter')
     return int(r.text)
 
 def bestFit(cpu, mem):
@@ -44,7 +46,7 @@ def firstFit(cpu, mem):
 previous_simulation = []
 
 def reset_simulation(current_identifier):
-    url = "http://%s/simulationreset" % "127.0.0.1:5000"
+    url = "http://%s/simulationreset" % "127.0.0.1:"+port
     r = requests.get(url)
     output = r.json()
     previous_simulation.append({
@@ -59,11 +61,11 @@ def reset_simulation(current_identifier):
     return output
 
 # Resetting simulator before start
-url = "http://%s/simulationreset" % "127.0.0.1:5000"
+url = "http://%s/simulationreset" % "127.0.0.1"
 r = requests.get(url)
 print("STARTING SIMULATION")
 
-fd = FogDirector("127.0.0.1:5000")
+fd = FogDirector("127.0.0.1:"+port)
 code = fd.authenticate("admin", "admin_123")
 if code == 401:
     print("Failed Authentication")
