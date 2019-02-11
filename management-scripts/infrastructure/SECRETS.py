@@ -1,3 +1,4 @@
+import os
 db_username = "alessandro"
 db_password = "FogDirector"
 db_host = "localhost" 
