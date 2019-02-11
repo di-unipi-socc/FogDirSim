@@ -64,6 +64,7 @@ def reset_simulation_counters():
     MYAPP_ALERT_counter = defaultdict(fourIntArray)
     global iter_count
     iter_count = 0
+    print("RESETTED SIMULATION")
     global DEVICE_USAGE_RESOURCES_SAMPLED_incrementing
     DEVICE_USAGE_RESOURCES_SAMPLED_incrementing = defaultdict(twoarray)
     constants.current_infrastructure = defaultdict(twoarray)
@@ -169,7 +170,7 @@ class SimThread(Thread):
                     HistoryThread.energy_history.append(total_consumed_energy)
 
             with myapp_lock:
-                db.deleteFromSamplingAlerts() # Cleaning all alerts inserted in previous simulation iter
+                db.deleteAlerts() # Cleaning all alerts inserted in previous simulation iter
                 myapp_jobs_up_counter = {}
                 myapp_jobs_down_counter = {}
                 DEVICE_USAGE_RESOURCES_SAMPLED_incrementing = defaultdict(twoarray)
@@ -236,7 +237,7 @@ class SimThread(Thread):
                                 "source": "Device periodic report",
                                 "action": "",
                                 "status": "ACTIVE"
-                            }, from_sampling=True)
+                            })
                             MYAPP_ALERT_counter[myappId][DEVICE_REACHABILITY_index] += 1
                         else:
                             if job["status"] == "start":
@@ -265,7 +266,7 @@ class SimThread(Thread):
                                     "source": "Device periodic report",
                                     "action": "",
                                     "status": "ACTIVE"
-                                }, from_sampling=True)
+                                })
                                 MYAPP_ALERT_counter[myappId][APP_HEALTH_index] += 1
                             if sampled_free_mem <= 0 and job["status"] == "start":
                                 db.addAlert({
@@ -281,7 +282,7 @@ class SimThread(Thread):
                                     "action": "",
                                     "status": "ACTIVE",
                                     "type": constants.APP_HEALTH
-                                }, from_sampling=True)
+                                })
                                 MYAPP_ALERT_counter[myappId][APP_HEALTH_index] += 1
                             if application_cpu_sampling > max_cpu*0.95 and job["status"] == "start":
                                 db.addAlert({
@@ -296,7 +297,7 @@ class SimThread(Thread):
                                     "action": "",
                                     "status": "ACTIVE",
                                     "type": constants.MYAPP_CPU_CONSUMING    
-                                }, from_sampling=True)
+                                })
                                 MYAPP_ALERT_counter[myappId][MYAPP_CPU_CONSUMING_index] += 1
                             if application_mem_sampling > max_mem*0.95 and job["status"] == "start":
                                 db.addAlert({
@@ -311,7 +312,7 @@ class SimThread(Thread):
                                     "action": "",
                                     "status": "ACTIVE",
                                     "type": constants.MYAPP_MEM_CONSUMING
-                                }, from_sampling=True)
+                                })
                                 MYAPP_ALERT_counter[myappId][MYAPP_MEM_CONSUMING_index] += 1
 
                 system_uptime = 0

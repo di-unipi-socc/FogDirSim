@@ -112,9 +112,14 @@ for simulation_count in range(0, 15):
 
     while simulation_counter() < 15000:
         _, alerts = fd.get_alerts()
+        migrated = []
         for alert in alerts["data"]:
             if "APP_HEALTH" == alert["type"]: 
                 dep = alert["appName"]
+                if dep in migrated:
+                    continue
+                else:
+                    migrated.append(dep)
                 fd.stop_app(dep)
                 fd.uninstall_app(dep, alert["ipAddress"])
                 new_device = bestFit(100, 32)
@@ -123,6 +128,7 @@ for simulation_count in range(0, 15):
                     fallimento += 1
                     new_device = bestFit(100, 32)
                     code, _ = fd.install_app(dep, [new_device]) 
+                print("migrating", dep, "from", alert["ipAddress"], "to", new_device)
                 fd.start_app(dep)
     
     fallimenti.append(fallimento)
@@ -173,9 +179,15 @@ for simulation_count in range(0, 15):
 
     while simulation_counter() < 15000:
         _, alerts = fd.get_alerts()
+        migrated = []
         for alert in alerts["data"]:
             if "APP_HEALTH" == alert["type"]: 
                 dep = alert["appName"]
+                
+                if dep in migrated:
+                    continue
+                else:
+                    migrated.append(dep)
                 fd.stop_app(dep)
                 fd.uninstall_app(dep, alert["ipAddress"])
                 new_device = randomFit()
@@ -184,6 +196,7 @@ for simulation_count in range(0, 15):
                     fallimento += 1
                     new_device = randomFit()
                     code, _ = fd.install_app(dep, [new_device]) 
+                print("migrating", dep, "from", alert["ipAddress"], "to", new_device)
                 fd.start_app(dep)
     
     fallimenti.append(fallimento)
@@ -233,9 +246,14 @@ for simulation_count in range(0, 15):
 
     while simulation_counter() < 15000:
         _, alerts = fd.get_alerts()
+        migrated = []
         for alert in alerts["data"]:
             if "APP_HEALTH" == alert["type"]: 
                 dep = alert["appName"]
+                if dep in migrated:
+                    continue
+                else:
+                    migrated.append(dep)
                 fd.stop_app(dep)
                 fd.uninstall_app(dep, alert["ipAddress"])
                 new_device = firstFit(100, 32)
@@ -244,6 +262,7 @@ for simulation_count in range(0, 15):
                     fallimento += 1
                     new_device = firstFit(100, 32)
                     code, _ = fd.install_app(dep, [new_device]) 
+                print("migrating", dep, "from", alert["ipAddress"], "to", new_device)
                 fd.start_app(dep)
     
     fallimenti.append(fallimento)

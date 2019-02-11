@@ -256,10 +256,10 @@ def getMyAppsLog():
     return db.myappsLogs.find()
 
 # Alerts
-def addAlert(alert, from_sampling=False):
-    db.alerts.insert_one({"alert": alert, "from_sampling": from_sampling})
-def deleteFromSamplingAlerts():
-    db.alerts.delete_many({"from_sampling": True})
+def addAlert(alert):
+    db.alerts.insert_one({"alert": alert})
+def deleteAlerts():
+    db.alerts.drop()
 def getAlerts():
     return db.alerts.aggregate([
         {
