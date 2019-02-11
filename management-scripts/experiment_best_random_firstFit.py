@@ -81,7 +81,8 @@ print("STARTING BESTFIT PHASE")
 #                                   BESTFIT                                               #
 ###########################################################################################
 for simulation_count in range(0, 15):
-    break
+    if os.environ.get('SKIP_BEST', None) != None:
+        break
     start = time.time()
     reset_simulation(simulation_count)
     fallimento = 0
@@ -141,6 +142,8 @@ print("STARTING RANDOM PHASE")
 fallimenti = []
 iteration_count = []
 for simulation_count in range(0, 15):
+    if os.environ.get('SKIP_RANDOM', None) != None:
+        break
     start = time.time()
     reset_simulation(simulation_count)
     fallimento = 0
@@ -199,6 +202,8 @@ print("STARTING FIRSTFIT PHASE")
 fallimenti = []
 iteration_count = []
 for simulation_count in range(0, 15):
+    if os.environ.get('SKIP_FIRST', None) != None:
+        break
     start = time.time()
     reset_simulation(simulation_count)
     fallimento = 0
