@@ -18,11 +18,10 @@ def bestFit(cpu, mem):
                             and dev["capabilities"]["nodes"][0]["memory"]["available"] >= mem]
     devices.sort(reverse=True, key=(lambda dev: (dev["capabilities"]["nodes"][0]["cpu"]["available"], 
                                                 dev["capabilities"]["nodes"][0]["memory"]["available"]) ))
-    trial = 0
     while len(devices) == 0:
-        trial += 1
-        if trial == 100:
-            return None
+        if simulation_counter() > 10000:
+            print("Not able to find a bestfit. Simulation ends")
+            exit()
         _, devices = fd.get_devices()
         devices = [ dev for dev in devices["data"] if dev["capabilities"]["nodes"][0]["cpu"]["available"] >= cpu 
                                     and dev["capabilities"]["nodes"][0]["memory"]["available"] >= mem]
@@ -99,12 +98,10 @@ for simulation_count in range(0, 15):
 
         deviceIp = bestFit(100, 32)
         code, res = fd.install_app(dep, [deviceIp])
-        trial = 0
         while code == 400:
-            trial += 1
-            if trial == 100:
-                print(DEPLOYMENT_NUMBER, "are too high value to deploy. (100 fails reached)")
-                continue
+            if simulation_counter() < 10000:
+                print("NOT ABLET TO REDEPLOY APPLICATION: ", dep)
+                exit()
             fallimento += 1
             deviceIp = bestFit(100, 32)
             code, res = fd.install_app(dep, [deviceIp])
