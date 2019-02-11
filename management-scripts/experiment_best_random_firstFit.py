@@ -46,7 +46,7 @@ def firstFit(cpu, mem):
 previous_simulation = []
 
 def reset_simulation(current_identifier):
-    url = "http://%s/simulationreset" % "127.0.0.1:"+port
+    url = "http://%s/simulationreset" % ("127.0.0.1:"+port)
     r = requests.get(url)
     output = r.json()
     previous_simulation.append({
@@ -61,7 +61,7 @@ def reset_simulation(current_identifier):
     return output
 
 # Resetting simulator before start
-url = "http://%s/simulationreset" % "127.0.0.1"
+url = "http://%s/simulationreset" % ("127.0.0.1:"+port)
 r = requests.get(url)
 print("STARTING SIMULATION")
 
