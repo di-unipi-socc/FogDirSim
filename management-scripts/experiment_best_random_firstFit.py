@@ -79,6 +79,7 @@ print("STARTING BESTFIT PHASE")
 #                                   BESTFIT                                               #
 ###########################################################################################
 for simulation_count in range(0, 15):
+    break
     start = time.time()
     reset_simulation(simulation_count)
     fallimento = 0
@@ -130,7 +131,6 @@ for simulation_count in range(0, 15):
                                                                             fallimento, 
                                                                             sum(fallimenti)/float(len(fallimenti))
                                                                             ))
-
 
 print("STARTING RANDOM PHASE")
 ###########################################################################################

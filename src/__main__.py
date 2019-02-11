@@ -134,4 +134,4 @@ def main():
 
 if __name__ == "__main__":
     app = main()
-    app.run(debug=True, use_reloader=False, threaded=True, host="0.0.0.0")
+    app.run(debug=True, use_reloader=False, threaded=True, host="0.0.0.0",port=os.environ.get('SERVER_PORT', 5000))
