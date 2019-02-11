@@ -1,10 +1,14 @@
 from APIWrapper import FogDirector
 import time, random, math
-from infrastructure import ciscorouters_15pz_5m10s as infrastructure
+from infrastructure import ciscorouters_20pz_5b5m10s as infrastructure
 import requests
 import simplejson, signal
 
 infrastructure.create()
+
+def simulation_counter():
+    r = requests.get('http://localhost:5000/result/simulationcounter')
+    return int(r.text)
 
 def bestFit(cpu, mem):
     _, devices = fd.get_devices()
@@ -16,9 +20,7 @@ def bestFit(cpu, mem):
     while len(devices) == 0:
         trial += 1
         if trial == 100:
-            print("BESTFIT is not able to find a device (100 trial reached)")
-            _, devices = fd.get_devices()
-            exit()
+            return None
         _, devices = fd.get_devices()
         devices = [ dev for dev in devices["data"] if dev["capabilities"]["nodes"][0]["cpu"]["available"] >= cpu 
                                     and dev["capabilities"]["nodes"][0]["memory"]["available"] >= mem]
@@ -66,8 +68,8 @@ code = fd.authenticate("admin", "admin_123")
 if code == 401:
     print("Failed Authentication")
 
-DEVICES_NUMBER = 15
-DEPLOYMENT_NUMBER = 60
+DEVICES_NUMBER = 20
+DEPLOYMENT_NUMBER = 150
 
 fallimenti = []
 iteration_count = []
@@ -76,7 +78,7 @@ print("STARTING BESTFIT PHASE")
 ###########################################################################################
 #                                   BESTFIT                                               #
 ###########################################################################################
-for simulation_count in range(0, 20):
+for simulation_count in range(0, 15):
     start = time.time()
     reset_simulation(simulation_count)
     fallimento = 0
@@ -96,20 +98,39 @@ for simulation_count in range(0, 20):
         trial = 0
         while code == 400:
             trial += 1
-            if trial == 50:
-                print(DEPLOYMENT_NUMBER, "are too high value to deploy. (50 fails reached)")
-                exit()
+            if trial == 100:
+                print(DEPLOYMENT_NUMBER, "are too high value to deploy. (100 fails reached)")
+                continue
             fallimento += 1
             deviceIp = bestFit(100, 32)
             code, res = fd.install_app(dep, [deviceIp])
         fd.start_app(dep)
 
-    r = requests.get('http://localhost:5000/result/simulationcounter')
-    iteration_end = int(r.text)
+    while simulation_counter() < 15000:
+        _, alerts = fd.get_alerts()
+        for alert in alerts["data"]:
+            if "APP_HEALTH" == alert["type"]: 
+                dep = alert["appName"]
+                fd.stop_app(dep)
+                fd.uninstall_app(dep, alert["ipAddress"])
+                new_device = bestFit(100, 32)
+                code, _ = fd.install_app(dep, [new_device]) 
+                while code == 400:
+                    fallimento += 1
+                    new_device = bestFit(100, 32)
+                    code, _ = fd.install_app(dep, [new_device]) 
+                fd.start_app(dep)
+    
     fallimenti.append(fallimento)
+    iteration_end = simulation_counter()
     iteration_count.append(iteration_end)
-    print("TIME", time.time() - start)
-    print(simulation_count, ") Iter_count:", iteration_end, "(mean:", sum(iteration_count)/len(iteration_count), ") - fails", fallimento, "(mean ", sum(fallimenti)/float(len(fallimenti)), ")")
+    print("{:02d}) iter_count: {:d} (mean: {:f}) - fails: {:d} (mean: {:f})".format(simulation_count, 
+                                                                            iteration_end, 
+                                                                            sum(iteration_count)/float(len(iteration_count)), 
+                                                                            fallimento, 
+                                                                            sum(fallimenti)/float(len(fallimenti))
+                                                                            ))
+
 
 print("STARTING RANDOM PHASE")
 ###########################################################################################
@@ -117,10 +138,10 @@ print("STARTING RANDOM PHASE")
 ###########################################################################################
 fallimenti = []
 iteration_count = []
-for simulation_count in range(0, 20):
+for simulation_count in range(0, 15):
+    start = time.time()
     reset_simulation(simulation_count)
     fallimento = 0
-
     for i in range(0, DEVICES_NUMBER):
         deviceId = i+1      
         _, device1 = fd.add_device("10.10.20."+str(deviceId), "cisco", "cisco")
@@ -137,30 +158,48 @@ for simulation_count in range(0, 20):
         trial = 0
         while code == 400:
             trial += 1
-            if trial == 50:
-                print(DEPLOYMENT_NUMBER, "applications are too high value to deploy. (50 fails reached)")
-                exit()
+            if trial == 1000:
+                print(DEPLOYMENT_NUMBER, "are too high value to deploy. (1000 fails reached)")
+                continue
             fallimento += 1
             deviceIp = randomFit()
             code, res = fd.install_app(dep, [deviceIp])
         fd.start_app(dep)
 
-    r = requests.get('http://localhost:5000/result/simulationcounter')
-    iteration_end = int(r.text)
+    while simulation_counter() < 15000:
+        _, alerts = fd.get_alerts()
+        for alert in alerts["data"]:
+            if "APP_HEALTH" == alert["type"]: 
+                dep = alert["appName"]
+                fd.stop_app(dep)
+                fd.uninstall_app(dep, alert["ipAddress"])
+                new_device = randomFit()
+                code, _ = fd.install_app(dep, [new_device]) 
+                while code == 400:
+                    fallimento += 1
+                    new_device = randomFit()
+                    code, _ = fd.install_app(dep, [new_device]) 
+                fd.start_app(dep)
+    
     fallimenti.append(fallimento)
+    iteration_end = simulation_counter()
     iteration_count.append(iteration_end)
-    print(simulation_count, ") Iter_count:", iteration_end, "(mean:", sum(iteration_count)/len(iteration_count), ") - fails", fallimento, "(mean ", sum(fallimenti)/float(len(fallimenti)), ")")
-
+    print("{:02d}) iter_count: {:d} (mean: {:f}) - fails: {:d} (mean: {:f})".format(simulation_count, 
+                                                                            iteration_end, 
+                                                                            sum(iteration_count)/float(len(iteration_count)), 
+                                                                            fallimento, 
+                                                                            sum(fallimenti)/float(len(fallimenti))
+                                                                            ))
 print("STARTING FIRSTFIT PHASE")
 ###########################################################################################
 #                                   FIRSTFIT                                              #
 ###########################################################################################
 fallimenti = []
 iteration_count = []
-for simulation_count in range(0, 20):
+for simulation_count in range(0, 15):
+    start = time.time()
     reset_simulation(simulation_count)
     fallimento = 0
-
     for i in range(0, DEVICES_NUMBER):
         deviceId = i+1      
         _, device1 = fd.add_device("10.10.20."+str(deviceId), "cisco", "cisco")
@@ -177,16 +216,35 @@ for simulation_count in range(0, 20):
         trial = 0
         while code == 400:
             trial += 1
-            if trial == 50:
-                print(DEPLOYMENT_NUMBER, " applications are too high value to deploy. (50 fails reached)")
-                exit()
+            if trial == 100:
+                print(DEPLOYMENT_NUMBER, "are too high value to deploy. (100 fails reached)")
+                continue
             fallimento += 1
             deviceIp = firstFit(100, 32)
             code, res = fd.install_app(dep, [deviceIp])
         fd.start_app(dep)
 
-    r = requests.get('http://localhost:5000/result/simulationcounter')
-    iteration_end = int(r.text)
+    while simulation_counter() < 15000:
+        _, alerts = fd.get_alerts()
+        for alert in alerts["data"]:
+            if "APP_HEALTH" == alert["type"]: 
+                dep = alert["appName"]
+                fd.stop_app(dep)
+                fd.uninstall_app(dep, alert["ipAddress"])
+                new_device = firstFit(100, 32)
+                code, _ = fd.install_app(dep, [new_device]) 
+                while code == 400:
+                    fallimento += 1
+                    new_device = firstFit(100, 32)
+                    code, _ = fd.install_app(dep, [new_device]) 
+                fd.start_app(dep)
+    
     fallimenti.append(fallimento)
+    iteration_end = simulation_counter()
     iteration_count.append(iteration_end)
-    print(simulation_count, ") Iter_count:", iteration_end, "(mean:", sum(iteration_count)/len(iteration_count), ") - fails", fallimento, "(mean ", sum(fallimenti)/float(len(fallimenti)), ")")
+    print("{:02d}) iter_count: {:d} (mean: {:f}) - fails: {:d} (mean: {:f})".format(simulation_count, 
+                                                                            iteration_end, 
+                                                                            sum(iteration_count)/float(len(iteration_count)), 
+                                                                            fallimento, 
+                                                                            sum(fallimenti)/float(len(fallimenti))
+                                                                            ))

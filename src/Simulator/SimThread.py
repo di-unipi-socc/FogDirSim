@@ -38,9 +38,6 @@ MYAPP_UP_counter = 1
 MYAPP_DOWN_counter = 2
 MYAPP_ALERT_incrementing = 3
 
-
-MYAPP_CPU_CONSUMING_counter = {}
-MYAPP_MEM_CONSUMING_counter = {}
 MYAPP_ON_DEVICE_counter = {}
 
 MYAPP_DEVICE_START_counter = {}
@@ -54,12 +51,11 @@ MYAPP_MEM_CONSUMING_index = 3
 MYAPP_ALERT_counter = defaultdict(fourIntArray)
 
 DEVICE_USAGE_RESOURCES_SAMPLED_incrementing = defaultdict(twoarray)
+myapp_ondevice_already_sampled = defaultdict(lambda: {})
 
 def reset_simulation_counters():
-    global MYAPP_CPU_CONSUMING_counter
-    MYAPP_CPU_CONSUMING_counter = {}
-    global MYAPP_MEM_CONSUMING_counter
-    MYAPP_MEM_CONSUMING_counter = {}
+    global myapp_ondevice_already_sampled
+    myapp_ondevice_already_sampled = defaultdict(lambda: {})
     global MYAPP_ON_DEVICE_counter
     MYAPP_ON_DEVICE_counter = {}
     global MYAPP_DEVICE_START_counter
@@ -80,7 +76,7 @@ def reset_simulation_counters():
     HistoryThread.uptime_history = []
     HistoryThread.energy_history = []
 
-myapp_ondevice_already_sampled = {}
+
 def resources_requested(sourceAppName):
     localapp_details = db.getLocalApplicationBySourceName(sourceAppName)
     profile = localapp_details["descriptor"]["app"]["resources"]["profile"]
@@ -182,10 +178,7 @@ class SimThread(Thread):
                     
                     if not myappId in MYAPP_ON_DEVICE_counter: # initialize all counters
                         MYAPP_ON_DEVICE_counter[myappId] = {}
-                        MYAPP_CPU_CONSUMING_counter[myappId] = {}
-                        MYAPP_MEM_CONSUMING_counter[myappId] = {}
                         MYAPP_DEVICE_START_counter[myappId] = {}
-                        myapp_ondevice_already_sampled[myappId] = {}
                     myapps_samples[myappId][MYAPP_ALERT_incrementing] += 1 # keeps trace of jobs in order to averaging the alerting counts
 
                     myapp_details = db.getMyApp(myappId)
@@ -201,8 +194,12 @@ class SimThread(Thread):
                         profile_values = get_profile_values(job["profile"])
                         allocated_cpu = device["resourceAsk"]["resources"]["cpu"]
                         allocated_mem = device["resourceAsk"]["resources"]["memory"]
-                        application_cpu_sampling = get_truncated_normal(mean=profile_values[0]*max_cpu, sd=profile_values[1]*max_cpu, low=0, upp=allocated_cpu+1).rvs()
-                        application_mem_sampling = get_truncated_normal(mean=profile_values[0]*max_mem, sd=profile_values[1]*max_mem, low=0, upp=allocated_mem+1).rvs()
+                        if job["status"] == "start": 
+                            application_cpu_sampling = get_truncated_normal(mean=profile_values[0]*max_cpu, sd=profile_values[1]*max_cpu, low=0, upp=allocated_cpu+1).rvs()
+                            application_mem_sampling = get_truncated_normal(mean=profile_values[0]*max_mem, sd=profile_values[1]*max_mem, low=0, upp=allocated_mem+1).rvs()
+                        else: # Stopped application does not consume resources
+                            application_cpu_sampling = 0
+                            application_mem_sampling = 0
 
                         DEVICE_USAGE_RESOURCES_SAMPLED_incrementing[device["deviceId"]][0] +=  application_cpu_sampling
                         DEVICE_USAGE_RESOURCES_SAMPLED_incrementing[device["deviceId"]][1] +=  application_mem_sampling
@@ -232,14 +229,13 @@ class SimThread(Thread):
                                 "hostname": device_details["ipAddress"],
                                 "appName": myapp_details["name"],
                                 "severity": "critical",
-                                "type": "status",
+                                "type": constants.DEVICE_REACHABILITY,
                                 "message": "The device is not reachable",
                                 #"message": "The desired state of the app on this device was \"running\" but the actual state is \"stopped\"",
                                 "time": int(iter_count), # Relative
                                 "source": "Device periodic report",
                                 "action": "",
-                                "status": "ACTIVE",
-                                "simulation_type": constants.DEVICE_REACHABILITY
+                                "status": "ACTIVE"
                             }, from_sampling=True)
                             MYAPP_ALERT_counter[myappId][DEVICE_REACHABILITY_index] += 1
                         else:
@@ -272,7 +268,6 @@ class SimThread(Thread):
                                 }, from_sampling=True)
                                 MYAPP_ALERT_counter[myappId][APP_HEALTH_index] += 1
                             if sampled_free_mem <= 0 and job["status"] == "start":
-                                myapp_details = db.getMyApp(job["myappId"])
                                 db.addAlert({
                                     "deviceId": device["deviceId"],
                                     "ipAddress": device_details["ipAddress"],

@@ -245,7 +245,7 @@ def uninstallJob(myappId, deviceId):
 
 def getJobs(myappid = None):
     if myappid == None:
-        return db.jobs.find()
+        return db.jobs.find(no_cursor_timeout=True)
     return db.jobs.find({"myappId": str(myappid)}, no_cursor_timeout=True)
     
 
