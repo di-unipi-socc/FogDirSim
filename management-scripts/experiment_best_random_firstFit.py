@@ -19,6 +19,7 @@ def bestFit(cpu, mem):
     devices.sort(reverse=True, key=(lambda dev: (dev["capabilities"]["nodes"][0]["cpu"]["available"], 
                                                 dev["capabilities"]["nodes"][0]["memory"]["available"]) ))
     while len(devices) == 0:
+        print("BESTFIT FAILS")
         if simulation_counter() > 10000:
             print("Not able to find a bestfit. Simulation ends")
             exit()
@@ -28,7 +29,7 @@ def bestFit(cpu, mem):
         devices.sort(reverse=True, key=(lambda dev: (dev["capabilities"]["nodes"][0]["cpu"]["available"], 
                                                         dev["capabilities"]["nodes"][0]["memory"]["available"]) ))
     best_fit = devices[0]
-    return best_fit["ipAddress"]
+    return best_fit["ipAddress"], best_fit["deviceId"]
 
 def randomFit():
     _, devices = fd.get_devices()
@@ -94,18 +95,18 @@ for simulation_count in range(0, 15):
 
     for myapp_index in range(0, DEPLOYMENT_NUMBER):
         dep = "dep"+str(myapp_index)
-        _, myapp1 = fd.create_myapp(localapp["localAppId"], dep)
+        _, myappId = fd.create_myapp(localapp["localAppId"], dep)
 
-        deviceIp = bestFit(100, 32)
-        code, res = fd.install_app(dep, [deviceIp])
+        deviceIp, deviceId = bestFit(100, 32)
+        code, res = fd.fast_install_app(myappId, [deviceId])
         while code == 400:
             if simulation_counter() > 10000:
                 print("NOT ABLET TO REDEPLOY APPLICATION: ", dep)
                 exit()
             fallimento += 1
-            deviceIp = bestFit(100, 32)
-            code, res = fd.install_app(dep, [deviceIp])
-        fd.start_app(dep)
+            deviceIp, deviceId = bestFit(100, 32)
+            code, res = fd.fast_install_app(myappId, [deviceId])
+        fd.fast_start_app(myappId)
 
     while simulation_counter() < 15000:
         _, alerts = fd.get_alerts()
@@ -117,19 +118,21 @@ for simulation_count in range(0, 15):
                     continue
                 else:
                     migrated.append(dep)
-                fd.stop_app(dep)
-                fd.uninstall_app(dep, alert["ipAddress"])
-                new_device = bestFit(100, 32)
-                code, _ = fd.install_app(dep, [new_device]) 
+                _, app_det = fd.get_myapp_details(dep)
+                myappId = app_det["myappId"]
+                fd.fast_stop_app(myappId)
+                fd.fast_uninstall_app(myappId, alert["deviceId"])
+                deviceIp, deviceId = bestFit(100, 32)
+                code, _ = fd.fast_install_app(myappId, [deviceId])
                 while code == 400:
                     fallimento += 1
                     if simulation_counter() > 10000:
                         print("NOT ABLET TO REDEPLOY APPLICATION: ", dep)
                         exit()
-                    new_device = bestFit(100, 32)
-                    code, _ = fd.install_app(dep, [new_device]) 
-                print("migrating", dep, "from", alert["ipAddress"], "to", new_device)
-                fd.start_app(dep)
+                    deviceIp, deviceId = bestFit(100, 32)
+                    code, _ = fd.fast_install_app(myappId, [deviceId]) 
+                print("migrating", dep, "from", alert["ipAddress"], "to", deviceIp)
+                fd.fast_start_app(myappId)
     
     fallimenti.append(fallimento)
     iteration_end = simulation_counter()

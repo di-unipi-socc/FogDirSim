@@ -1,4 +1,4 @@
-SAMPLE_INTERVAL = 5
+SAMPLE_INTERVAL = 8
 
 # Setting profile (mean, deviation) given type
 profile_low = (70, 5)

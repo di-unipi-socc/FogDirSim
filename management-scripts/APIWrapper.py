@@ -167,7 +167,7 @@ class FogDirector():
         r = requests.post(url, data=json.dumps(data), headers=headers, verify=False, params={"minjobs": minjobs})
         if r.status_code != 201:
             return (r.status_code, r.raise_for_status())
-        return (201, r.json())
+        return (201, r.json()["myappId"])
 
     def is_myapp_present(self, app_name):
         if self.ssl:
@@ -181,6 +181,20 @@ class FogDirector():
         else:
             return (200, True)
 
+
+    def fast_install_app(self, myappId, devicesId, resources={"resources":{"profile":"c1.tiny","cpu":100,"memory":32,"network":[{"interface-name":"eth0","network-name":"iox-bridge0"}]}}):
+        if self.ssl:
+            url = "https://%s/api/v1/appmgr/myapps/%s/action" % (self.ip, myappId)
+        else:
+            url = "http://%s/api/v1/appmgr/myapps/%s/action" % (self.ip, myappId)
+        headers = {'x-token-id': self.token,'content-type': 'application/json'}
+        askedResources = resources
+        data = {"deploy":{"config":{},"metricsPollingFrequency":"3600000","startApp":True,"devices":[]}}
+        for devId in devicesId:
+            data["deploy"]["devices"].append({"deviceId":devId, "resourceAsk":askedResources})
+        r = requests.post(url,data=json.dumps(data),headers=headers,verify=False)
+        return (r.status_code, r.json())
+        
 
     def install_app(self, appname, devicesip, resources={"resources":{"profile":"c1.tiny","cpu":100,"memory":32,"network":[{"interface-name":"eth0","network-name":"iox-bridge0"}]}}):
         _, myapp_present = self.is_myapp_present(appname)
@@ -205,6 +219,14 @@ class FogDirector():
         r = requests.post(url,data=json.dumps(data),headers=headers,verify=False)
         return (r.status_code, r.json())
 
+    def fast_uninstall_app(self, appId, deviceId):
+        url="http://%s/api/v1/appmgr/myapps/%s/action" % (self.ip, appId)
+        headers = {'x-token-id': self.token,'content-type': 'application/json'}
+        data = {"undeploy":{"devices":[-1]}}
+        data["undeploy"]["devices"][0] = deviceId
+        r = requests.post(url,data=json.dumps(data),headers=headers,verify=False)
+        return (200, r.json())
+
     def uninstall_app(self, appname, deviceip):
         _, myapp_details = self.get_myapp_details(appname)
         _, device_details = self.get_device_details(deviceip)
@@ -212,6 +234,16 @@ class FogDirector():
         headers = {'x-token-id': self.token,'content-type': 'application/json'}
         data = {"undeploy":{"devices":[-1]}}
         data["undeploy"]["devices"][0] = device_details['deviceId']
+        r = requests.post(url,data=json.dumps(data),headers=headers,verify=False)
+        return (200, r.json())
+
+    def fast_stop_app(self, appId):
+        if self.ssl:
+            url = "https://%s/api/v1/appmgr/myapps/%s/action" % (self.ip, appId)
+        else:
+            url = "http://%s/api/v1/appmgr/myapps/%s/action" % (self.ip, appId)
+        headers = {'x-token-id': self.token, "content-type": "application/json"}
+        data = {"stop":{}}
         r = requests.post(url,data=json.dumps(data),headers=headers,verify=False)
         return (200, r.json())
 
@@ -223,6 +255,16 @@ class FogDirector():
             url = "http://%s/api/v1/appmgr/myapps/%s/action" % (self.ip, myapp_details['myappId'])
         headers = {'x-token-id': self.token, "content-type": "application/json"}
         data = {"stop":{}}
+        r = requests.post(url,data=json.dumps(data),headers=headers,verify=False)
+        return (200, r.json())
+
+    def fast_start_app(self, appId):
+        if self.ssl:
+            url = "https://%s/api/v1/appmgr/myapps/%s/action" % (self.ip, appId)
+        else:
+            url = "http://%s/api/v1/appmgr/myapps/%s/action" % (self.ip, appId)
+        headers = {'x-token-id': self.token,'content-type': 'application/json'}
+        data = {"start":{}}
         r = requests.post(url,data=json.dumps(data),headers=headers,verify=False)
         return (200, r.json())
 
