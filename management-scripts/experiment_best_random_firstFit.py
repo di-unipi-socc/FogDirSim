@@ -169,7 +169,7 @@ for simulation_count in range(0, 15):
         trial = 0
         while code == 400:
             trial += 1
-            if simulation_counter() < 5000:
+            if simulation_counter() > 10000:
                 print("NOT ABLET TO DEPLOY ALL APPLICATIONs. Deployed number: ", myapp_index)
                 exit()
             fallimento += 1
@@ -177,7 +177,7 @@ for simulation_count in range(0, 15):
             code, res = fd.install_app(dep, [deviceIp])
         fd.start_app(dep)
 
-    while simulation_counter() < 10000:
+    while simulation_counter() < 15000:
         _, alerts = fd.get_alerts()
         migrated = []
         for alert in alerts["data"]:
@@ -247,7 +247,7 @@ for simulation_count in range(0, 15):
             code, res = fd.install_app(dep, [deviceIp])
         fd.start_app(dep)
 
-    while simulation_counter() < 10000:
+    while simulation_counter() < 15000:
         _, alerts = fd.get_alerts()
         migrated = []
         for alert in alerts["data"]:
