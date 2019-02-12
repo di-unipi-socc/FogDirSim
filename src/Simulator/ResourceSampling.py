@@ -1,15 +1,15 @@
 import pymongo as pm
 import time, json
-from scipy.stats import truncnorm 
 import SECRETS as config
 import Database as db
+import random as rnd
 
 def get_truncated_normal(mean=0, sd=1, low=0, upp=10):
-    return truncnorm(   (low - mean) / sd, 
-                        (upp - mean) / sd, 
-                        loc=mean, scale=sd
-                    )
-
+    sample = rnd.gauss(mean, sd)
+    while (sample > upp or sample < low):
+        sample = rnd.gauss(mean, sd)
+    return sample
+    
 def sampleCPU(devid, time_int=0):
     """
         Sampling considering only the distribution variables
@@ -18,7 +18,7 @@ def sampleCPU(devid, time_int=0):
     mean = device["distributions"]["CPU"][time_int]["mean"]
     deviation = device["distributions"]["CPU"][time_int]["deviation"]
     maxCPU = device["totalCPU"]
-    return get_truncated_normal(mean=mean, sd=deviation, low=0, upp=maxCPU).rvs()
+    return get_truncated_normal(mean=mean, sd=deviation, low=0, upp=maxCPU)
 
 def sampleMEM(devid, time_int=0):
     """
@@ -28,7 +28,7 @@ def sampleMEM(devid, time_int=0):
     mean = device["distributions"]["MEM"][time_int]["mean"]
     deviation = device["distributions"]["MEM"][time_int]["deviation"]
     maxMEM = device["totalMEM"]
-    return get_truncated_normal(mean=mean, sd=deviation, low=0, upp=maxMEM).rvs()
+    return get_truncated_normal(mean=mean, sd=deviation, low=0, upp=maxMEM)
 
 def sampleBusyCPU(devid, time=0):
     """
