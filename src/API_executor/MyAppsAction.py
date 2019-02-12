@@ -28,11 +28,11 @@ def post(args, data, myappId):
                         profile = constants.MYAPP_PROFILE_NORMAL
                     try:
                         if not db.deviceIsAlive(devid):
-                            return {"Error": "Device does not reachable"}, 400, {"content-type: application/json"}
+                            return {"Error": "Device does not reachable"}, 400, {"content-type": "application/json"}
                         try:
                             db.checkAndAllocateResource(devid, resourceAsked["cpu"], resourceAsked["memory"])
                         except TypeError:
-                            return {"Error": "Device does not exist"}, 400, {"content-type: application/json"}
+                            return {"Error": "Device does not exist"}, 400, {"content-type": "application/json"}
                         db.addMyAppToDevice(myappId, devid, profile)
                         db.addMyAppLog({
                             "time": int(time.time()),

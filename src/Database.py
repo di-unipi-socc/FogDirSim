@@ -61,11 +61,11 @@ def addDevice(ipAddress, port, user, pasw):
     db.devices.insert_one(devSpecs)
     return devSpecs
 def setDeviceDown(deviceId):
-    db.devices.update_one({"deviceId": deviceId}, {"$set": {"alive": False}})
+    db.devices.update_one({"deviceId": int(deviceId)}, {"$set": {"alive": False}})
 def setDeviceAlive(deviceId):
-    db.devices.update_one({"deviceId": deviceId}, {"$set": {"alive": True}})
+    db.devices.update_one({"deviceId": int(deviceId)}, {"$set": {"alive": True}})
 def deviceIsAlive(deviceId):
-    return db.devices.count_documents({"deviceId": deviceId, "alive": True}) > 0
+    return db.devices.count_documents({"deviceId": int(deviceId), "alive": True}) > 0
 def deviceExists(ipAddress, port):
     return db.devices.count_documents({"ipAddress": ipAddress, "port": port}) > 0
 def getDevice(devid):
@@ -105,9 +105,9 @@ def getDevices(limit=100, offset=0, searchByTag=None, searchByAnyMatch=None):
 
 lock = threading.Lock()
 def checkAndAllocateResource(devid, cpu, mem):
-    sampledCPU = sampling.sampleCPU(devid)
-    sampledMEM = sampling.sampleMEM(devid)
-    with lock: # Syncronized version of python
+    sampledCPU = constants.current_infrastructure[devid][0]
+    sampledMEM = constants.current_infrastructure[devid][1]
+    with lock: 
         device = getDevice(devid)
         availableCPU = sampledCPU - device["usedCPU"]
         availableMEM = sampledMEM - device["usedMEM"]
@@ -120,7 +120,7 @@ def checkAndAllocateResource(devid, cpu, mem):
 def deallocateResource(devid, cpu, mem):
     with lock:
         db.devices.find_one_and_update(
-            {"deviceId": devid},
+            {"deviceId": Int64(devid)},
             { "$inc": {"usedCPU": -cpu, "usedMEM": -mem} }
         )     
 def addMyAppToDevice(myappid, devid, profile):

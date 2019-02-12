@@ -35,11 +35,11 @@ def formatDeviceOutput(device):
         "name": "x86_64",
         "cartridges": [],
         "cpu": {
-            "available": constants.current_infrastructure[device["deviceId"]][0] - device["usedCPU"],
+            "available": constants.current_infrastructure[device["deviceId"]][0],
             "total": device["totalCPU"]
         },
         "memory": {
-            "available": constants.current_infrastructure[device["deviceId"]][1] - device["usedMEM"],
+            "available": constants.current_infrastructure[device["deviceId"]][1],
             "total": device["totalMEM"]
         },
         "disk": {
@@ -114,7 +114,7 @@ def delete(deviceid, args):
         dev = db.getDevice(deviceid)
         db.deleteDevice(deviceid)
         del dev["_id"]
-        return dev, 200, {"Content-Type": "application/json"}
+        return dev, 200, [("content-type", "application/json")]
     else:
         return invalidToken()
 
