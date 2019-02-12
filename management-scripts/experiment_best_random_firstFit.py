@@ -84,7 +84,7 @@ for simulation_count in range(0, 15):
     if os.environ.get('SKIP_BEST', None) != None:
         break
     start = time.time()
-    reset_simulation("BEST"+simulation_count)
+    reset_simulation("BEST"+str(simulation_count))
     fallimento = 0
     for i in range(0, DEVICES_NUMBER):
         deviceId = i+1      
@@ -154,7 +154,7 @@ for simulation_count in range(0, 15):
     if os.environ.get('SKIP_RANDOM', None) != None:
         break
     start = time.time()
-    reset_simulation("RANDOM"+simulation_count)
+    reset_simulation("RANDOM"+str(simulation_count))
     fallimento = 0
     for i in range(0, DEVICES_NUMBER):
         deviceId = i+1      
@@ -224,7 +224,7 @@ for simulation_count in range(0, 15):
     if os.environ.get('SKIP_FIRST', None) != None:
         break
     start = time.time()
-    reset_simulation("FIRST"+simulation_count)
+    reset_simulation("FIRST"+str(simulation_count))
     fallimento = 0
     for i in range(0, DEVICES_NUMBER):
         deviceId = i+1      
