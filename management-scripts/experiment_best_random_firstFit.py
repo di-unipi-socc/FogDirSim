@@ -239,7 +239,7 @@ for simulation_count in range(0, 15):
         trial = 0
         while code == 400:
             trial += 1
-            if simulation_counter() < 5000:
+            if simulation_counter() > 10000:
                 print("NOT ABLET TO DEPLOY ALL APPLICATIONs. Deployed number: ", myapp_index)
                 exit()
             fallimento += 1
