@@ -94,6 +94,8 @@ for simulation_count in range(0, 15):
     code, localapp = fd.add_app("./NettestApp2V1_lxc.tar.gz", publish_on_upload=True)
 
     for myapp_index in range(0, DEPLOYMENT_NUMBER):
+        if simulation_counter() > 500:
+            print("TEMPO", time.time() - start)
         dep = "dep"+str(myapp_index)
         _, myappId = fd.create_myapp(localapp["localAppId"], dep)
 
@@ -109,6 +111,8 @@ for simulation_count in range(0, 15):
         fd.fast_start_app(myappId)
 
     while simulation_counter() < 15000:
+        if simulation_counter() > 5000:
+            print("TEMPO", time.time() - start)
         _, alerts = fd.get_alerts()
         migrated = []
         for alert in alerts["data"]:

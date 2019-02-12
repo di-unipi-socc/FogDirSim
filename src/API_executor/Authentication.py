@@ -10,7 +10,7 @@ def post(user, psw):
     if user == "admin" and psw == "admin_123":
         epochTime = int(time.time())
         expiryTime = epochTime + 600 # 10 minutes
-        token = "%d-1366-4a3a--%d" % (hash(time.time()), int(time.time()))
+        token = "%d-fogdirsim-unipi--%d" % (hash(time.time()), int(time.time())) # Simple simulation token generation
         userid = 0
         db.addToken(expiryTime, token, userid)
         return {"token":token,"expiryTime":expiryTime,"serverEpochTime":epochTime}, 202, {"Content-Type": "application/json"}

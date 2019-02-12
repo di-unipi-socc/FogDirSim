@@ -35,11 +35,11 @@ def formatDeviceOutput(device):
         "name": "x86_64",
         "cartridges": [],
         "cpu": {
-            "available": constants.current_infrastructure[device["deviceId"]][0],
+            "available": constants.current_infrastructure[device["deviceId"]][0] - device["usedCPU"],
             "total": device["totalCPU"]
         },
         "memory": {
-            "available": constants.current_infrastructure[device["deviceId"]][1],
+            "available": constants.current_infrastructure[device["deviceId"]][1] - device["usedMEM"],
             "total": device["totalMEM"]
         },
         "disk": {

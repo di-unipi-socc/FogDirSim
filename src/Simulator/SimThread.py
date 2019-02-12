@@ -121,8 +121,8 @@ class SimThread(Thread):
                     if not deviceId in sampled_devices:
                         sampled_devices.append(deviceId)
                         # If new devices, sample probability even if not in run for sampling
-                        sampled_free_cpu = sampleCPU(deviceId) - dev["usedCPU"]
-                        sampled_free_mem = sampleMEM(deviceId) - dev["usedMEM"]
+                        sampled_free_cpu = sampleCPU(deviceId)# - dev["usedCPU"]
+                        sampled_free_mem = sampleMEM(deviceId)# - dev["usedMEM"]
                         constants.current_infrastructure[deviceId][0] = sampled_free_cpu
                         constants.current_infrastructure[deviceId][1] = sampled_free_mem
                     
@@ -134,8 +134,8 @@ class SimThread(Thread):
 
                     if dev["alive"]:
                         if iter_count % SAMPLE_INTERVAL == 0:
-                            sampled_free_cpu = sampleCPU(deviceId) - dev["usedCPU"] 
-                            sampled_free_mem = sampleMEM(deviceId) - dev["usedMEM"]
+                            sampled_free_cpu = sampleCPU(deviceId) #- dev["usedCPU"] 
+                            sampled_free_mem = sampleMEM(deviceId) #- dev["usedMEM"]
                             constants.current_infrastructure[deviceId][0] = sampled_free_cpu
                             constants.current_infrastructure[deviceId][1] = sampled_free_mem
                         # adding critical CPU, MEM
@@ -250,8 +250,9 @@ class SimThread(Thread):
                                     myapp_jobs_down_counter[myappId] = 1
                                 else:
                                     myapp_jobs_down_counter[myappId] += 1
-                            sampled_free_cpu = constants.current_infrastructure[device["deviceId"]][0]
-                            sampled_free_mem = constants.current_infrastructure[device["deviceId"]][1]
+                            sampled_free_cpu = constants.current_infrastructure[device["deviceId"]][0] - device_details["usedCPU"]
+                            sampled_free_mem = constants.current_infrastructure[device["deviceId"]][1] - device_details["usedMEM"]
+                            
                             if sampled_free_cpu <= 0 and job["status"] == "start":
                                 db.addAlert({
                                     "deviceId": device["deviceId"],
