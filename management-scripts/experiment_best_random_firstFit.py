@@ -52,7 +52,7 @@ def reset_simulation(current_identifier):
     previous_simulation.append({
         current_identifier: output
     })
-    file  = open("simulation_results_firstFit.txt", "a")
+    file  = open("simulation_results_best_random_first.txt", "a")
     file.write(str(current_identifier)+"\n")
     out = simplejson.dumps(output, indent=4, sort_keys=True)
     file.write(out)
@@ -84,7 +84,7 @@ for simulation_count in range(0, 15):
     if os.environ.get('SKIP_BEST', None) != None:
         break
     start = time.time()
-    reset_simulation(simulation_count)
+    reset_simulation("BEST"+simulation_count)
     fallimento = 0
     for i in range(0, DEVICES_NUMBER):
         deviceId = i+1      
@@ -154,7 +154,7 @@ for simulation_count in range(0, 15):
     if os.environ.get('SKIP_RANDOM', None) != None:
         break
     start = time.time()
-    reset_simulation(simulation_count)
+    reset_simulation("RANDOM"+simulation_count)
     fallimento = 0
     for i in range(0, DEVICES_NUMBER):
         deviceId = i+1      
@@ -224,7 +224,7 @@ for simulation_count in range(0, 15):
     if os.environ.get('SKIP_FIRST', None) != None:
         break
     start = time.time()
-    reset_simulation(simulation_count)
+    reset_simulation("FIRST"+simulation_count)
     fallimento = 0
     for i in range(0, DEVICES_NUMBER):
         deviceId = i+1      
