@@ -1,1 +1,2 @@
-export const URL =  "http://"+window.location.host; //"http://lab.apagiaro.it:5000" //"http://localhost:5000"
+export const URL =  "http://"+window.location.host; 
+//export const URL = "http://localhost:5000"

@@ -32,6 +32,11 @@ class App extends Component {
     return (
       <Router>
         <div className="col-lg-12">
+        <center>
+          <a class="navbar-brand" href="/">
+            <img style={{width: "200px"}} className="hvr-pulse-grow" src="https://raw.githubusercontent.com/di-unipi-socc/FogDirSim/master/docs/img/logo.png" />   
+          </a>
+        </center>  
           <Nav className="justify-content-center">
             <NavItem>
               <NavLink href="/">Home</NavLink>

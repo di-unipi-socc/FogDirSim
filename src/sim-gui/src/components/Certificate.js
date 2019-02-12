@@ -65,7 +65,6 @@ export default class Certificate extends React.Component {
         return (
         <div className="container">
         <div className="jumbotron">
-                <h2 className="display-4">Your system performance, in a nutshell</h2>
                 <div className="container">
                     <div className="row">
                         <div className="col-sm">
