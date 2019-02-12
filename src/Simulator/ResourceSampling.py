@@ -3,6 +3,7 @@ import time, json
 import SECRETS as config
 import Database as db
 import random as rnd
+import traceback
 
 def get_truncated_normal(mean=0, sd=1, low=0, upp=10):
     sample = rnd.gauss(mean, sd)

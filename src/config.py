@@ -1,9 +1,9 @@
 SAMPLE_INTERVAL = 8
 
 # Setting profile (mean, deviation) given type
-profile_low = (70, 5)
-profile_normal = (80, 10)
-profile_high = (90, 10)
+profile_low = (0.7, 0.05)
+profile_normal = (0.8, 0.1)
+profile_high = (0.9, 0.1)
 
 # Functions determining energy consumption for every device
 energy_consumption = {}
