@@ -33,14 +33,14 @@ def bestFit(cpu, mem):
 def randomFit():
     _, devices = fd.get_devices()
     r = random.randint(0, len(devices["data"]) - 1)
-    return devices["data"][r]["ipAddress"]
+    return devices["data"][r]["ipAddress"], devices["data"][r]["deviceId"]
 
 def firstFit(cpu, mem): 
     while simulation_counter() < 15000:
         _, devices = fd.get_devices()
         for dev in devices["data"]:
             if dev["capabilities"]["nodes"][0]["cpu"]["available"] >= cpu and dev["capabilities"]["nodes"][0]["memory"]["available"] >= mem:
-                return dev["ipAddress"]
+                return dev["ipAddress"], dev["deviceId"]
 
 previous_simulation = []
 
@@ -73,14 +73,16 @@ if code == 401:
 DEVICES_NUMBER = 20
 DEPLOYMENT_NUMBER = 150
 
-fallimenti = []
-iteration_count = []
+
 
 print("STARTING BESTFIT PHASE")
 ###########################################################################################
 #                                   BESTFIT                                               #
 ###########################################################################################
+fallimenti = []
+iteration_count = []
 for simulation_count in range(0, 15):
+    break
     if os.environ.get('SKIP_BEST', None) != None:
         break
     start = time.time()
@@ -163,42 +165,43 @@ for simulation_count in range(0, 15):
 
     for myapp_index in range(0, DEPLOYMENT_NUMBER):
         dep = "dep"+str(myapp_index)
-        _, myapp1 = fd.create_myapp(localapp["localAppId"], dep)
+        _, myappId = fd.create_myapp(localapp["localAppId"], dep)
 
-        deviceIp = randomFit()
-        code, res = fd.install_app(dep, [deviceIp])
+        deviceIp, deviceId = randomFit()
+        code, res = fd.fast_install_app(myappId, [deviceId])
         trial = 0
         while code == 400:
             trial += 1
             if simulation_counter() > 15000:
                 print("INSTALLED ONLY ", myapp_index, "in 15000")
             fallimento += 1
-            deviceIp = randomFit()
-            code, res = fd.install_app(dep, [deviceIp])
-        fd.start_app(dep)
+            deviceIp, deviceId = randomFit()
+            code, res = fd.fast_install_app(myappId, [deviceId])
+        fd.fast_start_app(myappId)
 
     while simulation_counter() < 15000:
         _, alerts = fd.get_alerts()
         migrated = []
         for alert in alerts["data"]:
             if "APP_HEALTH" == alert["type"]: 
-                dep = alert["appName"]
-                
+                dep = alert["appName"]  
                 if dep in migrated:
                     continue
                 else:
                     migrated.append(dep)
-                fd.stop_app(dep)
-                fd.uninstall_app(dep, alert["ipAddress"])
-                new_device = randomFit()
-                code, _ = fd.install_app(dep, [new_device]) 
+                _, app_det = fd.get_myapp_details(dep)
+                myappId = app_det["myappId"]
+                fd.fast_stop_app(myappId)
+                fd.fast_uninstall_app(myappId, alert["deviceId"])
+                deviceIp, deviceId = randomFit()
+                code, _ = fd.fast_install_app(myappId, [deviceId]) 
                 while code == 400:
                     fallimento += 1
                     if simulation_counter() > 15000:
                         break
-                    new_device = randomFit()
-                    code, _ = fd.install_app(dep, [new_device]) 
-                fd.start_app(dep)
+                    deviceIp, deviceId = randomFit()
+                    code, _ = fd.fast_install_app(myappId, [deviceId]) 
+                fd.fast_start_app(myappId)
             if simulation_counter() > 15000:
                 print("NOT ABLET TO REDEPLOY APPLICATION: ", dep)
                 break
@@ -233,20 +236,20 @@ for simulation_count in range(0, 15):
 
     for myapp_index in range(0, DEPLOYMENT_NUMBER):
         dep = "dep"+str(myapp_index)
-        _, myapp1 = fd.create_myapp(localapp["localAppId"], dep)
+        _, myappId = fd.create_myapp(localapp["localAppId"], dep)
 
-        deviceIp = firstFit(100, 32)
-        code, res = fd.install_app(dep, [deviceIp])
+        deviceIp, deviceId = firstFit(100, 32)
+        code, res = fd.fast_install_app(myappId, [deviceId])
         trial = 0
         while code == 400:
             trial += 1
             if simulation_counter() > 15000:
                 print("INSTALLED ONLY ", myapp_index, "in 15000")
             fallimento += 1
-            deviceIp = firstFit(100, 32)
-            code, res = fd.install_app(dep, [deviceIp])
+            deviceIp, deviceId = firstFit(100, 32)
+            code, res = fd.fast_install_app(myappId, [deviceId])
         
-        fd.start_app(dep)
+        fd.fast_start_app(myappId)
 
     while simulation_counter() < 15000:
         _, alerts = fd.get_alerts()
@@ -258,19 +261,21 @@ for simulation_count in range(0, 15):
                     continue
                 else:
                     migrated.append(dep)
-                fd.stop_app(dep)
-                fd.uninstall_app(dep, alert["ipAddress"])
-                new_device = firstFit(100, 32)
-                code, _ = fd.install_app(dep, [new_device]) 
+                _, app_det = fd.get_myapp_details(dep)
+                myappId = app_det["myappId"]
+                fd.fast_stop_app(myappId)
+                fd.fast_uninstall_app(myappId, alert["deviceId"])
+                deviceIp, deviceId = firstFit(100, 32)
+                code, _ = fd.fast_install_app(myappId, [deviceId]) 
                 while code == 400:
                     if simulation_counter() > 15000:
                         break
                     fallimento += 1
-                    new_device = firstFit(100, 32)
-                    code, _ = fd.install_app(dep, [new_device])
+                    deviceIp, deviceId = firstFit(100, 32)
+                    code, _ = fd.fast_install_app(myappId, [deviceId])
                 if simulation_counter() > 15000:
                     break
-                fd.start_app(dep)
+                fd.fast_start_app(myappId)
     
     fallimenti.append(fallimento)
     iteration_end = simulation_counter()
