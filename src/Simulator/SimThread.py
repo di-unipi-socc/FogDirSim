@@ -167,6 +167,7 @@ class SimThread(Thread):
                             devices_samples[deviceId][DEVICE_CRITICAL_CPU_counter_sum] += 1
                         if sampled_free_mem <= 0:
                             devices_samples[deviceId][DEVICE_CRITICAL_MEM_counter_sum] += 1
+
                         # adding sampled resources
                         usedCPU = DEVICE_USAGE_RESOURCES_SAMPLED_incrementing[deviceId][0]
                         usedMEM = DEVICE_USAGE_RESOURCES_SAMPLED_incrementing[deviceId][1]
@@ -191,7 +192,7 @@ class SimThread(Thread):
             
             if iter_count % SAMPLE_INTERVAL == 0:
                 with HistoryThread.lock:
-                    HistoryThread.energy_history.append(total_consumed_energy)
+                    HistoryThread.energy_history.append(total_consumed_energy*0.72)
 
             with myapp_lock:
                 db.deleteAlerts() # Cleaning all alerts inserted in previous simulation iter
