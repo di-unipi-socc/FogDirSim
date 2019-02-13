@@ -105,7 +105,6 @@ def get_profile_values(profile):
 
 class keydefaultdict(defaultdict):
     def __missing__(self, key):
-        
         if self.default_factory is None:
             raise KeyError( key )
         else:
@@ -117,25 +116,30 @@ def isDeviceAlive(devList, devId):
         return devList[devId]["alive"]
     return False
 
-myapps = keydefaultdict(lambda key: db.getMyApp(key)) # Used in Job, hopefully populated by the previous iteration
 
 class SimThread(Thread):
     def __init__(self):
         Thread.__init__(self)
         self.shutdown_flag = Event()
+        self.myapps = keydefaultdict(lambda key: db.getMyApp(key)) # Resetting myapps
+        self.devices = {}
+    def getDevices(self):
+        return self.devices()
+    def getMyApps(self):
+        return self.myapps
     def run(self):
         global iter_count
         global DEVICE_USAGE_RESOURCES_SAMPLED_incrementing
-        
+
         while not self.shutdown_flag.is_set():
             with itercount_lock:
                 iter_count += 1
             total_consumed_energy = 0
-            devices = {}
+            self.devices = {}
             with device_lock:
                 for dev in db.getDevices():
                     deviceId = dev["deviceId"]
-                    devices[deviceId] = dev
+                    self.devices[deviceId] = dev
                     if not deviceId in sampled_devices:
                         sampled_devices.append(deviceId)
                         # If new devices, sample probability even if not in run for sampling
@@ -147,10 +151,10 @@ class SimThread(Thread):
                     r = random.random()
                     if dev["alive"] and r <= dev["chaos_down_prob"]:
                         db.setDeviceDown(deviceId)
-                        devices[deviceId]["alive"] = True
+                        self.devices[deviceId]["alive"] = True
                     if not dev["alive"] and r <= dev["chaos_revive_prob"]:
                         db.setDeviceAlive(deviceId)
-                        devices[deviceId]["alive"] = False
+                        self.devices[deviceId]["alive"] = False
 
                     if dev["alive"]:
                         if iter_count % SAMPLE_INTERVAL == 0:
@@ -202,7 +206,7 @@ class SimThread(Thread):
                         MYAPP_DEVICE_START_counter[myappId] = {}
                     myapps_samples[myappId][MYAPP_ALERT_incrementing] += 1 # keeps trace of jobs in order to averaging the alerting counts
 
-                    myapp_details = myapps[myappId] # When it arrives here, previous iteration defined that variable, otherwise it sample
+                    myapp_details = self.myapps[myappId] # When it arrives here, previous iteration defined that variable, otherwise it sample
                     localapp_resources = resources_requested(myapp_details["sourceAppName"])
                     max_cpu = localapp_resources[0]
                     max_mem = localapp_resources[1]
@@ -225,7 +229,7 @@ class SimThread(Thread):
                         DEVICE_USAGE_RESOURCES_SAMPLED_incrementing[device["deviceId"]][0] +=  application_cpu_sampling
                         DEVICE_USAGE_RESOURCES_SAMPLED_incrementing[device["deviceId"]][1] +=  application_mem_sampling
 
-                        device_details = devices[device["deviceId"]]
+                        device_details = self.devices[device["deviceId"]]
                         if device_details == None: # the devices is removed without deleting the application
                             db.uninstallJob(myappId, device["deviceId"])
                             if len(job["payload"]["devices"]) == 0:
@@ -239,7 +243,7 @@ class SimThread(Thread):
                                 MYAPP_DEVICE_START_counter[myappId][device["deviceId"]] += 1
                             myapp_ondevice_already_sampled[myappId][device["deviceId"]] = iter_count
 
-                        if not isDeviceAlive(devices, device["deviceId"]):
+                        if not isDeviceAlive(self.devices, device["deviceId"]):
                             if not myappId in myapp_jobs_down_counter:
                                 myapp_jobs_down_counter[myappId] = 1
                             else:
@@ -338,10 +342,10 @@ class SimThread(Thread):
 
                 system_uptime = 0
                 active_myapps = 0
-                myapps = keydefaultdict(lambda key: db.getMyApp(key)) # Resetting myapps
+                self.myapps = keydefaultdict(lambda key: db.getMyApp(key)) # Resetting myapps
                 for myapp in db.getMyApps():
                     active_myapps += 1
-                    myapps[myapp["myappId"]] = myapp
+                    self.myapps[myapp["myappId"]] = myapp
                     myappId = myapp["myappId"]
                     myapps_samples[myappId][MYAPP_LIFETIME] += 1
                     if myapp["minjobs"] == 0: # 0 is assumed to be "all jobs have to be run"
