@@ -21,7 +21,7 @@ export default class Certificate extends React.Component {
       fetch(URL+"/result/devices")
         .then(res => res.json())
         .then(res => res.reduce((prev, current) => (prev+current.DEVICE_ENERGY_CONSUMPTION), 0))
-        .then(cost => this.setState({cost: cost, prev_cost: this.state.cost, energy_history: [...this.state.energy_history, {x: this.state.energy_history.length + 1, y: cost}]}))
+        .then(cost => this.setState({cost: cost, prev_cost: this.state.cost, energy_history: [...this.state.energy_history, {x: this.state.energy_history.length+1, y: cost}]}))
       fetch(URL+"/result/myapps")
         .then(res => res.json())
         .then(res => {

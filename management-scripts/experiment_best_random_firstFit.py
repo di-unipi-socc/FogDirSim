@@ -1,6 +1,6 @@
 from APIWrapper import FogDirector
 import time, random, math, os
-from infrastructure import ciscorouters_20pz_5b5m10s as infrastructure
+from infrastructure import ciscorouters_30pz_5b5m20s as infrastructure
 import requests
 import simplejson, signal
 
@@ -102,10 +102,10 @@ for simulation_count in range(0, 15):
 
         dt = datetime.now()
         deviceIp, deviceId = bestFit(100, 32)
-        print("BEST", datetime.now().microsecond - dt.microsecond)
+
         dt = datetime.now()
         code, res = fd.fast_install_app(myappId, [deviceId])
-        print("INSTALL", datetime.now().microsecond - dt.microsecond)
+ 
         while code == 400:
             if simulation_counter() > 15000:
                 print("INSTALLED ONLY ", myapp_index, "in 15000")
@@ -114,7 +114,7 @@ for simulation_count in range(0, 15):
             code, res = fd.fast_install_app(myappId, [deviceId])
         dt = datetime.now()
         fd.fast_start_app(myappId)
-        print("START", datetime.now().microsecond - dt.microsecond)
+
 
     while simulation_counter() < 15000:
         _, alerts = fd.get_alerts()

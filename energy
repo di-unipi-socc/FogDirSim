@@ -1,0 +1,66 @@
+STARTING SERVER ON PORT 5000
+ * Serving Flask app "constants" (lazy loading)
+ * Environment: production
+   WARNING: Do not use the development server in a production environment.
+   Use a production WSGI server instead.
+ * Debug mode: on
+consumed energy 0
+consumed energy 0
+consumed energy 0
+consumed energy 0
+consumed energy 0
+consumed energy 0
+consumed energy 0
+consumed energy 0
+consumed energy 0
+consumed energy 0
+consumed energy 0
+consumed energy 0
+consumed energy 0
+consumed energy 0
+consumed energy 0
+consumed energy 0
+consumed energy 0
+consumed energy 0
+consumed energy 0
+consumed energy 0
+consumed energy 0
+consumed energy 0
+consumed energy 0
+consumed energy 0
+consumed energy 0
+consumed energy 0
+RESETTED SIMULATION
+RESETTED SIMULATION
+consumed energy 0
+consumed energy 0
+consumed energy 0
+consumed energy 0
+consumed energy 7
+consumed energy 7
+consumed energy 8
+consumed energy 20
+consumed energy 16
+consumed energy 20
+consumed energy 15
+consumed energy 14
+consumed energy 22
+consumed energy 26
+consumed energy 27
+consumed energy 20
+consumed energy 43
+consumed energy 45
+consumed energy 48
+consumed energy 28
+consumed energy 58
+consumed energy 53
+consumed energy 37
+consumed energy 60
+consumed energy 34
+consumed energy 62
+consumed energy 35
+consumed energy 50
+consumed energy 55
+consumed energy 63
+
+Oh, ok, I'll shutdown all the thread in a second... Byeee!
