@@ -19,7 +19,7 @@ def bestFit(cpu, mem):
     devices.sort(reverse=True, key=(lambda dev: (dev["capabilities"]["nodes"][0]["cpu"]["available"], 
                                                 dev["capabilities"]["nodes"][0]["memory"]["available"]) ))
     while len(devices) == 0:
-        if simulation_counter() > 10000:
+        if simulation_counter() > 15000:
             print("Not able to find a bestfit. Simulation ends")
             exit()
         _, devices = fd.get_devices()
@@ -36,7 +36,7 @@ def randomFit():
     return devices["data"][r]["ipAddress"]
 
 def firstFit(cpu, mem): 
-    while simulation_counter() < 10000:
+    while simulation_counter() < 15000:
         _, devices = fd.get_devices()
         for dev in devices["data"]:
             if dev["capabilities"]["nodes"][0]["cpu"]["available"] >= cpu and dev["capabilities"]["nodes"][0]["memory"]["available"] >= mem:

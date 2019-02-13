@@ -21,12 +21,13 @@ def device(deviceList, deviceId):
         if x[0] == deviceId:
             return x
     return None
-def setDevice(deviceList, deviceId, new_cpu, new_mem):
+def incrementresources(deviceList, deviceId, new_cpu, new_mem):
     for x in deviceList:
         if x[0] == deviceId:
-            x[1] = new_cpu
-            x[2] = new_mem
-            break
+            x[1] += new_cpu
+            x[2] += new_mem
+            return deviceList
+    return deviceList
 
 def fog_torch():
     values = defaultdict(lambda: array.array("f", [0, 0]))
@@ -133,6 +134,8 @@ for simulation_count in range(0, 15):
                 myappId = app_det["myappId"]
                 fd.fast_stop_app(myappId)
                 fd.fast_uninstall_app(myappId, alert["deviceId"])
+                dev_list = incrementresources(dev_list, alert["deviceId"], 100, 32)
+                dev_list = dev_list_sort(dev_list)
                 deviceId = dev_list[0][0]
                 code, res = fd.fast_install_app(myappId, [deviceId])
                 if code != 400:
