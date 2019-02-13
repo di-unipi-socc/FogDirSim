@@ -6,10 +6,11 @@ import simplejson, signal, os
 
 infrastructure.create()
 
-fd = FogDirector("127.0.0.1:5000")
+port = os.environ.get('SERVER_PORT', "5000")
+fd = FogDirector("127.0.0.1:"+port)
 code = fd.authenticate("admin", "admin_123")
 
-port = os.environ.get('SERVER_PORT', "5000")
+
 def simulation_counter():
     r = requests.get('http://localhost:'+port+'/result/simulationcounter')
     return int(r.text)
@@ -34,7 +35,7 @@ def bestFit(cpu, mem):
     return best_fit["ipAddress"], best_fit["deviceId"]
 
 def reset_simulation():
-    url = "http://%s/simulationreset" % "127.0.0.1:5000"
+    url = "http://%s/simulationreset" % ("127.0.0.1:"+port)
     r = requests.get(url)
     output = r.json()
     try:
