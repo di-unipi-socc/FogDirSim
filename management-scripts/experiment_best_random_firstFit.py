@@ -4,6 +4,8 @@ from infrastructure import ciscorouters_20pz_5b5m10s as infrastructure
 import requests
 import simplejson, signal
 
+from datetime import datetime
+
 port = os.environ.get('SERVER_PORT', "5000")
 
 infrastructure.create()
@@ -82,7 +84,6 @@ print("STARTING BESTFIT PHASE")
 fallimenti = []
 iteration_count = []
 for simulation_count in range(0, 15):
-    break
     if os.environ.get('SKIP_BEST', None) != None:
         break
     start = time.time()
@@ -99,15 +100,21 @@ for simulation_count in range(0, 15):
         dep = "dep"+str(myapp_index)
         _, myappId = fd.create_myapp(localapp["localAppId"], dep)
 
+        dt = datetime.now()
         deviceIp, deviceId = bestFit(100, 32)
+        print("BEST", datetime.now().microsecond - dt.microsecond)
+        dt = datetime.now()
         code, res = fd.fast_install_app(myappId, [deviceId])
+        print("INSTALL", datetime.now().microsecond - dt.microsecond)
         while code == 400:
             if simulation_counter() > 15000:
                 print("INSTALLED ONLY ", myapp_index, "in 15000")
             fallimento += 1
             deviceIp, deviceId = bestFit(100, 32)
             code, res = fd.fast_install_app(myappId, [deviceId])
+        dt = datetime.now()
         fd.fast_start_app(myappId)
+        print("START", datetime.now().microsecond - dt.microsecond)
 
     while simulation_counter() < 15000:
         _, alerts = fd.get_alerts()
@@ -239,6 +246,7 @@ for simulation_count in range(0, 15):
         _, myappId = fd.create_myapp(localapp["localAppId"], dep)
 
         deviceIp, deviceId = firstFit(100, 32)
+        
         code, res = fd.fast_install_app(myappId, [deviceId])
         trial = 0
         while code == 400:
