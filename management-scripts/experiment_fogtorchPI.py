@@ -96,7 +96,6 @@ for simulation_count in range(0, 15):
     code, localapp = fd.add_app("./NettestApp2V1_lxc.tar.gz", publish_on_upload=True)
 
     for myapp_index in range(0, DEPLOYMENT_NUMBER):
-        if 
         if DEPLOYMENT_NUMBER % 200 == 0:
             dev_list = fog_torch()
             dev_list = dev_list_sort(dev_list)
