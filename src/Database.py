@@ -18,9 +18,9 @@ def resetSimulation():
     global db
     client.drop_database("fogdirector")
     db = client.fogdirector 
-    db.devices.create_index({ "deviceId": 1})
-    db.myapps.create_index({"myappId": 1})
-    db.applications.create_index({"localappId": 1})
+    db.devices.create_index([('deviceId', pm.ASCENDING)], name='device_index', default_language='english')
+    db.myapps.create_index([('myappId', pm.TEXT)], name='myapps_index', default_language='english')
+    db.applications.create_index([('localappId', pm.TEXT)], name='localapp_index', default_language='english')
  
 resetSimulation()
 
