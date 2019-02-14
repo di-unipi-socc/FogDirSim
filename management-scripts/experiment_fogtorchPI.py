@@ -78,7 +78,7 @@ iteration_count = []
 
 print("STARTING FTPI")
 ###########################################################################################
-#                                   FTpi+BEST                                             #
+#                                   FTpi                                                  #
 ###########################################################################################
 for simulation_count in range(0, 15):
     if os.environ.get('SKIP_BEST', None) != None:
@@ -136,7 +136,7 @@ for simulation_count in range(0, 15):
                 myappId = app_det["myappId"]
                 fd.fast_stop_app(myappId)
                 fd.fast_uninstall_app(myappId, alert["deviceId"])
-                dev_list = incrementresources(dev_list, alert["deviceId"], 100, 32)
+                
                 dev_list = dev_list_sort(dev_list)
                 deviceId = dev_list[0][0]
                 code, res = fd.fast_install_app(myappId, [deviceId])
@@ -149,6 +149,7 @@ for simulation_count in range(0, 15):
                     if code != 400:
                         dev_list[0][1] -= 100
                         dev_list[0][2] -= 32
+                dev_list = incrementresources(dev_list, alert["deviceId"], 100, 32)
                 print("migrating", dep, "from", alert["ipAddress"], "to", deviceId)
                 fd.fast_start_app(myappId)
     

@@ -273,6 +273,7 @@ for simulation_count in range(0, 15):
                     else:
                         migrated.append(dep)
                 except TypeError:
+                    print("TYPERROR... boooh")
                     continue
                 _, app_det = fd.get_myapp_details(dep)
                 myappId = app_det["myappId"]
