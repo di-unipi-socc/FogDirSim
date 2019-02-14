@@ -17,14 +17,14 @@ def get_uptime_history():
     global lock
     with lock:
         l = len(uptime_history)
-        if l > 200:
-            return uptime_history[0::int(l/100)]
+        #if l > 200:
+        #    return uptime_history[0::int(l/100)]
         return uptime_history
     
 def get_energy_history():
     global lock
     with lock:
         l = len(energy_history)
-        if l > 200:
-            return energy_history[0::int(l/100)]
+        #if l > 200:
+        #    return energy_history[0::int(l/100)]
         return energy_history

@@ -70,7 +70,7 @@ def reset_simulation(current_identifier):
     previous_simulation.append({
         current_identifier: output
     })
-    file  = open("simulation_results_firstFit.txt", "a")
+    file  = open("simulation_results_fogtorch_best.txt", "a")
     file.write(str(current_identifier)+"\n")
     out = simplejson.dumps(output, indent=4, sort_keys=True)
     file.write(out)
@@ -98,7 +98,7 @@ print("STARTING + BEST PHASE")
 ###########################################################################################
 #                                   FTpi+best                                             #
 ###########################################################################################
-for simulation_count in range(0, 15):
+for simulation_count in range(0, 3):
     if os.environ.get('SKIP_BEST', None) != None:
         break
     start = time.time()

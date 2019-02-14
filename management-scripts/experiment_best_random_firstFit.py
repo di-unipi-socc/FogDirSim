@@ -21,7 +21,7 @@ def bestFit(cpu, mem):
     devices.sort(reverse=True, key=(lambda dev: (dev["capabilities"]["nodes"][0]["cpu"]["available"], 
                                                 dev["capabilities"]["nodes"][0]["memory"]["available"]) ))
     while len(devices) == 0:
-        if simulation_counter() > 15000:
+        if simulation_counter() > 10000:
             print("Not able to find a bestfit. Simulation ends")
             exit()
         _, devices = fd.get_devices()
@@ -38,11 +38,12 @@ def randomFit():
     return devices["data"][r]["ipAddress"], devices["data"][r]["deviceId"]
 
 def firstFit(cpu, mem): 
-    while simulation_counter() < 15000:
+    while simulation_counter() < 10000:
         _, devices = fd.get_devices()
         for dev in devices["data"]:
             if dev["capabilities"]["nodes"][0]["cpu"]["available"] >= cpu and dev["capabilities"]["nodes"][0]["memory"]["available"] >= mem:
                 return dev["ipAddress"], dev["deviceId"]
+    return 1, 1
 
 previous_simulation = []
 
@@ -83,7 +84,7 @@ print("STARTING BESTFIT PHASE")
 ###########################################################################################
 fallimenti = []
 iteration_count = []
-for simulation_count in range(0, 15):
+for simulation_count in range(0, 3):
     if os.environ.get('SKIP_BEST', None) != None:
         break
     start = time.time()
@@ -96,8 +97,7 @@ for simulation_count in range(0, 15):
     # Uploading Application
     code, localapp = fd.add_app("./NettestApp2V1_lxc.tar.gz", publish_on_upload=True)
 
-    deploy_start = simulation_counter()
-    print("STARTING TO DEPLOY", deploy_start)
+    print("STARTING TO DEPLOY", simulation_counter())
     for myapp_index in range(0, DEPLOYMENT_NUMBER):
         dep = "dep"+str(myapp_index)
         _, myappId = fd.create_myapp(localapp["localAppId"], dep)
@@ -109,16 +109,15 @@ for simulation_count in range(0, 15):
         code, res = fd.fast_install_app(myappId, [deviceId])
  
         while code == 400:
-            if simulation_counter() > 15000:
-                print("INSTALLED ONLY ", myapp_index, "in 15000")
+            if simulation_counter() > 10000:
+                print("INSTALLED ONLY ", myapp_index, "in 10000")
             fallimento += 1
             deviceIp, deviceId = bestFit(100, 32)
             code, res = fd.fast_install_app(myappId, [deviceId])
         dt = datetime.now()
         fd.fast_start_app(myappId)
-
-    print("ITERATION PER ", DEPLOYMENT_NUMBER, "richiede", simulation_counter()-deploy_start)
-    while simulation_counter() < 15000:
+    print("FINISHED TO DEPLOY", simulation_counter())
+    while simulation_counter() < 10000:
         _, alerts = fd.get_alerts()
         migrated = []
         for alert in alerts["data"]:
@@ -136,12 +135,12 @@ for simulation_count in range(0, 15):
                 code, _ = fd.fast_install_app(myappId, [deviceId])
                 while code == 400:
                     fallimento += 1
-                    if simulation_counter() > 15000:
+                    if simulation_counter() > 10000:
                         break
                     deviceIp, deviceId = bestFit(100, 32)
                     code, _ = fd.fast_install_app(myappId, [deviceId]) 
                 fd.fast_start_app(myappId)
-            if simulation_counter() > 15000:
+            if simulation_counter() > 10000:
                 break
     fallimenti.append(fallimento)
     iteration_end = simulation_counter()
@@ -159,7 +158,7 @@ print("STARTING RANDOM PHASE")
 ###########################################################################################
 fallimenti = []
 iteration_count = []
-for simulation_count in range(0, 15):
+for simulation_count in range(0, 3):
     if os.environ.get('SKIP_RANDOM', None) != None:
         break
     start = time.time()
@@ -171,7 +170,7 @@ for simulation_count in range(0, 15):
 
     # Uploading Application
     code, localapp = fd.add_app("./NettestApp2V1_lxc.tar.gz", publish_on_upload=True)
-
+    print("STARTING TO DEPLOY", simulation_counter())
     for myapp_index in range(0, DEPLOYMENT_NUMBER):
         dep = "dep"+str(myapp_index)
         _, myappId = fd.create_myapp(localapp["localAppId"], dep)
@@ -181,14 +180,14 @@ for simulation_count in range(0, 15):
         trial = 0
         while code == 400:
             trial += 1
-            if simulation_counter() > 15000:
-                print("INSTALLED ONLY ", myapp_index, "in 15000")
+            if simulation_counter() > 10000:
+                print("INSTALLED ONLY ", myapp_index, "in 10000")
             fallimento += 1
             deviceIp, deviceId = randomFit()
             code, res = fd.fast_install_app(myappId, [deviceId])
         fd.fast_start_app(myappId)
-
-    while simulation_counter() < 15000:
+    print("FINISHED TO DEPLOY", simulation_counter())
+    while simulation_counter() < 10000:
         _, alerts = fd.get_alerts()
         migrated = []
         for alert in alerts["data"]:
@@ -206,12 +205,12 @@ for simulation_count in range(0, 15):
                 code, _ = fd.fast_install_app(myappId, [deviceId]) 
                 while code == 400:
                     fallimento += 1
-                    if simulation_counter() > 15000:
+                    if simulation_counter() > 10000:
                         break
                     deviceIp, deviceId = randomFit()
                     code, _ = fd.fast_install_app(myappId, [deviceId]) 
                 fd.fast_start_app(myappId)
-            if simulation_counter() > 15000:
+            if simulation_counter() > 10000:
                 print("NOT ABLET TO REDEPLOY APPLICATION: ", dep)
                 break
 
@@ -230,7 +229,7 @@ print("STARTING FIRSTFIT PHASE")
 ###########################################################################################
 fallimenti = []
 iteration_count = []
-for simulation_count in range(0, 15):
+for simulation_count in range(0, 3):
     if os.environ.get('SKIP_FIRST', None) != None:
         break
     start = time.time()
@@ -242,7 +241,7 @@ for simulation_count in range(0, 15):
 
     # Uploading Application
     code, localapp = fd.add_app("./NettestApp2V1_lxc.tar.gz", publish_on_upload=True)
-
+    print("STARTING TO DEPLOY", simulation_counter())
     for myapp_index in range(0, DEPLOYMENT_NUMBER):
         dep = "dep"+str(myapp_index)
         _, myappId = fd.create_myapp(localapp["localAppId"], dep)
@@ -253,15 +252,15 @@ for simulation_count in range(0, 15):
         trial = 0
         while code == 400:
             trial += 1
-            if simulation_counter() > 15000:
-                print("INSTALLED ONLY ", myapp_index, "in 15000")
+            if simulation_counter() > 10000:
+                print("INSTALLED ONLY ", myapp_index, "in 10000")
             fallimento += 1
             deviceIp, deviceId = firstFit(100, 32)
             code, res = fd.fast_install_app(myappId, [deviceId])
         
         fd.fast_start_app(myappId)
-
-    while simulation_counter() < 15000:
+    print("FINISHED TO DEPLOY", simulation_counter())   
+    while simulation_counter() < 10000:
         _, alerts = fd.get_alerts()
         migrated = []
         for alert in alerts["data"]:
@@ -282,12 +281,12 @@ for simulation_count in range(0, 15):
                 deviceIp, deviceId = firstFit(100, 32)
                 code, _ = fd.fast_install_app(myappId, [deviceId]) 
                 while code == 400:
-                    if simulation_counter() > 15000:
+                    if simulation_counter() > 10000:
                         break
                     fallimento += 1
                     deviceIp, deviceId = firstFit(100, 32)
                     code, _ = fd.fast_install_app(myappId, [deviceId])
-                if simulation_counter() > 15000:
+                if simulation_counter() > 10000:
                     break
                 fd.fast_start_app(myappId)
     

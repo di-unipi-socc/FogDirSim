@@ -52,7 +52,7 @@ def reset_simulation(current_identifier):
     previous_simulation.append({
         current_identifier: output
     })
-    file  = open("simulation_results_firstFit.txt", "a")
+    file  = open("simulation_results_fogtorch.txt", "a")
     file.write(str(current_identifier)+"\n")
     out = simplejson.dumps(output, indent=4, sort_keys=True)
     file.write(out)
