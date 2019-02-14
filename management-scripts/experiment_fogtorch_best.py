@@ -112,7 +112,7 @@ for simulation_count in range(0, 3):
     dev_list = dev_list_sort(dev_list)
     # Uploading Application
     code, localapp = fd.add_app("./NettestApp2V1_lxc.tar.gz", publish_on_upload=True)
-
+    print("STARTING TO DEPLOY", simulation_counter())
     for myapp_index in range(0, DEPLOYMENT_NUMBER):
         if DEPLOYMENT_NUMBER % 200 == 0:
             dev_list = fog_torch()
@@ -136,7 +136,7 @@ for simulation_count in range(0, 3):
                 dev_list[0][1] -= 100
                 dev_list[0][2] -= 32
         fd.fast_start_app(myappId)
-    print("ITERATION PER ", DEPLOYMENT_NUMBER, "richiede", simulation_counter())
+    print("ENDING TO DEPLOY", simulation_counter())
     while simulation_counter() < 15000:
         _, alerts = fd.get_alerts()
         migrated = []
