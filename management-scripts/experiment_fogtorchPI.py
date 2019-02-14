@@ -31,7 +31,7 @@ def incrementresources(deviceList, deviceId, new_cpu, new_mem):
 
 def fog_torch():
     values = defaultdict(lambda: array.array("f", [0, 0]))
-    MAX_ITER = 200
+    MAX_ITER = 500
     for _ in range(0, MAX_ITER):
         _, devices = fd.get_devices()
         for dev in devices["data"]:
@@ -76,9 +76,9 @@ DEPLOYMENT_NUMBER = 150
 fallimenti = []
 iteration_count = []
 
-print("STARTING FOGTORCH PHASE")
+print("STARTING FTPI")
 ###########################################################################################
-#                                   FOGTORCH                                              #
+#                                   FTpi+BEST                                             #
 ###########################################################################################
 for simulation_count in range(0, 15):
     if os.environ.get('SKIP_BEST', None) != None:
@@ -95,6 +95,8 @@ for simulation_count in range(0, 15):
     # Uploading Application
     code, localapp = fd.add_app("./NettestApp2V1_lxc.tar.gz", publish_on_upload=True)
 
+    deploy_start = simulation_counter()
+    print("INIZIA a DEPLOYARE A ",deploy_start)
     for myapp_index in range(0, DEPLOYMENT_NUMBER):
         if DEPLOYMENT_NUMBER % 200 == 0:
             dev_list = fog_torch()
@@ -118,7 +120,7 @@ for simulation_count in range(0, 15):
                 dev_list[0][1] -= 100
                 dev_list[0][2] -= 32
         fd.fast_start_app(myappId)
-    print("ITERATION PER ", DEPLOYMENT_NUMBER, "richiede", simulation_counter())
+    print("ITERATION PER ", DEPLOYMENT_NUMBER, "richiede", simulation_counter()-deploy_start)
     while simulation_counter() < 15000:
         _, alerts = fd.get_alerts()
         migrated = []

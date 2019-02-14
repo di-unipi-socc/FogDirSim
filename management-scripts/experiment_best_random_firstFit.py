@@ -96,6 +96,8 @@ for simulation_count in range(0, 15):
     # Uploading Application
     code, localapp = fd.add_app("./NettestApp2V1_lxc.tar.gz", publish_on_upload=True)
 
+    deploy_start = simulation_counter()
+    print("STARTING TO DEPLOY", deploy_start)
     for myapp_index in range(0, DEPLOYMENT_NUMBER):
         dep = "dep"+str(myapp_index)
         _, myappId = fd.create_myapp(localapp["localAppId"], dep)
@@ -115,7 +117,7 @@ for simulation_count in range(0, 15):
         dt = datetime.now()
         fd.fast_start_app(myappId)
 
-
+    print("ITERATION PER ", DEPLOYMENT_NUMBER, "richiede", simulation_counter()-deploy_start)
     while simulation_counter() < 15000:
         _, alerts = fd.get_alerts()
         migrated = []

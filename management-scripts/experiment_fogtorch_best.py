@@ -94,9 +94,9 @@ DEPLOYMENT_NUMBER = 150
 fallimenti = []
 iteration_count = []
 
-print("STARTING FOGTORCH PHASE")
+print("STARTING + BEST PHASE")
 ###########################################################################################
-#                                   FOGTORCH                                              #
+#                                   FTpi+best                                             #
 ###########################################################################################
 for simulation_count in range(0, 15):
     if os.environ.get('SKIP_BEST', None) != None:
