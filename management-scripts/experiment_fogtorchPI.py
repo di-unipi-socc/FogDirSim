@@ -139,6 +139,8 @@ for simulation_count in range(0, 15):
                 
                 dev_list = dev_list_sort(dev_list)
                 deviceId = dev_list[0][0]
+                if int(deviceId) == int(alert["deviceId"]):
+                    deviceId = dev_list[1][0]
                 code, res = fd.fast_install_app(myappId, [deviceId])
                 if code != 400:
                     dev_list[0][1] -= 100
