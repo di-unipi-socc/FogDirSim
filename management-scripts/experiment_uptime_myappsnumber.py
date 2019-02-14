@@ -25,7 +25,7 @@ def bestFit(cpu, mem):
     while len(devices) == 0:
         trial += 1
         if trial == 100:
-            return None
+            return None, None
         _, devices = fd.get_devices()
         devices = [ dev for dev in devices["data"] if dev["capabilities"]["nodes"][0]["cpu"]["available"] >= cpu 
                                     and dev["capabilities"]["nodes"][0]["memory"]["available"] >= mem]

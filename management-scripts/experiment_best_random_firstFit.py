@@ -265,10 +265,13 @@ for simulation_count in range(0, 15):
         for alert in alerts["data"]:
             if "APP_HEALTH" == alert["type"]: 
                 dep = alert["appName"]
-                if dep in migrated:
+                try:
+                    if dep in migrated:
+                        continue
+                    else:
+                        migrated.append(dep)
+                except TypeError:
                     continue
-                else:
-                    migrated.append(dep)
                 _, app_det = fd.get_myapp_details(dep)
                 myappId = app_det["myappId"]
                 fd.fast_stop_app(myappId)
