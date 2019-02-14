@@ -9,6 +9,24 @@ port = os.environ.get('SERVER_PORT', "5000")
 
 infrastructure.create()
 
+def bestFit(cpu, mem):
+    _, devices = fd.get_devices()
+    devices = [ dev for dev in devices["data"] if dev["capabilities"]["nodes"][0]["cpu"]["available"] >= cpu 
+                            and dev["capabilities"]["nodes"][0]["memory"]["available"] >= mem]
+    devices.sort(reverse=True, key=(lambda dev: (dev["capabilities"]["nodes"][0]["cpu"]["available"], 
+                                                dev["capabilities"]["nodes"][0]["memory"]["available"]) ))
+    while len(devices) == 0:
+        if simulation_counter() > 15000:
+            print("Not able to find a bestfit. Simulation ends")
+            exit()
+        _, devices = fd.get_devices()
+        devices = [ dev for dev in devices["data"] if dev["capabilities"]["nodes"][0]["cpu"]["available"] >= cpu 
+                                    and dev["capabilities"]["nodes"][0]["memory"]["available"] >= mem]
+        devices.sort(reverse=True, key=(lambda dev: (dev["capabilities"]["nodes"][0]["cpu"]["available"], 
+                                                        dev["capabilities"]["nodes"][0]["memory"]["available"]) ))
+    best_fit = devices[0]
+    return best_fit["ipAddress"], best_fit["deviceId"]
+
 def simulation_counter():
     r = requests.get('http://localhost:'+port+'/result/simulationcounter')
     return int(r.text)
@@ -134,20 +152,12 @@ for simulation_count in range(0, 15):
                 myappId = app_det["myappId"]
                 fd.fast_stop_app(myappId)
                 fd.fast_uninstall_app(myappId, alert["deviceId"])
-                dev_list = incrementresources(dev_list, alert["deviceId"], 100, 32)
-                dev_list = dev_list_sort(dev_list)
-                deviceId = dev_list[0][0]
-                code, res = fd.fast_install_app(myappId, [deviceId])
-                if code != 400:
-                    dev_list[0][1] -= 100
-                    dev_list[0][2] -= 32
+                _, deviceId = bestFit(100, 32)
+                code, _ = fd.fast_install_app(myappId, [deviceId])
                 while code == 400:
                     fallimento += 1
-                    code, res = fd.fast_install_app(myappId, [deviceId])
-                    if code != 400:
-                        dev_list[0][1] -= 100
-                        dev_list[0][2] -= 32
-                print("migrating", dep, "from", alert["ipAddress"], "to", deviceId)
+                    _, deviceId = bestFit(100, 32)
+                    code, _ = fd.fast_install_app(myappId, [deviceId]) 
                 fd.fast_start_app(myappId)
     
     fallimenti.append(fallimento)
