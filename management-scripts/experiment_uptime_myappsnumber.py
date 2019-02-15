@@ -86,7 +86,7 @@ for DEVICE_NUMBER in range(15, 30, 5):
         installed_apps = install_apps()
         if installed_apps < DEPLOYMENT_NUMBER:
             break
-        while simulation_counter() < 5000:
+        while simulation_counter() < 3000:
             try:
                 time.sleep(5)
             except KeyboardInterrupt:
