@@ -98,11 +98,7 @@ for simulation_count in range(0, 15):
     deploy_start = simulation_counter()
     print("INIZIA a DEPLOYARE A ",deploy_start)
     for myapp_index in range(0, DEPLOYMENT_NUMBER):
-        if DEPLOYMENT_NUMBER % 200 == 0:
-            dev_list = fog_torch()
-            dev_list = dev_list_sort(dev_list)
-        else:
-            dev_list = dev_list_sort(dev_list)
+        dev_list = dev_list_sort(dev_list)
             
         dep = "dep"+str(myapp_index)
         _, myappId = fd.create_myapp(localapp["localAppId"], dep)
@@ -121,7 +117,7 @@ for simulation_count in range(0, 15):
                 dev_list[0][2] -= 32
         fd.fast_start_app(myappId)
     print("ITERATION PER ", DEPLOYMENT_NUMBER, "richiede", simulation_counter()-deploy_start)
-    while simulation_counter() < 15000:
+    while simulation_counter() < 10000:
         _, alerts = fd.get_alerts()
         migrated = []
         for alert in alerts["data"]:
@@ -141,16 +137,27 @@ for simulation_count in range(0, 15):
                 deviceId = dev_list[0][0]
                 if int(deviceId) == int(alert["deviceId"]):
                     deviceId = dev_list[1][0]
-                code, res = fd.fast_install_app(myappId, [deviceId])
-                if code != 400:
-                    dev_list[0][1] -= 100
-                    dev_list[0][2] -= 32
-                while code == 400:
-                    fallimento += 1
+                    code, res = fd.fast_install_app(myappId, [deviceId])
+                    if code != 400:
+                        dev_list[1][1] -= 100
+                        dev_list[1][2] -= 32
+                    while code == 400:
+                        fallimento += 1
+                        code, res = fd.fast_install_app(myappId, [deviceId])
+                        if code != 400:
+                            dev_list[1][1] -= 100
+                            dev_list[1][2] -= 32
+                else:
                     code, res = fd.fast_install_app(myappId, [deviceId])
                     if code != 400:
                         dev_list[0][1] -= 100
                         dev_list[0][2] -= 32
+                    while code == 400:
+                        fallimento += 1
+                        code, res = fd.fast_install_app(myappId, [deviceId])
+                        if code != 400:
+                            dev_list[0][1] -= 100
+                            dev_list[0][2] -= 32
                 dev_list = incrementresources(dev_list, alert["deviceId"], 100, 32)
                 print("migrating", dep, "from", alert["ipAddress"], "to", deviceId)
                 fd.fast_start_app(myappId)

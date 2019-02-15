@@ -77,7 +77,7 @@ def install_apps():
     return DEPLOYMENT_NUMBER
 
 reset_simulation()
-for DEVICE_NUMBER in range(25, 30, 5):
+for DEVICE_NUMBER in range(15, 30, 5):
     for DEPLOYMENT_NUMBER in range(150, 300, 10):
         print("Trying on", DEVICE_NUMBER, "with", DEPLOYMENT_NUMBER, "applications")
         reset_simulation()
