@@ -1,6 +1,6 @@
 from APIWrapper import FogDirector
 import time, random, math
-from infrastructure import ciscorouters_30pz_5b5m20s as infrastructure
+from infrastructure import ciscorouters_210pz_5b5m200s as infrastructure
 import requests
 import simplejson, signal, os
 
@@ -40,10 +40,11 @@ def reset_simulation():
     output = r.json()
     try:
         file  = open("simulation_results_resort.txt", "a")
-        file.write("# Devices: "+str(DEVICE_NUMBER)+" - # Deployments: "+str(DEPLOYMENT_NUMBER)+" - # Successfully Installed: "+str(installed_apps)+"\n")
+        file.write("# Successfully Installed previous step: "+str(installed_apps)+"\n"+"# Devices: "+str(DEVICE_NUMBER)+" - # Deployments: "+str(DEPLOYMENT_NUMBER)+"\n")
+        file.write("\""+str(DEVICE_NUMBER)+"\"{")
         out = simplejson.dumps(output, indent=4, sort_keys=True)
         file.write(out)
-        file.write("\n\n")
+        file.write("},\n\n")
         file.close()
     except NameError:
         pass
@@ -77,7 +78,7 @@ def install_apps():
     return DEPLOYMENT_NUMBER
 
 reset_simulation()
-for DEVICE_NUMBER in range(15, 30, 5):
+for DEVICE_NUMBER in range(30, 41, 5):
     for DEPLOYMENT_NUMBER in range(150, 300, 10):
         print("Trying on", DEVICE_NUMBER, "with", DEPLOYMENT_NUMBER, "applications")
         reset_simulation()
@@ -91,3 +92,15 @@ for DEVICE_NUMBER in range(15, 30, 5):
                 time.sleep(5)
             except KeyboardInterrupt:
                 break
+
+for DEVICE_NUMBER in range(40, 150, 5):
+    DEPLOYMENT_NUMBER = 150
+    reset_simulation()
+    add_devices()
+    code, localapp = fd.add_app("./NettestApp2V1_lxc.tar.gz", publish_on_upload=True)
+    installed_apps = install_apps()
+    while simulation_counter() < 3000:
+        try:
+            time.sleep(5)
+        except KeyboardInterrupt:
+            break
