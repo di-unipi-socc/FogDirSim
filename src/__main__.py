@@ -106,7 +106,7 @@ def main():
         result = {
             "energy": result_system_energy(),
             "uptime": result_system_uptime(),
-            "uptime_energy": HistoryThread.get_energy_history(),
+            "energy_history": HistoryThread.get_energy_history(),
             "uptime_history": HistoryThread.get_uptime_history(),
             "alerts": average_alerts,
             "iteration_count": sim_count()
