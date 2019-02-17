@@ -78,30 +78,15 @@ def install_apps():
     return DEPLOYMENT_NUMBER
 
 reset_simulation()
-for DEVICE_NUMBER in range(30, 31, 5):
-    for DEPLOYMENT_NUMBER in range(190, 191, 10):
-        print("Trying on", DEVICE_NUMBER, "with", DEPLOYMENT_NUMBER, "applications")
-        reset_simulation()
-        add_devices()
-        code, localapp = fd.add_app("./NettestApp2V1_lxc.tar.gz", publish_on_upload=True)
-        installed_apps = install_apps()
-        if installed_apps < DEPLOYMENT_NUMBER:
-            break
-        while simulation_counter() < 3000:
-            try:
-                time.sleep(5)
-            except KeyboardInterrupt:
-                break
+DEVICE_NUMBER = 25
+DEPLOYMENT_NUMBER = 150
+print("Trying ", DEVICE_NUMBER, "devices with", DEPLOYMENT_NUMBER, "deployments")
+add_devices()
+code, localapp = fd.add_app("./NettestApp2V1_lxc.tar.gz", publish_on_upload=True)
+installed_apps = install_apps()
+while simulation_counter() < 3000:
+    try:
+        time.sleep(5)
+    except KeyboardInterrupt:
+        break
 reset_simulation()
-
-for DEVICE_NUMBER in range(40, 150, 5):
-    DEPLOYMENT_NUMBER = 150
-    reset_simulation()
-    add_devices()
-    code, localapp = fd.add_app("./NettestApp2V1_lxc.tar.gz", publish_on_upload=True)
-    installed_apps = install_apps()
-    while simulation_counter() < 3000:
-        try:
-            time.sleep(5)
-        except KeyboardInterrupt:
-            break
