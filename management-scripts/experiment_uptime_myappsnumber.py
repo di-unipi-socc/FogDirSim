@@ -78,8 +78,8 @@ def install_apps():
     return DEPLOYMENT_NUMBER
 
 reset_simulation()
-for DEVICE_NUMBER in range(30, 41, 5):
-    for DEPLOYMENT_NUMBER in range(150, 300, 10):
+for DEVICE_NUMBER in range(30, 31, 5):
+    for DEPLOYMENT_NUMBER in range(190, 191, 10):
         print("Trying on", DEVICE_NUMBER, "with", DEPLOYMENT_NUMBER, "applications")
         reset_simulation()
         add_devices()
@@ -92,6 +92,7 @@ for DEVICE_NUMBER in range(30, 41, 5):
                 time.sleep(5)
             except KeyboardInterrupt:
                 break
+reset_simulation()
 
 for DEVICE_NUMBER in range(40, 150, 5):
     DEPLOYMENT_NUMBER = 150
