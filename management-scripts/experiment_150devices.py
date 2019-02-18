@@ -39,7 +39,7 @@ def reset_simulation():
     r = requests.get(url)
     output = r.json()
     try:
-        file  = open("simulation_results_150devices.txt", "a")
+        file  = open("simulation_results_150devices_300apps.txt", "a")
         file.write("# Successfully Installed previous step: "+str(installed_apps)+"\n"+"# Devices: "+str(DEVICE_NUMBER)+" - # Deployments: "+str(DEPLOYMENT_NUMBER)+"\n")
         file.write("\""+str(DEVICE_NUMBER)+"\"{")
         out = simplejson.dumps(output, indent=4, sort_keys=True)
