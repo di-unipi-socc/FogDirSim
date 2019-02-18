@@ -78,7 +78,7 @@ def install_apps():
 
 reset_simulation()
 for DEVICE_NUMBER in range(50, 301, 10):
-    for DEPLOYMENT_NUMBER in [150, 300]:
+    for DEPLOYMENT_NUMBER in [300]:
         print("Trying ", DEVICE_NUMBER, "devices with", DEPLOYMENT_NUMBER, "deployments")
         add_devices()
         code, localapp = fd.add_app("./NettestApp2V1_lxc.tar.gz", publish_on_upload=True)
