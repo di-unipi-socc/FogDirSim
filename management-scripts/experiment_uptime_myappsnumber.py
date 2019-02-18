@@ -1,6 +1,6 @@
 from APIWrapper import FogDirector
 import time, random, math
-from infrastructure import ciscorouters_210pz_5b5m200s as infrastructure
+from infrastructure import ciscorouters_310pz_5b5m300s as infrastructure
 import requests
 import simplejson, signal, os
 
@@ -9,7 +9,6 @@ infrastructure.create()
 port = os.environ.get('SERVER_PORT', "5000")
 fd = FogDirector("127.0.0.1:"+port)
 code = fd.authenticate("admin", "admin_123")
-
 
 def simulation_counter():
     r = requests.get('http://localhost:'+port+'/result/simulationcounter')
@@ -51,7 +50,7 @@ def reset_simulation():
 
 def add_devices():
     for i in range(1, DEVICE_NUMBER+1):
-        deviceId = i+1      
+        deviceId = i
         _, device1 = fd.add_device("10.10.20."+str(deviceId), "cisco", "cisco")
 
 def install_apps():
@@ -78,15 +77,15 @@ def install_apps():
     return DEPLOYMENT_NUMBER
 
 reset_simulation()
-DEVICE_NUMBER = 25
-DEPLOYMENT_NUMBER = 150
-print("Trying ", DEVICE_NUMBER, "devices with", DEPLOYMENT_NUMBER, "deployments")
-add_devices()
-code, localapp = fd.add_app("./NettestApp2V1_lxc.tar.gz", publish_on_upload=True)
-installed_apps = install_apps()
-while simulation_counter() < 3000:
-    try:
-        time.sleep(5)
-    except KeyboardInterrupt:
-        break
-reset_simulation()
+for DEVICE_NUMBER in range(50, 301, 10):
+    for DEPLOYMENT_NUMBER in [150, 300]:
+        print("Trying ", DEVICE_NUMBER, "devices with", DEPLOYMENT_NUMBER, "deployments")
+        add_devices()
+        code, localapp = fd.add_app("./NettestApp2V1_lxc.tar.gz", publish_on_upload=True)
+        installed_apps = install_apps()
+        while simulation_counter() < 3000:
+            try:
+                time.sleep(5)
+            except KeyboardInterrupt:
+                break
+        reset_simulation()

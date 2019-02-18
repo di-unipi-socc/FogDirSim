@@ -147,7 +147,6 @@ class SimThread(Thread):
                         sampled_free_mem = sampleMEM(deviceId)# - dev["usedMEM"]
                         constants.current_infrastructure[deviceId][0] = sampled_free_cpu
                         constants.current_infrastructure[deviceId][1] = sampled_free_mem
-                    
                     r = random.random()
                     if dev["alive"] and r <= dev["chaos_down_prob"]:
                         db.setDeviceDown(deviceId)
@@ -163,22 +162,22 @@ class SimThread(Thread):
                             constants.current_infrastructure[deviceId][0] = sampled_free_cpu
                             constants.current_infrastructure[deviceId][1] = sampled_free_mem
                         # adding critical CPU, MEM
-                        if sampled_free_cpu <= 0:
+                        if constants.current_infrastructure[deviceId][0] - DEVICE_USAGE_RESOURCES_SAMPLED_incrementing[deviceId][0] <= 0:
                             devices_samples[deviceId][DEVICE_CRITICAL_CPU_counter_sum] += 1
-                        if sampled_free_mem <= 0:
+                        if constants.current_infrastructure[deviceId][1] - DEVICE_USAGE_RESOURCES_SAMPLED_incrementing[deviceId][1] <= 0:
                             devices_samples[deviceId][DEVICE_CRITICAL_MEM_counter_sum] += 1
-
+                        
                         # adding sampled resources
                         usedCPU = DEVICE_USAGE_RESOURCES_SAMPLED_incrementing[deviceId][0]
                         usedMEM = DEVICE_USAGE_RESOURCES_SAMPLED_incrementing[deviceId][1]
-                        device_cpu_used = usedCPU + dev["totalCPU"] - sampled_free_cpu
-                        device_mem_used = usedMEM + dev["totalMEM"] - sampled_free_mem
+                        device_cpu_used = usedCPU + dev["totalCPU"] - constants.current_infrastructure[deviceId][0]
+                        device_mem_used = usedMEM + dev["totalMEM"] - constants.current_infrastructure[deviceId][1]
 
                         devices_samples[deviceId][DEVICE_CPU_USED_sum] += device_cpu_used if device_cpu_used <= dev["totalCPU"] else dev["totalCPU"] 
                         devices_samples[deviceId][DEVICE_MEM_USED_sum] += device_mem_used if device_mem_used <= dev["totalMEM"] else dev["totalMEM"]
                         
-                        basal_cpu_usage = dev["totalCPU"] - sampled_free_cpu
-                        basal_mem_usage = dev["totalMEM"] - sampled_free_mem
+                        basal_cpu_usage = dev["totalCPU"] - constants.current_infrastructure[deviceId][0]
+                        basal_mem_usage = dev["totalMEM"] - constants.current_infrastructure[deviceId][1]
                         consumed_energy = (getEnergyConsumed(deviceId, device_cpu_used, device_mem_used) - 
                                             getEnergyConsumed(deviceId, basal_cpu_usage, basal_mem_usage))
                         total_consumed_energy += consumed_energy

@@ -79,7 +79,7 @@ def deleteDevice(devid):
         uninstallJob(app["appid"], devid)
     db.devices.find_one_and_delete({"deviceId": Int64(devid)})
 
-def getDevices(limit=100, offset=0, searchByTag=None, searchByAnyMatch=None):
+def getDevices(limit=1000, offset=0, searchByTag=None, searchByAnyMatch=None):
     if searchByTag != None:
         tag = db.tags.find_one({"name": searchByTag})
         try:
