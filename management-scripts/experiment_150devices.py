@@ -40,7 +40,7 @@ def reset_simulation():
     output = r.json()
     try:
         file  = open("simulation_results_150devices_300apps.txt", "a")
-        file.write("# Successfully Installed previous step: "+str(installed_apps)+"\n"+"# Devices: "+str(DEVICE_NUMBER)+" - # Deployments: "+str(DEPLOYMENT_NUMBER)+"\n")
+        file.write("# corrected dev and myapps number - Devices: "+str(DEVICE_NUMBER)+" - # Deployments: "+str(DEPLOYMENT_NUMBER)+"\n")
         file.write("\""+str(DEVICE_NUMBER)+"\"{")
         out = simplejson.dumps(output, indent=4, sort_keys=True)
         file.write(out)
@@ -99,17 +99,17 @@ def install_apps_ft():
         fd.fast_start_app(myappId)
 
 reset_simulation()
-#for DEVICE_NUMBER in range(20, 151, 10):
-DEVICE_NUMBER = 300
-DEPLOYMENT_NUMBER = 300
-reset_simulation()
-add_devices()
-code, localapp = fd.add_app("./NettestApp2V1_lxc.tar.gz", publish_on_upload=True)
-installed_apps = install_apps()
-while simulation_counter() < 3000:
-    try:
-        time.sleep(5)
-    except KeyboardInterrupt:
-        break
+for DEVICE_NUMBER in range(20, 151, 10):
+    DEPLOYMENT_NUMBER = 300
+    print("STARTING ", DEVICE_NUMBER, DEPLOYMENT_NUMBER)
+    add_devices()
+    code, localapp = fd.add_app("./NettestApp2V1_lxc.tar.gz", publish_on_upload=True)
+    installed_apps = install_apps()
+    while simulation_counter() < 3000:
+        try:
+            time.sleep(5)
+        except KeyboardInterrupt:
+            break
+    reset_simulation()
 
 reset_simulation()
