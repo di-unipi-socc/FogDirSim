@@ -64,7 +64,7 @@ def install_apps():
             if deviceIp == None:
                 return i
             r = random.random()
-            code, res = fd.fast_install_app(myappId, [deviceId], profile="angry")
+            code, res = fd.fast_install_app(myappId, [deviceId], profile="normal")
             trial = 0
             while code == 400:
                 trial += 1
