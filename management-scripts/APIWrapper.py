@@ -182,11 +182,11 @@ class FogDirector():
             return (200, True)
 
 
-    def fast_install_app(self, myappId, devicesId, resources={"resources":{"profile":"c1.tiny","cpu":100,"memory":32,"network":[{"interface-name":"eth0","network-name":"iox-bridge0"}]}}):
+    def fast_install_app(self, myappId, devicesId, profile="normal", resources={"resources":{"profile":"c1.tiny","cpu":100,"memory":32,"network":[{"interface-name":"eth0","network-name":"iox-bridge0"}]}}):
         if self.ssl:
             url = "https://%s/api/v1/appmgr/myapps/%s/action" % (self.ip, myappId)
         else:
-            url = "http://%s/api/v1/appmgr/myapps/%s/action" % (self.ip, myappId)
+            url = "http://%s/api/v1/appmgr/myapps/%s/action?profile=%s" % (self.ip, myappId, profile)
         headers = {'x-token-id': self.token,'content-type': 'application/json'}
         askedResources = resources
         data = {"deploy":{"config":{},"metricsPollingFrequency":"3600000","startApp":True,"devices":[]}}

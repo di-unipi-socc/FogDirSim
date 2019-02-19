@@ -89,6 +89,7 @@ def post(args, request, uploadDir, filename):
             os.chdir(tmpDir)
             tar.extractall()
             tar.close()
+
         elif (filename.endswith("tar")):
             tar = tarfile.open(filename, "r:")
             os.chdir(tmpDir)
@@ -97,9 +98,16 @@ def post(args, request, uploadDir, filename):
         
         # Opening YAML Description of the application
         try:
+            cwd = os.getcwd()
+            def files(path):  
+                for file in os.listdir(path):
+                    if os.path.isfile(os.path.join(path, file)):
+                        yield file
+            print(cwd)
+            for file in files(cwd):  
+                print (file)
             with open("package.yaml", 'r') as stream:
                 app_data = yaml.load(stream)
-                
         except IOError:
             return file_error_string, 400, {"Content-Type": "application/xml"} 
         os.chdir("../")

@@ -309,7 +309,7 @@ class SimThread(Thread):
                                     "type": constants.APP_HEALTH
                                 })
                                 MYAPP_ALERT_counter[myappId][APP_HEALTH_index] += 1
-                            if application_cpu_sampling > max_cpu*0.95 and job["status"] == "start":
+                            if application_cpu_sampling > allocated_cpu*0.95 and job["status"] == "start":
                                 db.addAlert({
                                     "deviceId": device["deviceId"],
                                     "ipAddress": device_details["ipAddress"],
@@ -324,7 +324,7 @@ class SimThread(Thread):
                                     "type": constants.MYAPP_CPU_CONSUMING    
                                 })
                                 MYAPP_ALERT_counter[myappId][MYAPP_CPU_CONSUMING_index] += 1
-                            if application_mem_sampling > max_mem*0.95 and job["status"] == "start":
+                            if application_mem_sampling > allocated_mem*0.95 and job["status"] == "start":
                                 db.addAlert({
                                     "deviceId": device["deviceId"],
                                     "ipAddress": device_details["ipAddress"],

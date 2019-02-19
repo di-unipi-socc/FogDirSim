@@ -39,7 +39,7 @@ def reset_simulation():
     r = requests.get(url)
     output = r.json()
     try:
-        file  = open("simulation_results_150devices_300apps.txt", "a")
+        file  = open("simulation_results_failure.txt", "a")
         file.write("# corrected dev and myapps number - Devices: "+str(DEVICE_NUMBER)+" - # Deployments: "+str(DEPLOYMENT_NUMBER)+"\n")
         file.write("\""+str(DEVICE_NUMBER)+"\"{")
         out = simplejson.dumps(output, indent=4, sort_keys=True)
@@ -63,7 +63,8 @@ def install_apps():
             deviceIp, deviceId = bestFit(100, 32)
             if deviceIp == None:
                 return i
-            code, res = fd.fast_install_app(myappId, [deviceId])
+            r = random.random()
+            code, res = fd.fast_install_app(myappId, [deviceId], profile="normal")
             trial = 0
             while code == 400:
                 trial += 1
@@ -85,7 +86,11 @@ def install_apps_ft():
         _, myappId = fd.create_myapp(localapp["localAppId"], dep)
         
         deviceId = dev_list[0][0]
-        code, res = fd.fast_install_app(myappId, [deviceId])
+        r = random.random()
+        if r < 0.5:
+            code, res = fd.fast_install_app(myappId, [deviceId], profile="angry")
+        else:
+            code, res = fd.fast_install_app(myappId, [deviceId], profile="normal")
         if code != 400:
             dev_list[0][1] -= 100
             dev_list[0][2] -= 32
@@ -103,13 +108,13 @@ for DEVICE_NUMBER in range(40, 51, 5):
     DEPLOYMENT_NUMBER = 150
     print("STARTING ", DEVICE_NUMBER, DEPLOYMENT_NUMBER)
     add_devices()
-    code, localapp = fd.add_app("./NettestApp2V1_lxc.tar.gz", publish_on_upload=True)
+    code, localapp = fd.add_app("./TestApp_tiny.tar.gz", publish_on_upload=True)
     installed_apps = install_apps()
     while simulation_counter() < 3000:
         _, alerts = fd.get_alerts()
         migrated = []
         for alert in alerts["data"]:
-            if "APP_HEALTH" == alert["type"]: 
+            if "APP_HEALTH" == alert["type"] or "DEVICE_REACHABILITY" == alert["type"]: 
                 dep = alert["appName"]
                 if dep in migrated:
                     continue
@@ -127,8 +132,6 @@ for DEVICE_NUMBER in range(40, 51, 5):
                     deviceIp, deviceId = bestFit(100, 32)
                     code, _ = fd.fast_install_app(myappId, [deviceId]) 
                 fd.fast_start_app(myappId)
-            if simulation_counter() > 3000:
-                break
     reset_simulation()
 
 reset_simulation()
