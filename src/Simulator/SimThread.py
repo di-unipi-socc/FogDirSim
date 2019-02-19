@@ -42,13 +42,14 @@ MYAPP_ON_DEVICE_counter = {}
 
 MYAPP_DEVICE_START_counter = {}
 
-def fourIntArray():
-    return array.array("I", [0, 0, 0, 0])
+def fiveIntArray():
+    return array.array("I", [0, 0, 0, 0, 0])
 APP_HEALTH_index = 0
 DEVICE_REACHABILITY_index = 1
 MYAPP_CPU_CONSUMING_index = 2
 MYAPP_MEM_CONSUMING_index = 3
-MYAPP_ALERT_counter = defaultdict(fourIntArray)
+MYAPP_NO_ALERTS_index = 4
+MYAPP_ALERT_counter = defaultdict(fiveIntArray)
 
 DEVICE_USAGE_RESOURCES_SAMPLED_incrementing = defaultdict(twoarray)
 myapp_ondevice_already_sampled = defaultdict(lambda: {})
@@ -61,7 +62,7 @@ def reset_simulation_counters():
     global MYAPP_DEVICE_START_counter
     MYAPP_DEVICE_START_counter = {}
     global MYAPP_ALERT_counter
-    MYAPP_ALERT_counter = defaultdict(fourIntArray)
+    MYAPP_ALERT_counter = defaultdict(fiveIntArray)
     global iter_count
     iter_count = 0
     print("RESETTED SIMULATION")
@@ -200,7 +201,7 @@ class SimThread(Thread):
                 DEVICE_USAGE_RESOURCES_SAMPLED_incrementing = defaultdict(twoarray)
                 for job in db.getJobs():
                     myappId = job["myappId"]
-                    
+                   
                     if not myappId in MYAPP_ON_DEVICE_counter: # initialize all counters
                         MYAPP_ON_DEVICE_counter[myappId] = {}
                         MYAPP_DEVICE_START_counter[myappId] = {}
@@ -211,6 +212,7 @@ class SimThread(Thread):
                     max_cpu = localapp_resources[0]
                     max_mem = localapp_resources[1]
 
+                    number_of_triggered_alerts = 0
                     for device in job["payload"]["devices"]:
                         if not device["deviceId"] in MYAPP_ON_DEVICE_counter[myappId]: # Inizializer
                             MYAPP_ON_DEVICE_counter[myappId][device["deviceId"]] = 0
@@ -221,6 +223,7 @@ class SimThread(Thread):
                         allocated_mem = device["resourceAsk"]["resources"]["memory"]
                         if job["status"] == "start": 
                             application_cpu_sampling = get_truncated_normal(mean=profile_values[0]*max_cpu, sd=profile_values[1]*max_cpu, low=0, upp=allocated_cpu+1)
+
                             application_mem_sampling = get_truncated_normal(mean=profile_values[0]*max_mem, sd=profile_values[1]*max_mem, low=0, upp=allocated_mem+1)
                         else: # Stopped application does not consume resources
                             application_cpu_sampling = 0
@@ -262,6 +265,7 @@ class SimThread(Thread):
                                 "action": "",
                                 "status": "ACTIVE"
                             })
+                            number_of_triggered_alerts += 1
                             MYAPP_ALERT_counter[myappId][DEVICE_REACHABILITY_index] += 1
                         else:
                             if job["status"] == "start":
@@ -293,6 +297,7 @@ class SimThread(Thread):
                                     "status": "ACTIVE"
                                 })
                                 MYAPP_ALERT_counter[myappId][APP_HEALTH_index] += 1
+                                number_of_triggered_alerts += 1
                             if sampled_free_mem <= 0 and job["status"] == "start":
                                 db.addAlert({
                                     "deviceId": device["deviceId"],
@@ -309,6 +314,7 @@ class SimThread(Thread):
                                     "type": constants.APP_HEALTH
                                 })
                                 MYAPP_ALERT_counter[myappId][APP_HEALTH_index] += 1
+                                number_of_triggered_alerts += 1
                             if application_cpu_sampling > allocated_cpu*0.95 and job["status"] == "start":
                                 db.addAlert({
                                     "deviceId": device["deviceId"],
@@ -324,6 +330,7 @@ class SimThread(Thread):
                                     "type": constants.MYAPP_CPU_CONSUMING    
                                 })
                                 MYAPP_ALERT_counter[myappId][MYAPP_CPU_CONSUMING_index] += 1
+                                number_of_triggered_alerts += 1
                             if application_mem_sampling > allocated_mem*0.95 and job["status"] == "start":
                                 db.addAlert({
                                     "deviceId": device["deviceId"],
@@ -339,6 +346,9 @@ class SimThread(Thread):
                                     "type": constants.MYAPP_MEM_CONSUMING
                                 })
                                 MYAPP_ALERT_counter[myappId][MYAPP_MEM_CONSUMING_index] += 1
+                                number_of_triggered_alerts += 1
+                        if number_of_triggered_alerts == 0:
+                            MYAPP_ALERT_counter[myappId][MYAPP_NO_ALERTS_index] += 1
 
                 system_uptime = 0
                 active_myapps = 0
@@ -422,10 +432,11 @@ def getMyAppsSampling():
                 tmp["ON_DEVICE_PERCENTAGE"] = {}
 
             try:
-                tmp["ALERT_PERCENTAGE"] = {constants.MYAPP_CPU_CONSUMING: MYAPP_ALERT_counter[myappId][MYAPP_CPU_CONSUMING_index] / myapps_samples[myappId][MYAPP_ALERT_incrementing],
-                                        constants.MYAPP_MEM_CONSUMING: MYAPP_ALERT_counter[myappId][MYAPP_MEM_CONSUMING_index] / myapps_samples[myappId][MYAPP_ALERT_incrementing],
-                                        constants.APP_HEALTH: MYAPP_ALERT_counter[myappId][APP_HEALTH_index] / (myapps_samples[myappId][MYAPP_ALERT_incrementing]*2),
-                                        constants.DEVICE_REACHABILITY: MYAPP_ALERT_counter[myappId][DEVICE_REACHABILITY_index] / myapps_samples[myappId][MYAPP_ALERT_incrementing]}
+                tmp["ALERT_PERCENTAGE"] = {"NO_ALERTS": MYAPP_ALERT_counter[myappId][MYAPP_NO_ALERTS_index]/myapps_samples[myappId][MYAPP_ALERT_incrementing], 
+                                            constants.MYAPP_CPU_CONSUMING: MYAPP_ALERT_counter[myappId][MYAPP_CPU_CONSUMING_index] / myapps_samples[myappId][MYAPP_ALERT_incrementing],
+                                            constants.MYAPP_MEM_CONSUMING: MYAPP_ALERT_counter[myappId][MYAPP_MEM_CONSUMING_index] / myapps_samples[myappId][MYAPP_ALERT_incrementing],
+                                            constants.APP_HEALTH: MYAPP_ALERT_counter[myappId][APP_HEALTH_index] / (myapps_samples[myappId][MYAPP_ALERT_incrementing]*2),
+                                            constants.DEVICE_REACHABILITY: MYAPP_ALERT_counter[myappId][DEVICE_REACHABILITY_index] / myapps_samples[myappId][MYAPP_ALERT_incrementing]}
             except ZeroDivisionError:
                 tmp["ALERT_PERCENTAGE"] = {}
  

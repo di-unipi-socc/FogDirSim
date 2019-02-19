@@ -2,14 +2,22 @@ import React from 'react';
 import { Table } from 'reactstrap';
 import { URL } from "../costants"
 import MyAppDevice from "./MyAppDevice"
-import {PieChart} from 'react-easy-chart';
+import {BarChart} from 'react-easy-chart';
 import Quadretti from "./Quadretti"
 
 let alert_to_color = {
   "APP_HEALTH": "#CD533B",
-  "DEVICE_REACHABILITY": "#33753e",
+  "DEVICE_REACHABILITY": "grey",
   "MYAPP_CPU_CONSUMING": "#E3B505",
-  "MYAPP_MEM_CONSUMING": "#4392F1"
+  "MYAPP_MEM_CONSUMING": "#4392F1",
+  "NO_ALERTS": "#33753e"
+}
+let compress_alert = {
+  "APP_HEALTH": "HEALTH",
+  "DEVICE_REACHABILITY": "DEVICE",
+  "MYAPP_CPU_CONSUMING": "CPU",
+  "MYAPP_MEM_CONSUMING": "MEM",
+  "NO_ALERTS": "NO"
 }
 
 export default class MyAppsTable extends React.Component {
@@ -47,12 +55,9 @@ export default class MyAppsTable extends React.Component {
           {
             this.state.myapps.map((myapp, i) => {
               let pie_data = []
-              let total = 1
               for (let k in myapp.ALERT_PERCENTAGE){
-                total -= myapp.ALERT_PERCENTAGE[k]
-                pie_data.push({key: k, value: myapp.ALERT_PERCENTAGE[k]*100, color: alert_to_color[k]})
+                pie_data.push({x: k, y: myapp.ALERT_PERCENTAGE[k]*100, color: alert_to_color[k]})
               }
-              pie_data.push({key: "no_alert", value: total*100, color: "green"})
               return <tr key={myapp.myappId}>
               <td>{i}</td>
               <td>{myapp.myappId}</td>
@@ -66,18 +71,19 @@ export default class MyAppsTable extends React.Component {
                 <table className="quadretto">
                 <tbody><tr>
                   <td>
-                    {pie_data.reduce((p, v) => p+v.value, 0) == 0 ? "No alerts" :
-                    <PieChart
-                      key={myapp.myappId}
-                      id={myapp.myappId}
-                      size={100}
-                      innerHoleSize={0}
-                      data={pie_data}
-                    />
-                  }
+                      <BarChart
+                        axes
+                        yDomainRange={[0, 100]}
+                        axisLabels={{x: 'Alert Type', y: '%'}}
+                        height={150}
+                        width={400}
+                        yTickNumber={3}
+                        data={pie_data.map(e => ({x: compress_alert[e.x], y: e.y, color: e.color})) }
+                      />
                   </td>
+                  </tr><tr>
                   <td>
-                    <Quadretti data={pie_data.map(val => { return {color: val.color, val: val.value, name: val.key}} )} />
+                  <Quadretti data={pie_data.map(val => { return {color: val.color, val: val.y, name: val.x}} )} />
                   </td>
                   </tr>
                 </tbody>
