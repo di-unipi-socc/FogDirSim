@@ -1,6 +1,6 @@
 from APIWrapper import FogDirector
 import time, random, math
-from infrastructure import ciscorouters_310pz_5b5m300s as infrastructure
+from infrastructure import ciscorouters_310pz_5b5m300s_withFails as infrastructure
 import requests
 import simplejson, signal, os
 
@@ -106,10 +106,30 @@ for DEVICE_NUMBER in range(20, 151, 10):
     code, localapp = fd.add_app("./NettestApp2V1_lxc.tar.gz", publish_on_upload=True)
     installed_apps = install_apps()
     while simulation_counter() < 3000:
-        try:
-            time.sleep(5)
-        except KeyboardInterrupt:
-            break
+        _, alerts = fd.get_alerts()
+        migrated = []
+        for alert in alerts["data"]:
+            if "APP_HEALTH" == alert["type"]: 
+                dep = alert["appName"]
+                if dep in migrated:
+                    continue
+                else:
+                    migrated.append(dep)
+                _, app_det = fd.get_myapp_details(dep)
+                myappId = app_det["myappId"]
+                fd.fast_stop_app(myappId)
+                fd.fast_uninstall_app(myappId, alert["deviceId"])
+                deviceIp, deviceId = bestFit(100, 32)
+                code, _ = fd.fast_install_app(myappId, [deviceId])
+                while code == 400:
+                    fallimento += 1
+                    if simulation_counter() > 10000:
+                        break
+                    deviceIp, deviceId = bestFit(100, 32)
+                    code, _ = fd.fast_install_app(myappId, [deviceId]) 
+                fd.fast_start_app(myappId)
+            if simulation_counter() > 10000:
+                break
     reset_simulation()
 
 reset_simulation()
