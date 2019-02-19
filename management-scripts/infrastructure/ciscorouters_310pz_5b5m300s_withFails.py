@@ -22,8 +22,8 @@ def create():
                     "totalVCPU": 2,
                     "maxVCPUPerApp": 2,
                     "totalMEM": 1024,
-                    "chaos_down_prob": 0.01,
-                    "chaos_revive_prob": 0.6,
+                    "chaos_down_prob": 0.005,
+                    "chaos_revive_prob": 0.4,
                     "distributions": { 
                         "CPU": [
                             {
@@ -56,8 +56,8 @@ def create():
                     "totalVCPU": 2,
                     "maxVCPUPerApp": 2,
                     "totalMEM": 1024,
-                    "chaos_down_prob": 0.01,
-                    "chaos_revive_prob": 0.6,
+                    "chaos_down_prob": 0.005,
+                    "chaos_revive_prob": 0.4,
                     "distributions": { 
                         "CPU": [
                             {
@@ -89,8 +89,8 @@ def create():
                     "totalVCPU": 2,
                     "maxVCPUPerApp": 2,
                     "totalMEM": 512,
-                    "chaos_down_prob": 0.01,
-                    "chaos_revive_prob": 0.6,
+                    "chaos_down_prob": 0.005,
+                    "chaos_revive_prob": 0.4,
                     "distributions": { 
                         "CPU": [
                             {

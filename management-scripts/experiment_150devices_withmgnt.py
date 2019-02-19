@@ -122,13 +122,12 @@ for DEVICE_NUMBER in range(40, 51, 5):
                 deviceIp, deviceId = bestFit(100, 32)
                 code, _ = fd.fast_install_app(myappId, [deviceId])
                 while code == 400:
-                    fallimento += 1
-                    if simulation_counter() > 10000:
+                    if simulation_counter() > 3000:
                         break
                     deviceIp, deviceId = bestFit(100, 32)
                     code, _ = fd.fast_install_app(myappId, [deviceId]) 
                 fd.fast_start_app(myappId)
-            if simulation_counter() > 10000:
+            if simulation_counter() > 3000:
                 break
     reset_simulation()
 
