@@ -99,8 +99,8 @@ def install_apps_ft():
         fd.fast_start_app(myappId)
 
 reset_simulation()
-for DEVICE_NUMBER in range(20, 151, 10):
-    DEPLOYMENT_NUMBER = 300
+for DEVICE_NUMBER in range(40, 51, 5):
+    DEPLOYMENT_NUMBER = 150
     print("STARTING ", DEVICE_NUMBER, DEPLOYMENT_NUMBER)
     add_devices()
     code, localapp = fd.add_app("./NettestApp2V1_lxc.tar.gz", publish_on_upload=True)
