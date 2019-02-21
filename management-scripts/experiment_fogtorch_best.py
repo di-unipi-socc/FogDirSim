@@ -141,24 +141,23 @@ for simulation_count in range(0, 3):
         _, alerts = fd.get_alerts()
         migrated = []
         for alert in alerts["data"]:
-            if "APP_HEALTH" == alert["type"]: 
-                dev_list = dev_list_sort(dev_list)
-                dep = alert["appName"]
-                if dep in migrated:
-                    continue
-                else:
-                    migrated.append(dep)
-                _, app_det = fd.get_myapp_details(dep)
-                myappId = app_det["myappId"]
-                fd.fast_stop_app(myappId)
-                fd.fast_uninstall_app(myappId, alert["deviceId"])
+            dev_list = dev_list_sort(dev_list)
+            dep = alert["appName"]
+            if dep in migrated:
+                continue
+            else:
+                migrated.append(dep)
+            _, app_det = fd.get_myapp_details(dep)
+            myappId = app_det["myappId"]
+            fd.fast_stop_app(myappId)
+            fd.fast_uninstall_app(myappId, alert["deviceId"])
+            _, deviceId = bestFit(100, 32)
+            code, _ = fd.fast_install_app(myappId, [deviceId])
+            while code == 400:
+                fallimento += 1
                 _, deviceId = bestFit(100, 32)
-                code, _ = fd.fast_install_app(myappId, [deviceId])
-                while code == 400:
-                    fallimento += 1
-                    _, deviceId = bestFit(100, 32)
-                    code, _ = fd.fast_install_app(myappId, [deviceId]) 
-                fd.fast_start_app(myappId)
+                code, _ = fd.fast_install_app(myappId, [deviceId]) 
+            fd.fast_start_app(myappId)
     
     fallimenti.append(fallimento)
     iteration_end = simulation_counter()

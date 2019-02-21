@@ -3,6 +3,8 @@ import time, random, math
 from infrastructure import ciscorouters_310pz_5b5m300s_withFails as infrastructure
 import requests
 import simplejson, signal, os
+from collections import defaultdict
+import array
 
 infrastructure.create()
 
@@ -33,6 +35,36 @@ def bestFit(cpu, mem):
                                                         dev["capabilities"]["nodes"][0]["memory"]["available"]) ))
     best_fit = devices[0]
     return best_fit["ipAddress"], best_fit["deviceId"]
+
+def dev_list_sort(dev_list):
+    dev_list.sort(reverse=True, key=(lambda val: (val[1], val[2], val[0])))
+    return dev_list
+def device(deviceList, deviceId):
+    for x in deviceList:
+        if x[0] == deviceId:
+            return x
+    return None
+def incrementresources(deviceList, deviceId, new_cpu, new_mem):
+    for x in deviceList:
+        if x[0] == deviceId:
+            x[1] += new_cpu
+            x[2] += new_mem
+            return deviceList
+    return deviceList
+def fog_torch():
+    values = defaultdict(lambda: array.array("f", [0, 0]))
+    MAX_ITER = 200
+    for _ in range(0, MAX_ITER):
+        _, devices = fd.get_devices()
+        for dev in devices["data"]:
+            values[dev["deviceId"]][0] = dev["capabilities"]["nodes"][0]["cpu"]["available"]
+            values[dev["deviceId"]][1] = dev["capabilities"]["nodes"][0]["memory"]["available"]
+    dev_list = []
+    for k in values:
+        dev_list.append([k, values[k][0]/MAX_ITER, values[k][1]/MAX_ITER])
+    dev_list = dev_list_sort(dev_list)
+    return dev_list
+
 
 def reset_simulation():
     url = "http://%s/simulationreset" % ("127.0.0.1:"+port)
@@ -78,6 +110,31 @@ def install_apps():
             return i
     return DEPLOYMENT_NUMBER
 
+def install_apps_FT():
+    dev_list = fog_torch()
+    dev_list = dev_list_sort(dev_list)
+    for myapp_index in range(0, DEPLOYMENT_NUMBER):
+        if DEPLOYMENT_NUMBER % 200 == 0:
+            dev_list = fog_torch()
+            dev_list = dev_list_sort(dev_list)
+        else:
+            dev_list = dev_list_sort(dev_list)
+            
+        dep = "dep"+str(myapp_index)
+        _, myappId = fd.create_myapp(localapp["localAppId"], dep)
+        
+        deviceId = dev_list[0][0]
+        code, res = fd.fast_install_app(myappId, [deviceId])
+        if code != 400:
+            dev_list[0][1] -= 100
+            dev_list[0][2] -= 32
+        while code == 400:
+            code, res = fd.fast_install_app(myappId, [deviceId])
+            if code != 400:
+                dev_list[0][1] -= 100
+                dev_list[0][2] -= 32
+        fd.fast_start_app(myappId)
+
 def install_apps_ft():
     for myapp_index in range(0, DEPLOYMENT_NUMBER):
         dev_list = dev_list_sort(dev_list)
@@ -104,12 +161,12 @@ def install_apps_ft():
         fd.fast_start_app(myappId)
 
 reset_simulation()
-for DEVICE_NUMBER in range(40, 51, 5):
+for DEVICE_NUMBER in [35, 50, 70]:
     DEPLOYMENT_NUMBER = 150
     print("STARTING ", DEVICE_NUMBER, DEPLOYMENT_NUMBER)
     add_devices()
     code, localapp = fd.add_app("./TestApp_tiny.tar.gz", publish_on_upload=True)
-    installed_apps = install_apps()
+    installed_apps = install_apps_FT()
     while simulation_counter() < 3000:
         _, alerts = fd.get_alerts()
         migrated = []
