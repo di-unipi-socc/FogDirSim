@@ -223,7 +223,6 @@ class SimThread(Thread):
                         allocated_mem = device["resourceAsk"]["resources"]["memory"]
                         if job["status"] == "start": 
                             application_cpu_sampling = get_truncated_normal(mean=profile_values[0]*max_cpu, sd=profile_values[1]*max_cpu, low=0, upp=allocated_cpu+1)
-
                             application_mem_sampling = get_truncated_normal(mean=profile_values[0]*max_mem, sd=profile_values[1]*max_mem, low=0, upp=allocated_mem+1)
                         else: # Stopped application does not consume resources
                             application_cpu_sampling = 0

@@ -162,11 +162,11 @@ def install_apps_ft():
 
 reset_simulation()
 for DEVICE_NUMBER in [35, 50, 70]:
-    DEPLOYMENT_NUMBER = 150
+    DEPLOYMENT_NUMBER = 300
     print("STARTING ", DEVICE_NUMBER, DEPLOYMENT_NUMBER)
     add_devices()
     code, localapp = fd.add_app("./TestApp_tiny.tar.gz", publish_on_upload=True)
-    installed_apps = install_apps_FT()
+    install_apps_FT()
     while simulation_counter() < 3000:
         _, alerts = fd.get_alerts()
         migrated = []

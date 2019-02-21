@@ -102,7 +102,6 @@ for simulation_count in range(0, 3):
     if os.environ.get('SKIP_BEST', None) != None:
         break
     start = time.time()
-    reset_simulation(simulation_count)
     fallimento = 0
     for i in range(0, DEVICES_NUMBER):
         deviceId = i+1      
@@ -158,6 +157,7 @@ for simulation_count in range(0, 3):
                 _, deviceId = bestFit(100, 32)
                 code, _ = fd.fast_install_app(myappId, [deviceId]) 
             fd.fast_start_app(myappId)
+        reset_simulation(simulation_count)
     
     fallimenti.append(fallimento)
     iteration_end = simulation_counter()
