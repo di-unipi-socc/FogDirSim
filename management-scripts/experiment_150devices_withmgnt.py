@@ -161,34 +161,34 @@ def install_apps_ft():
         fd.fast_start_app(myappId)
 
 reset_simulation()
-for DEVICE_NUMBER in [35, 50, 70]:
-    DEPLOYMENT_NUMBER = 300
-    print("STARTING ", DEVICE_NUMBER, DEPLOYMENT_NUMBER)
-    add_devices()
-    code, localapp = fd.add_app("./TestApp_tiny.tar.gz", publish_on_upload=True)
-    install_apps_FT()
-    while simulation_counter() < 3000:
-        _, alerts = fd.get_alerts()
-        migrated = []
-        for alert in alerts["data"]:
-            if "APP_HEALTH" == alert["type"] or "DEVICE_REACHABILITY" == alert["type"]: 
-                dep = alert["appName"]
-                if dep in migrated:
-                    continue
-                else:
-                    migrated.append(dep)
-                _, app_det = fd.get_myapp_details(dep)
-                myappId = app_det["myappId"]
-                fd.fast_stop_app(myappId)
-                fd.fast_uninstall_app(myappId, alert["deviceId"])
-                deviceIp, deviceId = bestFit(100, 32)
-                code, _ = fd.fast_install_app(myappId, [deviceId])
-                while code == 400:
-                    if simulation_counter() > 3000:
-                        break
+for DEVICE_NUMBER in [80, 90, 100, 110]:
+    for DEPLOYMENT_NUMBER in [150,300]:
+        print("STARTING ", DEVICE_NUMBER, DEPLOYMENT_NUMBER)
+        add_devices()
+        code, localapp = fd.add_app("./TestApp_tiny.tar.gz", publish_on_upload=True)
+        install_apps_FT()
+        while simulation_counter() < 3000:
+            _, alerts = fd.get_alerts()
+            migrated = []
+            for alert in alerts["data"]:
+                if "APP_HEALTH" == alert["type"] or "DEVICE_REACHABILITY" == alert["type"]: 
+                    dep = alert["appName"]
+                    if dep in migrated:
+                        continue
+                    else:
+                        migrated.append(dep)
+                    _, app_det = fd.get_myapp_details(dep)
+                    myappId = app_det["myappId"]
+                    fd.fast_stop_app(myappId)
+                    fd.fast_uninstall_app(myappId, alert["deviceId"])
                     deviceIp, deviceId = bestFit(100, 32)
-                    code, _ = fd.fast_install_app(myappId, [deviceId]) 
-                fd.fast_start_app(myappId)
-    reset_simulation()
+                    code, _ = fd.fast_install_app(myappId, [deviceId])
+                    while code == 400:
+                        if simulation_counter() > 3000:
+                            break
+                        deviceIp, deviceId = bestFit(100, 32)
+                        code, _ = fd.fast_install_app(myappId, [deviceId]) 
+                    fd.fast_start_app(myappId)
+        reset_simulation()
 
 reset_simulation()
