@@ -1,0 +1,24 @@
+version: '3.1'
+
+services:
+  db:
+    image: mongo:3.4.19
+    restart: always
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: alessandro 
+      MONGO_INITDB_ROOT_PASSWORD: FogDirector 
+      
+  simulator:
+    image: alessandro308/fogdirsim
+    restart: always
+    ports:
+      - 80:5000
+    environment:
+      DB_USER: alessandro
+      DB_PSW: FogDirector
+      DB_HOST: db
+      DB_PORT: 27017
+
+
