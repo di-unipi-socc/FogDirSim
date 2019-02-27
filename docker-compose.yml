@@ -14,7 +14,9 @@ services:
     image: alessandro308/fogdirsim
     restart: always
     ports:
-      - 80:5000
+      - 5000:5000
+    volumes:
+      - ${PWD}/src/config.py:/usr/src/app/src/config.py
     environment:
       DB_USER: alessandro
       DB_PSW: FogDirector

@@ -10,15 +10,27 @@ energy_consumption = {}
 # energy_consumption[deviceId] = (lambda cpu_usage, mem_usage: return cpu_usage, mem_usage)
 #energy_consumption["1"] = (lambda cpu_usage, mem_usage: cpu_usage+mem_usage)
 
-def device2_energy(cpu_usage, mem_usage):
+def large_devs(cpu_usage, mem_usage):
     if cpu_usage < 425:
-        return 5
+        return 7
+    if cpu_usage < 850:
+        return 12
+    if cpu_usage < 1275:
+        return 20
+    return 30
+def medium_devs(cpu_usage, mem_usage):
+    if cpu_usage < 425:
+        return 6
     if cpu_usage < 850:
         return 10
     if cpu_usage < 1275:
-        return 18
+        return 20
     return 25
-energy_consumption["2"] = device2_energy
+
+for i in range(1, 6):
+    energy_consumption[str(i)] = large_devs
+for i in range(6, 11):
+    energy_consumption[str(i)] = medium_devs
 #energy_consumption["3"] = (lambda *args: 100)
 
 # Costo medie energia: 0,25€/kW
