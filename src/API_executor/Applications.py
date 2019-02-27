@@ -98,14 +98,6 @@ def post(args, request, uploadDir, filename):
         
         # Opening YAML Description of the application
         try:
-            cwd = os.getcwd()
-            def files(path):  
-                for file in os.listdir(path):
-                    if os.path.isfile(os.path.join(path, file)):
-                        yield file
-            print(cwd)
-            for file in files(cwd):  
-                print (file)
             with open("package.yaml", 'r') as stream:
                 app_data = yaml.load(stream)
         except IOError:
