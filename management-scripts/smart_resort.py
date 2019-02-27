@@ -222,7 +222,7 @@ for COUNTER_SIM in range(0, 5):
                         pass # guarda sopra e buona fortuna
 
                 _, devices = fd.get_devices()
-                for dev in devices:
+                for dev in devices["data"]:
                     devId = dev["deviceId"]
                     if devId in offline_devices:
                         for myappId in dev_unreachable_appId[devId]:
