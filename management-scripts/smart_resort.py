@@ -82,7 +82,10 @@ def increment_resources(deviceList, deviceId, new_cpu, new_mem):
     return deviceList
 
 DEPLOYMENT_NUMBER = 150
-os.remove("simulation_results_paper.txt")
+try:
+    os.remove("simulation_results_paper.txt")
+except FileNotFoundError:
+    pass
 reset_simulation(write_file=False)
 for COUNTER_SIM in range(0, 5):
     file  = open("simulation_results_paper.txt", "a")
