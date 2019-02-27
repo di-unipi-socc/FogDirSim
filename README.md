@@ -63,8 +63,17 @@ db.Rdevices.insert_one({
 ### Execute the simulator
 You are now ready to start the tool, move in the tool folder and start python scripts:
 ```
-cd FogDirSimulator
+cd FogDirSim
 python3 src
+```
+or, alternatevely, you can run the docker image
+```
+docker run -p 80:5000 -e DB_HOST=<yourdbcontainer> alessandro308/fogdirsim
+```
+or, building a docker-compose
+```
+cd FogDirSim
+docker-compose up
 ```
 
 Start your management script / execute your API calls by hand, as you prefer. Open your browser at `http://localhost:5000/` and see your results! Enjoy!
@@ -145,7 +154,6 @@ All the API not reported here, are not available yet.
 
 ###### Alerts
  - `GET /api/v1/appmgr/alerts` - provides the alerts about the infrastructure and applications status
-
 
 
 ## Tested functions
