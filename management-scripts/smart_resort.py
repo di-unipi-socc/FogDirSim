@@ -139,7 +139,7 @@ for COUNTER_SIM in range(0, 5):
                         dev_list[0][1] -= 100
                         dev_list[0][2] -= 32
                     while code == 400:
-                        if res["Error"] == "Device does not reachable":
+                        if "Error" in res and res["Error"] == "Device does not reachable":
                             device_notReachable += 1
                             if device_notReachable == 10:
                                 current_device += 1
