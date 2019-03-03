@@ -33,7 +33,6 @@ def simulation_counter():
     return int(r.text)
 def check_termination():
     if simulation_counter() > MAX_SIMULATION_ITER:
-        reset_simulation()
         return True
     return False
 
@@ -228,4 +227,4 @@ for COUNTER_SIM in range(0, 5):
                         for myappId in dev_unreachable_appId[devId]:
                             fd.fast_uninstall_app(myappId, devId)
                         dev_unreachable_appId[devId] = []
-                        
+    reset_simulation()
