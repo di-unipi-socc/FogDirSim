@@ -227,4 +227,4 @@ for COUNTER_SIM in range(0, 5):
                         for myappId in dev_unreachable_appId[devId]:
                             fd.fast_uninstall_app(myappId, devId)
                         dev_unreachable_appId[devId] = []
-    reset_simulation()
+            reset_simulation()
