@@ -89,8 +89,8 @@ reset_simulation(write_file=False)
 for COUNTER_SIM in range(0, 5):
     file  = open("simulation_results_paper.txt", "a")
     file.write("# STARTING NEW SIMULATION EPOCH: "+str(COUNTER_SIM)+"\n")
-    for DEVICE_NUMBER in range(20, 151, 10):
-        for APP_EXTRA in range(1, 151, 10):
+    for DEVICE_NUMBER in range(30, 151, 10):
+        for APP_EXTRA in range(0, 151, 10):
             print("DevNumber", DEVICE_NUMBER, "APP_EXTRA", APP_EXTRA)
             add_devices()
             dev_list = fog_torch()
