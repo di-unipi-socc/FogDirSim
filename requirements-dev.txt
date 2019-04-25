@@ -1,0 +1,7 @@
+docker-compose
+mypy
+pre-commit
+pytest
+pytest-benchmark
+pytest-cov
+pytest-travis-fold
