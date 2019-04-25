@@ -26,3 +26,8 @@ clean:
 	@rm -rf .tox build dist docs/build *.egg-info
 	find . -name '*.pyc' -delete
 	find . -name '__pycache__' -delete
+
+.PHONY: start-simulator-api
+start-simulator-api:
+	@which uwsgi
+	uwsgi --http :${PORT} --wsgi-file ${CURDIR}/uwsgi/simulator_api.wsgi --master --processes 4

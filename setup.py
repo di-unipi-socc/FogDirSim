@@ -51,7 +51,10 @@ setup(
     keywords=[],  # TODO
     python_requires='>=3.6',
     install_requires=[
+        'pyramid',
+        'pyramid-swagger',
         'sqlalchemy[mysql]',
+        'uWSGI',
     ],
     extras_require={
         ':python_version=="3.6"': ['typing_extensions'],
