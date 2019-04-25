@@ -31,3 +31,8 @@ clean:
 start-simulator-api:
 	@which uwsgi
 	uwsgi --http :${PORT} --wsgi-file ${CURDIR}/uwsgi/simulator_api.wsgi --master --processes 4
+
+.PHONY: start-fake-fog-director
+start-fake-fog-director:
+	@which uwsgi
+	uwsgi --http :${PORT} --wsgi-file ${CURDIR}/uwsgi/fake_fog_director.wsgi --master --processes 4

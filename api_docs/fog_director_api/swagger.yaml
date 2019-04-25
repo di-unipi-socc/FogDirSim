@@ -1,0 +1,11 @@
+swagger: '2.0'
+info:
+  title: APIs for Cisco's Fog Director
+  version: '0.0'
+basePath: /api
+paths:
+  /status:
+    get:
+      responses:
+        default:
+          description: ''
