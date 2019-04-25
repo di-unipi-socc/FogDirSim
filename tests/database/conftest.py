@@ -15,7 +15,6 @@ from fog_director_simulator.database.models import JobDeviceAllocation
 from fog_director_simulator.database.models import JobIntensivity
 from fog_director_simulator.database.models import JobMetric
 from fog_director_simulator.database.models import JobMetricType
-from fog_director_simulator.database.models import JobSampling
 from fog_director_simulator.database.models import JobStatus
 from fog_director_simulator.database.models import MyApp
 from fog_director_simulator.database.models import MyAppMetric
@@ -71,7 +70,7 @@ def application() -> Application:
 def device() -> Device:
     return Device(
         deviceId='deviceId',
-        port=1,
+        port='1',
         ipAddress='ipAddress',
         username='username',
         password='password',
@@ -167,12 +166,4 @@ def device_sampling(device: Device, iterationCount: int) -> DeviceSampling:
         averageCpuUsed=3.0,
         averageMemUsed=4.0,
         averageMyAppCount=5.0,
-    )
-
-
-@pytest.fixture
-def job_sampling(job: Job, iterationCount: int) -> JobSampling:
-    return JobSampling(
-        job=job,
-        iterationCount=iterationCount,
     )

@@ -17,9 +17,11 @@ venv: requirements-dev.txt setup.py tox.ini
 dev: venv install-hooks
 	@true
 
+.PHONY: test tests
 test tests:
 	tox -e py36
 
+.PHONY: clean
 clean:
 	@rm -rf .tox build dist docs/build *.egg-info
 	find . -name '*.pyc' -delete

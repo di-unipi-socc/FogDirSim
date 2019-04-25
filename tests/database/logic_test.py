@@ -42,7 +42,7 @@ def test_select_application(database, application):
         database.logic.create(application)
         database.current_session.flush()
         assert application == database.logic.get_application(application.localAppId, application.version)
-        assert database.logic.get_application(application.localAppId, application.version + 1) is None
+        assert database.logic.get_application(application.localAppId, 'a-random-version') is None
 
 
 def test_select_my_app(database, my_app):
