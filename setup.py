@@ -51,8 +51,13 @@ setup(
     keywords=[],  # TODO
     python_requires='>=3.6',
     install_requires=[
+        'bravado',
+        'bravado-core',
+        'bravado-asyncio[aiohttp_extras]',
+        'ephemeral-port-reserve',
         'pyramid',
         'pyramid-swagger',
+        'pyyaml',
         'sqlalchemy[mysql]',
         'uWSGI',
     ],
