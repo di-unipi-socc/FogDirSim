@@ -5,6 +5,7 @@ from typing import Optional
 from typing import Tuple
 
 from sqlalchemy import create_engine
+from sqlalchemy import func
 from sqlalchemy.engine.url import URL
 from sqlalchemy.orm import Session
 from sqlalchemy.orm import sessionmaker
@@ -16,6 +17,7 @@ from fog_director_simulator.database.models import create_all_tables
 from fog_director_simulator.database.models import Device
 from fog_director_simulator.database.models import DeviceMetric
 from fog_director_simulator.database.models import DeviceMetricType
+from fog_director_simulator.database.models import DeviceSampling
 from fog_director_simulator.database.models import Job
 from fog_director_simulator.database.models import JobMetric
 from fog_director_simulator.database.models import JobMetricType
@@ -196,3 +198,7 @@ class DatabaseLogic:
         )
 
         return query.one_or_none()
+
+    @with_session
+    def get_simulation_time(self, session: Session) -> int:
+        return session.query(func.max(DeviceSampling.iterationCount)).scalar() or 0
