@@ -1,11 +1,281 @@
 swagger: '2.0'
 info:
   title: APIs for Cisco's Fog Director
+  description: |
+    The APIs are extracted with best effort,
+    we do not have the ambition to claim that the following
+    are CISCO's Fog Director complete APIs.
   version: '0.0'
 basePath: /api
+consumes:
+- application/json
+produces:
+- application/json
+schemes:
+- http
+- https
+
+definitions:
+  alert:
+    # TODO
+    type: object
+  device:
+    allOf:
+    - $ref: '#/definitions/deviceMinimal'
+    - type: object  # TODO
+    type: object
+  deviceMinimal:
+    properties:
+      port:
+        type: string
+      ipAddress:
+        type: string
+      username:
+        type: string
+      password:
+        type: string
+    required:
+      - port
+      - ipAddress
+      - username
+      - password
+    type: object
+  localApp:
+    # TODO
+    type: object
+
 paths:
-  /status:
+  /v1/appmgr/alerts:
     get:
+      description: Retrieve all the currently available alerts
       responses:
-        default:
-          description: ''
+        '200':
+          description: HTTP/200
+          schema:
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: '#/definitions/alert'
+            required:
+            - data
+      security:
+      - XTokenId: []
+
+  /v1/appmgr/apps/{local_application_id}:{version}:
+    delete:
+      description: Remove the Application from the Local Store
+      parameters:
+      - name: local_application_id
+        in: path
+        required: true
+        type: string
+      - name: version
+        in: path
+        required: true
+        type: string
+      responses:
+        '200':
+          description: HTTP/200
+      security:
+      - XTokenId: []
+
+  /v1/appmgr/devices:
+    get:
+      description: Retrieve the devices matching the filtering rules
+      parameters:
+      - in: query
+        name: limit
+        required: false
+        type: integer
+      - in: query
+        name: offset
+        required: false
+        type: integer
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: searchByTags
+        required: false
+        type: array
+      - in: query
+        name: searchByAnyMatch
+        required: false
+        type: string
+      responses:
+        '200':
+          description: HTTP/200
+          schema:
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: '#/definitions/device'
+            required:
+            - data
+            type: object
+      security:
+      - XTokenId: []
+    post:
+      description: Add a Device on the Infrastructure
+      parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/deviceMinimal'
+      responses:
+        '200':
+          description: HTTP/200
+          schema:
+            $ref: '#/definitions/device'
+      security:
+      - XTokenId: []
+
+  /v1/appmgr/devices/{device_id}:
+    delete:
+      description: Remove the Device from the Infrastructure
+      parameters:
+      - in: path
+        name: device_id
+        type: string
+        required: true
+      responses:
+        '200':
+          description: Removed device
+          schema:
+            $ref: '#/definitions/device'
+      security:
+      - XTokenId: []
+
+  /v1/appmgr/localapps:
+    get:
+      description: Retrive the Local Application available in the Local Store
+      parameters:
+        - in: query
+          name: limit
+          required: false
+          type: integer
+        - in: query
+          name: offset
+          required: false
+          type: integer
+      responses:
+        '200':
+          description: HTTP/200
+          schema:
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: '#/definitions/localApp'
+            required:
+            - data
+            type: object
+      security:
+      - XTokenId: []
+
+  /v1/appmgr/localapps/{local_application_id}:{version}:
+    put:
+      description: Update the Application status (publish, unpublish)
+      parameters:
+      - name: local_application_id
+        in: path
+        required: true
+        type: string
+      - name: version
+        in: path
+        required: true
+        type: string
+      - name: body
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/localApp'
+      responses:
+        '200':
+          description: HTTP/200
+          schema:
+            $ref: '#/definitions/localApp'
+      security:
+      - XTokenId: []
+
+  /v1/appmgr/localapps/upload:
+    get:
+      description: Upload the application archive to the Local Store
+      parameters:
+      - in: header
+        name: X-Publish-On-Upload
+        type: boolean
+        required: false
+      responses:
+        '200':
+          description: HTTP/200
+          schema:
+            $ref: '#/definitions/localApp'
+      security:
+      - XTokenId: []
+
+#  /v1/appmgr/myapps:
+#    get:
+#      responses:
+#        '200':
+#          description: HTTP/200
+#      security:
+#      - XTokenId: []
+#
+#  /v1/appmgr/myapps/{my_app_id}:
+#    get:
+#      responses:
+#        '200':
+#          description: HTTP/200
+#      security:
+#      - XTokenId: []
+#
+#  /v1/appmgr/myapps/{my_app_id}/action:
+#    get:
+#      responses:
+#        '200':
+#          description: HTTP/200
+#      security:
+#      - XTokenId: []
+#
+#  /v1/appmgr/tags:
+#    get:
+#      responses:
+#        '200':
+#          description: HTTP/200
+#      security:
+#      - XTokenId: []
+#
+#  /v1/appmgr/tags/{tag_id}/devices:
+#    get:
+#      responses:
+#        '200':
+#          description: HTTP/200
+#      security:
+#      - XTokenId: []
+#
+#  /v1/appmgr/tokenservice:
+#    get:
+#      responses:
+#        '200':
+#          description: HTTP/200
+#
+#  /v1/appmgr/tokenservice/{token}:
+#    get:
+#      responses:
+#        '200':
+#          description: HTTP/200
+#      security:
+#      - XTokenId: []
+
+securityDefinitions:
+  XTokenId:
+    description: >
+      Token provided to the user during the login phase.
+      The token will provide the right user context to the server.
+    type: apiKey
+    in: header
+    name: X-Token-Id

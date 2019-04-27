@@ -3,6 +3,14 @@ info:
   title: APIs for Fog Director Simulator
   version: '0.0'
 basePath: /api
+consumes:
+- application/json
+produces:
+- application/json
+schemes:
+- http
+- https
+
 paths:
   /simulator_frontend/aggregated_device_metric/v1:
     get:
