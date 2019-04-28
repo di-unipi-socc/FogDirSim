@@ -59,41 +59,52 @@ class DatabaseClient:
             echo=verbose,
         )
         create_all_tables(self._engine)
-        self._Session = sessionmaker(bind=self._engine)
+        self._SessionClass = sessionmaker(bind=self._engine)
+        self._session = None
         self.logic = DatabaseLogic(self)
 
     def reset_database(self):
         prune_all_tables(self._engine)
 
     def __enter__(self):
-        self.current_session = self._Session(autocommit=True)
-        self.current_session.begin()
-        return self.current_session
+        if self._session is None:
+            self._session = self._SessionClass()
+        self._session.begin_nested()
+        return self._session
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_type is not None:
-            self.current_session.rollback()
+            self._session.rollback()
         else:
-            self.current_session.commit()
-        self.current_session.close()
-        self.current_session = None
+            self._session.commit()
+
+        if not self._session.transaction.nested:
+            if exc_type is not None:
+                self._session.rollback()
+            else:
+                self._session.commit()
+            self._session.close()
 
 
 def with_session(func):
     def wrapper(self, *args, **kwargs):
         if args and isinstance(args[0], Session):
             return func(self, *args, **kwargs)
-        elif self._client.current_session is None:
+        else:
             with self._client as session:
                 return func(self, session, *args, **kwargs)
-        else:
-            return func(self, self._client.current_session, *args, **kwargs)
     return wrapper
 
 
 class DatabaseLogic:
     def __init__(self, database_client: DatabaseClient):
         self._client = database_client
+
+    def __enter__(self):
+        return self._client.__enter__()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        return self._client.__exit__(exc_type, exc_val, exc_tb)
 
     @with_session
     def create(self, session: Session, *sql_alchemy_mapping: Base) -> Tuple[Base, ...]:
