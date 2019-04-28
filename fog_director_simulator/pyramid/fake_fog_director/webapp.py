@@ -19,6 +19,7 @@ def create_application() -> Router:
     # Add status metrics view with the internal_ip_only predicate
     config.add_route('api.status', '/api/status')
     config.add_route('api.status_slow', '/api/status_slow')
+    config.add_route('api.v1.appmgr.alerts', '/api/v1/appmgr/alerts')
 
     # Scan the service package to attach any decorated views.
     config.scan(views)

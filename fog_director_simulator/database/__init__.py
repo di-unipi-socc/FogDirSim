@@ -10,6 +10,7 @@ from sqlalchemy.engine.url import URL
 from sqlalchemy.orm import Session
 from sqlalchemy.orm import sessionmaker
 
+from fog_director_simulator.database.models import Alert
 from fog_director_simulator.database.models import AlertType
 from fog_director_simulator.database.models import Application
 from fog_director_simulator.database.models import Base
@@ -198,6 +199,18 @@ class DatabaseLogic:
         )
 
         return query.one_or_none()
+
+    @with_session
+    def get_alerts(
+        self,
+        session: Session,
+        iterationCount: int,
+    ) -> Iterable[MyAppAlertStatistic]:
+        query = session.query(Alert).filter(
+            Alert.time == iterationCount,
+        )
+
+        return query.all()
 
     @with_session
     def get_simulation_time(self, session: Session) -> int:
