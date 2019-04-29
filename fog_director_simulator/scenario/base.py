@@ -59,6 +59,9 @@ class BaseScenario(ABC):
             body={'devices': self.scenario_devices},
         ).result()
 
+    def get_all_devices(self) -> List[Device]:
+        return self.fog_director_client.get_devices().result()["data"]
+
     def register_devices(self, *devices: Device) -> Tuple[Device, ...]:
         futures = {
             (device.ipAddress, device.port): self.fog_director_client.register_device_v1(
