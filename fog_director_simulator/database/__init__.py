@@ -215,3 +215,12 @@ class DatabaseLogic:
     @with_session
     def get_simulation_time(self, session: Session) -> int:
         return session.query(func.max(DeviceSampling.iterationCount)).scalar() or 0
+
+    @with_session
+    def delete_application(self, session: Session, localAppId: str, version: int) -> None:
+        session.query(
+            Application,
+        ).filter(
+            Application.localAppId == localAppId,
+            Application.version == version,
+        ).delete()
