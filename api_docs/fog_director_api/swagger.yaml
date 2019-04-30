@@ -150,7 +150,6 @@ definitions:
   myAppAction:
     properties:
       deploy:
-        type: object
         $ref: '#/definitions/myAppActionDeploy'
       start:
         type: object
