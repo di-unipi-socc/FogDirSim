@@ -224,3 +224,20 @@ class DatabaseLogic:
             Application.localAppId == localAppId,
             Application.version == version,
         ).delete()
+
+    @with_session
+    def get_devices(
+        self,
+        session: Session,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+    ) -> Iterable[Device]:
+        query = session.query(
+            Device,
+        )
+        if limit is not None:
+            query = query.limit(limit)
+        if offset is not None:
+            query = query.offset(offset)
+
+        return query.all()
