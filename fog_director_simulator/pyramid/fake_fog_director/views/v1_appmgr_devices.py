@@ -32,3 +32,8 @@ def get_v1_appmgr_devices(request: Request) -> Dict[str, Any]:
             for alert in request.database_logic.get_devices(limit=request.swagger_data['limit'], offset=request.swagger_data['offset'])
         ]
     }
+
+
+@view_config(route_name='api.v1.appmgr.devices', request_method='POST')
+def post_v1_appmgr_devices(request: Request) -> Dict[str, Any]:
+    raise NotImplementedError()

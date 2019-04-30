@@ -49,3 +49,9 @@ def test_get_v1_appmgr_devices_with_devices(testapp, database_logic, device):
             },
         ],
     }
+
+
+def test_post_v1_appmgr_devices_without_token(testapp):
+    # type: (TestApp) -> None
+    response = testapp.post('/api/v1/appmgr/devices', expect_errors=True)
+    assert response.status_code == 400
