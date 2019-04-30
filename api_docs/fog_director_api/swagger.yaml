@@ -43,6 +43,12 @@ definitions:
   localApp:
     # TODO
     type: object
+  myApp:
+    properties:
+      myAppId:
+        type: integer
+      name:
+        type: string
 
 paths:
   /v1/appmgr/alerts:
@@ -202,13 +208,17 @@ paths:
       - XTokenId: []
 
   /v1/appmgr/localapps/upload:
-    get:
+    post:
       description: Upload the application archive to the Local Store
       parameters:
       - in: header
         name: X-Publish-On-Upload
         type: boolean
         required: false
+      - in: body
+        name: file
+        type: file
+        required: true
       responses:
         '200':
           description: HTTP/200
@@ -217,30 +227,119 @@ paths:
       security:
       - XTokenId: []
 
-#  /v1/appmgr/myapps:
-#    get:
-#      responses:
-#        '200':
-#          description: HTTP/200
-#      security:
-#      - XTokenId: []
-#
-#  /v1/appmgr/myapps/{my_app_id}:
-#    get:
-#      responses:
-#        '200':
-#          description: HTTP/200
-#      security:
-#      - XTokenId: []
-#
-#  /v1/appmgr/myapps/{my_app_id}/action:
-#    get:
-#      responses:
-#        '200':
-#          description: HTTP/200
-#      security:
-#      - XTokenId: []
-#
+  /v1/appmgr/myapps:
+    post:
+      description: Create a new deployment hook
+      parameters:
+      - in: query
+        name: minjobs
+        type: integer
+        required: false
+        description: Parameter added by FogDirSim to permit to specify minimal amount of job required to consider the myapp up and running
+      responses:
+        '200':
+          description: MyApp correctly created
+          schema:
+            $ref: '#/definitions/myApp'
+      security:
+      - XTokenId: []
+
+    get:
+      description: Get the myapp created in the system
+      parameters:
+      - in: query
+        name: searchByName
+        type: string
+        required: false
+      responses:
+        '200':
+          description: HTTP/200
+          schema:
+            data:
+              type: array
+              items:
+                $ref: '#/definitions/myApp'
+      security:
+      - XTokenId: []
+
+  /v1/appmgr/myapps/{my_app_id}:
+    delete:
+      description: Remove the myApp if it is not installed on any device, returns error otherwise
+      parameters:
+      - in: path
+        name: my_app_id
+        type: integer
+        description: myApp identifier to remove
+      responses:
+        '200':
+          description: HTTP/200
+          schema:
+            $ref: '#/definitions/myApp'
+      security:
+      - XTokenId: []
+
+  /v1/appmgr/myapps/{my_app_id}/action:
+    post:
+      description: Manage the myapp state applying action on it
+      parameters:
+      - in: path
+        name: my_app_id
+        type: integer
+        description: myApp identifier
+      - in: query
+        name: profile
+        type: string # TODO: is it "enum" type
+        description: Simulator job intensitivy profile used to represent an heavy resources application usage
+      - in: body
+        type: object
+        # {"deploy":
+        #    {"config":{},
+        #      "metricsPollingFrequency":"3600000",
+        #      "startApp":True,
+        #      "devices":[{"deviceId":device_details['deviceId'],
+        #                     "resourceAsk":
+        #                           {"resources":{
+        #                                 "profile":"c1.tiny",
+        #                                  "cpu":100,"memory":32,
+        #                                   "network":[{"interface-name":"eth0","network-name":"iox-bridge0"}]}}}]
+        # }}
+        # OPPURE
+        # {"start": {}}
+        # OPPURE
+        # {"stop": {}}
+      responses:
+        '200':
+          description: HTTP/200
+      security:
+      - XTokenId: []
+
+    /v1/appmgr/tokenservice:
+        get:
+          # BASIC HTTP AUTH
+          responses:
+            '200':
+              description: HTTP/200
+            schema:
+              token:
+                type: string
+              expiryTime:
+                type: integer
+              serverEpochTime:
+                type: integer
+
+    /v1/appmgr/tokenservice/{token}: # TODO: to define, not essential for the paper
+      delete:
+      - in: path
+        description: token to delete
+        type: string
+
+      responses:
+        '200':
+          description: HTTP/200
+      security:
+      - XTokenId: []
+
+# TODO: To define tags API, not essential for the paper
 #  /v1/appmgr/tags:
 #    get:
 #      responses:
@@ -257,19 +356,6 @@ paths:
 #      security:
 #      - XTokenId: []
 #
-#  /v1/appmgr/tokenservice:
-#    get:
-#      responses:
-#        '200':
-#          description: HTTP/200
-#
-#  /v1/appmgr/tokenservice/{token}:
-#    get:
-#      responses:
-#        '200':
-#          description: HTTP/200
-#      security:
-#      - XTokenId: []
 
 securityDefinitions:
   XTokenId:
