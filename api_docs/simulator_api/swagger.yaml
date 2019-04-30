@@ -17,20 +17,20 @@ paths:
       description: Retrieve the post-aggregated metrics related to the Devices
       operationId: get_aggregated_device_metrics_v1
       parameters:
-        - in: query
-          name: iteration_count
-          type: integer
-          required: false
-        - in: query
-          name: device_ids
-          type: array
-          collectionFormat: csv
-          items:
-            type: string
-          required: false
+      - in: query
+        name: iteration_count
+        type: integer
+        required: false
+      - in: query
+        name: device_ids
+        type: array
+        collectionFormat: csv
+        items:
+          type: string
+        required: false
       responses:
         '200':
-          description: 'HTTP/200'
+          description: HTTP/200
           schema:
             type: object
             properties:
@@ -41,8 +41,8 @@ paths:
                 items:
                   $ref: '#/definitions/AggregatedDeviceMetric'
             required:
-              - iteration_count
-              - metrics
+            - iteration_count
+            - metrics
       tags:
       - simulator_frontend
   /simulator_frontend/aggregated_my_app_metric/v1:
@@ -50,20 +50,20 @@ paths:
       description: Retrieve the post-aggregated metrics related to the My Apps
       operationId: get_aggregated_my_app_metrics_v1
       parameters:
-        - in: query
-          name: iteration_count
-          type: integer
-          required: false
-        - in: query
-          name: my_app_ids
-          type: array
-          collectionFormat: csv
-          items:
-            type: string
-          required: false
+      - in: query
+        name: iteration_count
+        type: integer
+        required: false
+      - in: query
+        name: my_app_ids
+        type: array
+        collectionFormat: csv
+        items:
+          type: string
+        required: false
       responses:
         '200':
-          description: 'HTTP/200'
+          description: HTTP/200
           schema:
             type: object
             properties:
@@ -74,8 +74,8 @@ paths:
                 items:
                   $ref: '#/definitions/AggregatedMyAppMetric'
             required:
-              - iteration_count
-              - metrics
+            - iteration_count
+            - metrics
       tags:
       - simulator_frontend
   /simulator_frontend/iteration_count/v1:
@@ -83,27 +83,27 @@ paths:
       description: Retrieve the current iteration count of the simulation
       operationId: get_iteration_count_v1
       parameters:
-        - in: query
-          name: iteration_count
-          type: integer
-          required: false
-        - in: query
-          name: device_ids
-          type: array
-          collectionFormat: csv
-          items:
-            type: string
-          required: false
+      - in: query
+        name: iteration_count
+        type: integer
+        required: false
+      - in: query
+        name: device_ids
+        type: array
+        collectionFormat: csv
+        items:
+          type: string
+        required: false
       responses:
         '200':
-          description: 'HTTP/200'
+          description: HTTP/200
           schema:
             type: object
             properties:
               iteration_count:
                 type: integer
             required:
-              - iteration_count
+            - iteration_count
       tags:
       - simulator_frontend
   /simulator_frontend/simulation_statistic/v1:
@@ -111,22 +111,22 @@ paths:
       description: Retrieve historical information related to the whole simulation
       operationId: get_simulation_statistic_v1
       parameters:
-        - in: query
-          name: minIterationCount
-          type: integer
-          required: false
-        - in: query
-          name: maxIterationCount
-          type: integer
-          required: false
-        - in: query
-          description: TODO
-          name: totalNumberOfSamplings
-          type: integer
-          required: true
+      - in: query
+        name: minIterationCount
+        type: integer
+        required: false
+      - in: query
+        name: maxIterationCount
+        type: integer
+        required: false
+      - in: query
+        description: TODO
+        name: totalNumberOfSamplings
+        type: integer
+        required: true
       responses:
         '200':
-          description: 'HTTP/200'
+          description: HTTP/200
           schema:
             type: object
             properties:
@@ -198,14 +198,14 @@ definitions:
       device:
         $ref: '#/definitions/DeviceMinimal'
     required:
-      - device
-      - averageCpuUsed
-      - averageMemUsed
-      - averageMyAppCount
-      - criticalCpuUsagePercentage
-      - criticalMemUsagePercentage
-      - deviceDownPercentage
-      - deviceEnergyConsumption
+    - device
+    - averageCpuUsed
+    - averageMemUsed
+    - averageMyAppCount
+    - criticalCpuUsagePercentage
+    - criticalMemUsagePercentage
+    - deviceDownPercentage
+    - deviceEnergyConsumption
   DeviceMinimal:
     type: object
     properties:
@@ -220,11 +220,11 @@ definitions:
       totalMem:
         type: integer
     required:
-      - deviceId
-      - ipAddress
-      - port
-      - totalCpu
-      - totalMem
+    - deviceId
+    - ipAddress
+    - port
+    - totalCpu
+    - totalMem
   AggregatedMyAppMetric:
     type: object
     properties:
@@ -256,11 +256,11 @@ definitions:
       myApp:
         $ref: '#/definitions/MyAppMinimal'
     required:
-      - myApp
-      - alertStatistics
-      - startTimePercentagePerDevice
-      - installedTimePercentagePerDevice
-      - uptimePercentage
+    - myApp
+    - alertStatistics
+    - startTimePercentagePerDevice
+    - installedTimePercentagePerDevice
+    - uptimePercentage
   AlertStatus:
     type: object
     properties:
@@ -302,5 +302,5 @@ definitions:
       name:
         type: string
     required:
-      - myAppId
-      - name
+    - myAppId
+    - name
