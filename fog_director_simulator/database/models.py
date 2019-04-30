@@ -303,7 +303,11 @@ class AlertType(enum.Enum):
 
 class Alert(Base):  # type: ignore
     __tablename__ = 'alerts'
+    __table_args__ = (
+        UniqueConstraint('myAppId', 'deviceId', 'type', 'time'),
+    )
 
+    alertId = Column(Integer, primary_key=True)
     myAppId = Column(ForeignKey(f'{MyApp.__tablename__}.myAppId'), primary_key=True)
     myApp = relationship('MyApp')
     deviceId = Column(ForeignKey(f'{Device.__tablename__}.deviceId'), primary_key=True)

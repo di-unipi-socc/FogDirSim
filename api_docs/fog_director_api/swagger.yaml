@@ -92,17 +92,6 @@ paths:
         name: offset
         required: false
         type: integer
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        name: searchByTags
-        required: false
-        type: array
-      - in: query
-        name: searchByAnyMatch
-        required: false
-        type: string
       responses:
         '200':
           description: HTTP/200
