@@ -24,8 +24,8 @@ def _format(device: Device) -> Dict[str, Any]:
     }
 
 
-@view_config(route_name='api.v1.appmgr.devices')
-def v1_appmgr_devices(request: Request) -> Dict[str, Any]:
+@view_config(route_name='api.v1.appmgr.devices', request_method='GET')
+def get_v1_appmgr_devices(request: Request) -> Dict[str, Any]:
     return {
         'data': [
             _format(alert)

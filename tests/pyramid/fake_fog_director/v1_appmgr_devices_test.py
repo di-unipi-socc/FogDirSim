@@ -4,13 +4,13 @@ from fog_director_simulator.database import DatabaseLogic
 from fog_director_simulator.database import Device
 
 
-def test_v1_appmgr_devices_without_token(testapp):
+def test_get_v1_appmgr_devices_without_token(testapp):
     # type: (TestApp) -> None
     response = testapp.get('/api/v1/appmgr/devices', expect_errors=True)
     assert response.status_code == 400
 
 
-def test_v1_appmgr_devices_no_devices(testapp):
+def test_get_v1_appmgr_devices_no_devices(testapp):
     # type: (TestApp) -> None
     response = testapp.get(
         '/api/v1/appmgr/devices',
@@ -22,7 +22,7 @@ def test_v1_appmgr_devices_no_devices(testapp):
     assert response.json == {'data': []}
 
 
-def test_v1_appmgr_devices_with_devices(testapp, database_logic, device):
+def test_get_v1_appmgr_devices_with_devices(testapp, database_logic, device):
     # type: (TestApp, DatabaseLogic, Device) -> None
     database_logic.create(device)
     response = testapp.get(

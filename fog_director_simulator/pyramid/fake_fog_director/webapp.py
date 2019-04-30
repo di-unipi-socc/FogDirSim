@@ -20,7 +20,7 @@ def create_application() -> Router:
     config.add_route('api.status', '/api/status')
     config.add_route('api.status_slow', '/api/status_slow')
     config.add_route('api.v1.appmgr.alerts', '/api/v1/appmgr/alerts')
-    config.add_route('api.v1.appmgr.apps.local_application_id.version', '/api/v1/appmgr/apps/{local_application_id}:{version}')
+    config.add_route('api.v1.appmgr.apps.local_application_id_version', '/api/v1/appmgr/apps/{local_application_id}:{version}')
     config.add_route('api.v1.appmgr.devices', '/api/v1/appmgr/devices')
 
     # Scan the service package to attach any decorated views.

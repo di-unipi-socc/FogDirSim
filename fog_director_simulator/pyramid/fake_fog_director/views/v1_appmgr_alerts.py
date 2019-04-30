@@ -16,8 +16,8 @@ def _format(alert: Alert) -> Dict[str, Any]:
     }
 
 
-@view_config(route_name='api.v1.appmgr.alerts')
-def v1_appmgr_alerts(request: Request) -> Dict[str, Any]:
+@view_config(route_name='api.v1.appmgr.alerts', request_method='GET')
+def get_v1_appmgr_alerts(request: Request) -> Dict[str, Any]:
     return {
         'data': [
             _format(alert)
