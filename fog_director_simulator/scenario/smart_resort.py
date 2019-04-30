@@ -1,13 +1,15 @@
 from collections import defaultdict
-from typing import cast, List
+from typing import cast
+from typing import List
+from typing import Optional
 
-from fog_director_simulator.database import Device, MyApp
-from fog_director_simulator.database.models import JobDeviceAllocation, ApplicationProfile, Alert, AlertType
+from fog_director_simulator.database import Device
+from fog_director_simulator.database import MyApp
+from fog_director_simulator.database.models import Alert
+from fog_director_simulator.database.models import AlertType
+from fog_director_simulator.database.models import ApplicationProfile
+from fog_director_simulator.database.models import JobDeviceAllocation
 from fog_director_simulator.scenario.base import BaseScenario
-
-
-class Optional(object):
-    pass
 
 
 class SmartResort(BaseScenario):
@@ -21,44 +23,52 @@ class SmartResort(BaseScenario):
         5 MEDIUM (1500 CPU, 1024 RAM, distr: 1000/400 CPU, 750/450 RAM)
         remaining devices SMALL (1200 CPU, 512 RAM, distr: 800/400 CPU, 300/200 RAM)
     The application installed is always the same (100 CPU, 32 RAM)
-    
+
     This scanario, moreover, permits to define with amount of deployments has
-    to be considered with JobIntensivity.HEAVY 
+    to be considered with JobIntensivity.HEAVY
     """
 
     def _get_best_fit_device(self, cpu_required, mem_required):
         devices = self.fog_director_client.get_devices()
-        devices = [dev
-                   for dev in devices["data"]
-                   if dev["capabilities"]["nodes"][0]["cpu"]["available"] >= cpu_required
-                   and dev["capabilities"]["nodes"][0]["memory"]["available"] >= mem_required]
-        devices.sort(reverse=True, key=(lambda dev: (dev["capabilities"]["nodes"][0]["cpu"]["available"],
-                                                     dev["capabilities"]["nodes"][0]["memory"]["available"])))
-        return None if len(devices) == 0 else devices[0]
+        devices = [
+            dev
+            for dev in devices['data']
+            if (
+                dev['capabilities']['nodes'][0]['cpu']['available'] >= cpu_required
+                and dev['capabilities']['nodes'][0]['memory']['available'] >= mem_required
+            )
+        ]
+        devices.sort(
+            reverse=True,
+            key=lambda dev: (dev['capabilities']['nodes'][0]['cpu']['available'], dev['capabilities']['nodes'][0]['memory']['available']),
+        )
+        return next(devices)
 
-    def _get_best_fit_device_until_success(self, cpu_required, mem_required, max_trial = None):
-        device = None
+    def _get_best_fit_device_until_success(self, cpu_required, mem_required, max_trial=None):
         count = 0
-        while not device and (max_trial is None or count < max_trial):
+        while max_trial is None or count < max_trial:
             device = self._get_best_fit_device(cpu_required, mem_required)
-        return device
+            if device is not None:
+                return device
+        return None
 
-    def __init__(self,
-                 number_of_devices: int = 15,
-                 number_of_deployments: int = 30,
-                 percentage_of_heavy_job: int = 0,
-                 max_simulation_iterations: Optional[int] = None, 
-                 fog_director_api: Optional[str] = None,
-                 ):
+    def __init__(
+        self,
+        number_of_devices: int = 15,
+        number_of_deployments: int = 30,
+        percentage_of_heavy_job: int = 0,
+        max_simulation_iterations: Optional[int] = None,
+        fog_director_api: Optional[str] = None,
+    ):
         self.number_of_devices = number_of_devices
         self.number_of_deployments = number_of_deployments
         self.percentage_of_heavy_job = percentage_of_heavy_job
-        BaseScenario.__init__(self, max_simulation_iterations=max_simulation_iterations, fog_director_api= fog_director_api)
+        BaseScenario.__init__(self, max_simulation_iterations=max_simulation_iterations, fog_director_api=fog_director_api)
 
         big_devices = [
             Device(
-                deviceId='dev-{}'.format(dev_number),
-                ipAddress='10.10.20.5{}'.format(dev_number),
+                deviceId=f'dev-{device_number}',
+                ipAddress=f'10.10.20.5{device_number}',
                 username='username',
                 password='password',
                 totalCPU=2500,
@@ -69,13 +79,13 @@ class SmartResort(BaseScenario):
                 _memMetricsDistributionStdDev=450,
                 chaosDieProb=0,
                 chaosReviveProb=1,
-            ) for dev_number in range(1, 6)
+            ) for device_number in range(1, 6)
         ]
 
         medium_devices = [
             Device(
-                deviceId='dev-{}'.format(dev_number),
-                ipAddress='10.10.20.5{}'.format(dev_number),
+                deviceId=f'dev-{device_number}',
+                ipAddress=f'10.10.20.5{device_number}',
                 username='username',
                 password='password',
                 totalCPU=1500,
@@ -86,13 +96,13 @@ class SmartResort(BaseScenario):
                 _memMetricsDistributionStdDev=450,
                 chaosDieProb=0,
                 chaosReviveProb=1,
-            ) for dev_number in range(6, 11)
+            ) for device_number in range(6, 11)
         ]
 
         small_devices = [
             Device(
-                deviceId='dev-{}'.format(dev_number),
-                ipAddress='10.10.20.5{}'.format(dev_number),
+                deviceId=f'dev-{device_number}',
+                ipAddress=f'10.10.20.5{device_number}',
                 username='username',
                 password='password',
                 totalCPU=1200,
@@ -103,7 +113,7 @@ class SmartResort(BaseScenario):
                 _memMetricsDistributionStdDev=200,
                 chaosDieProb=0,
                 chaosReviveProb=1,
-            ) for dev_number in range(11, number_of_devices + 1)
+            ) for device_number in range(11, number_of_devices + 1)
         ]
 
         self.scenario_devices.extend(big_devices)
@@ -131,9 +141,9 @@ class SmartResort(BaseScenario):
         # Uploading .tar.gz
         application = self.register_application('NettestApp2')
 
-        for i in range(0, self.number_of_deployments):
+        for deployment_id in range(0, self.number_of_deployments):
             # Creating myApp
-            myapp = MyApp("SmartResortApplication {}".format(i))
+            myapp = MyApp(name=f'SmartResortApplication {deployment_id}')
             myapp.applicationLocalAppId = application.localAppId
             self.register_my_apps(myapp)
 
@@ -144,27 +154,28 @@ class SmartResort(BaseScenario):
             self.start_my_apps()
 
     def manage_iteration(self):
-        alerts = cast(List[Alert], self.fog_director_client.get_alerts().result()['data'])
+        alerts = cast(List[Alert], self.fog_director_client.get_alerts().result()['data'])  # THIS IS WRONG :)
         already_migrated = []
-        not_reachable_devices = defaultdict(lambda _: [])
+        not_reachable_devices = defaultdict(list)
         for alert in alerts:
             if alert.type in (AlertType.APP_HEALTH, AlertType.DEVICE_REACHABILITY):
                 if alert.myAppId in already_migrated:
                     continue
-                else:
-                    already_migrated.append(alert.myAppId)
+
+                already_migrated.append(alert.myAppId)
                 self.stop_my_apps(alert.myApp)
                 self.uninstall_my_app(alert.myApp, devices=[alert.device])
                 self._install_my_app(
                     my_app=alert.myApp,
                     device=self._get_best_fit_device_until_success(
                         alert.myApp.application.cpuUsage,
-                        alert.myApp.application.memoryUsage
+                        alert.myApp.application.memoryUsage,
                     )
                 )
                 self.stop_my_apps(alert.myApp)
                 if alert.type == AlertType.DEVICE_REACHABILITY:
                     not_reachable_devices[alert.deviceId].append(alert.myApp)
+
             elif alert.type == AlertType.CPU_CRITICAL_CONSUMPTION:
                 # TODO: To be implemented according new API found
                 continue
@@ -174,5 +185,3 @@ class SmartResort(BaseScenario):
         for device in revived_devices:
             for myApp in not_reachable_devices[device.deviceId]:
                 self.uninstall_my_app(my_app=myApp, devices=[device])
-        not_reachable_devices.clear()
-
