@@ -456,7 +456,7 @@ paths:
       - XTokenId: []
 
   /v1/appmgr/tokenservice:
-    get:
+    post:
       parameters:
       - in: header
         name: Authorization
