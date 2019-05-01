@@ -3,6 +3,7 @@ from typing import Dict
 
 from fog_director_simulator.database import Alert
 from fog_director_simulator.database import Device
+from fog_director_simulator.database.models import Application
 
 
 def alert_format(alert: Alert) -> Dict[str, Any]:
@@ -24,4 +25,17 @@ def device_format(device: Device) -> Dict[str, Any]:
         'usedCPU': 0,
         'usedMEM': 0,
         'apps': [],
+    }
+
+
+def application_format(application: Application) -> Dict[str, Any]:
+    return {
+        'creationDate': -1,
+        'localAppId': application.localAppId,
+        'version': application.version,
+        'published': 'published' if application.isPublished else 'unpublished',
+        'profileNeeded': application.profileNeeded.iox_name(),
+        'cpuUsage': application.cpuUsage,
+        'memoryUsage': application.memoryUsage,
+        'sourceAppName': f'{application.localAppId}:{application.version}',
     }

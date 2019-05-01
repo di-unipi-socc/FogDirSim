@@ -58,6 +58,22 @@ class ApplicationProfile(enum.Enum):
     XLarge = 4
     Custom = 5
 
+    def iox_name(self) -> str:
+        if self == ApplicationProfile.Tiny:
+            return 'c1.tiny'
+        elif self == ApplicationProfile.Small:
+            return 'c1.small'
+        elif self == ApplicationProfile.Medium:
+            return 'c1.medium'
+        elif self == ApplicationProfile.Large:
+            return 'c1.large'
+        elif self == ApplicationProfile.XLarge:
+            return 'c1.xlarge'
+        elif self == ApplicationProfile.Custom:
+            return 'c1.custom'
+        else:
+            raise RuntimeError('This should not be possible')
+
 
 class Application(Base):  # type: ignore
     __tablename__ = 'applications'

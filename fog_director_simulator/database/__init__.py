@@ -266,3 +266,20 @@ class DatabaseLogic:
             query = query.offset(offset)
 
         return query.all()
+
+    @with_session
+    def get_applications(
+        self,
+        session: Session,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+    ) -> Iterable[Application]:
+        query = session.query(
+            Application,
+        )
+        if limit is not None:
+            query = query.limit(limit)
+        if offset is not None:
+            query = query.offset(offset)
+
+        return query.all()
