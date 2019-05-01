@@ -283,3 +283,17 @@ class DatabaseLogic:
             query = query.offset(offset)
 
         return query.all()
+
+    @with_session
+    def get_application_by_name(
+        self,
+        session: Session,
+        name: str,
+    ) -> Optional[Application]:
+        query = session.query(
+            Application,
+        ).filter(
+            Application.name == name,
+        )
+
+        return query.first()
