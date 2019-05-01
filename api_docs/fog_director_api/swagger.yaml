@@ -44,6 +44,8 @@ definitions:
     - $ref: '#/definitions/deviceMinimal'
     - type: object
       properties:
+        deviceId:
+          type: string
         usedCPU:
           type: integer
         usedMEM:
@@ -53,6 +55,7 @@ definitions:
           items:
             type: integer
       required:
+      - deviceId
       - usedCPU
       - usedMEM
       - apps

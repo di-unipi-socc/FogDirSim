@@ -1,6 +1,8 @@
 from abc import ABC
 from abc import abstractmethod
 from functools import lru_cache
+from typing import Any
+from typing import Dict
 from typing import Iterable
 from typing import List
 from typing import Optional
@@ -59,6 +61,9 @@ class BaseScenario(ABC):
             body={'devices': self.scenario_devices},
         ).result()
 
+    def get_all_devices(self) -> List[Dict[str, Any]]:
+        return self.fog_director_client.get_devices().result()["data"]
+
     def register_devices(self, *devices: Device) -> Tuple[Device, ...]:
         futures = {
             (device.ipAddress, device.port): self.fog_director_client.register_device_v1(
@@ -107,13 +112,13 @@ class BaseScenario(ABC):
         # TODO: we should send around the messy tar.gz files and/or generate them for readability
         raise NotImplementedError()
 
-    def install_my_app(self, my_app: MyApp, device_allocations: Iterable[JobDeviceAllocation], retry_on_failure=False):
+    def install_my_app(self, my_app_id: int, device_allocations: Iterable[JobDeviceAllocation], retry_on_failure=False):
         def _build_device_allocation(device_allocation: JobDeviceAllocation):
             return {
                 'deviceId': device_allocation.device.deviceId,
                 'resourceAsk': {
                     'resources': {
-                        'profile': device_allocation.profile,  # TODO: 99.99% that this is wrong
+                        'profile': device_allocation.profile.iox_name(),
                         'cpu': device_allocation.cpu,
                         'memory': device_allocation.memory,
                         'network': [  # We do not simulate metrics collection on networking stack
@@ -128,7 +133,7 @@ class BaseScenario(ABC):
 
         try:
             return self.fog_director_client.post_myapp_action_v1(
-                my_app_id=my_app.myAppId,
+                my_app_id=my_app_id,
                 body={
                     'deploy': {
                         'config': {},
@@ -143,40 +148,40 @@ class BaseScenario(ABC):
             ).result()
         except HTTPError:
             if retry_on_failure:
-                return self.install_my_app(my_app, device_allocations, retry_on_failure)
+                return self.install_my_app(my_app_id, device_allocations, retry_on_failure)
             else:
                 raise
 
-    def start_my_apps(self, *my_apps: MyApp) -> None:
+    def start_my_apps(self, *my_app_ids: int) -> None:
         futures = [
             self.fog_director_client.post_myapp_action_v1(
-                my_app_id=my_app.myAppId,
+                my_app_id=my_app_id,
                 body={'start': {}},
             )
-            for my_app in my_apps
+            for my_app_id in my_app_ids
         ]
 
         for future in futures:
             future.result()
 
-    def stop_my_apps(self, *my_apps: MyApp) -> None:
+    def stop_my_apps(self, *my_app_ids: int) -> None:
         futures = [
             self.fog_director_client.post_myapp_action_v1(
-                my_app_id=my_app.myAppId,
+                my_app_id=my_app_id,
                 body={'stop': {}},
             ).result()
-            for my_app in my_apps
+            for my_app_id in my_app_ids
         ]
 
         for future in futures:
             future.result()
 
-    def uninstall_my_app(self, my_app: MyApp, devices: Iterable[Device]) -> None:
+    def uninstall_my_app(self, my_app_id: int, device_ids: Iterable[str]) -> None:
         self.fog_director_client.post_myapp_action_v1(
-            my_app_id=my_app.myAppId,
+            my_app_id=my_app_id,
             body={
                 'undeploy': {
-                    'devices': [device.deviceId for device in devices],
+                    'devices': list(device_ids),
                 },
             },
         ).result()

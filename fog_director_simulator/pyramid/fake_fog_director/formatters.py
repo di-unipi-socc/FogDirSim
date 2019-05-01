@@ -19,6 +19,7 @@ def alert_format(alert: Alert) -> Dict[str, Any]:
 
 def device_format(device: Device) -> Dict[str, Any]:
     return {
+        'deviceId': device.deviceId,
         'port': device.port,
         'ipAddress': device.ipAddress,
         'username': device.username,
