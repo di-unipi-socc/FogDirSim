@@ -16,16 +16,12 @@ def alert_format(alert: Alert) -> Dict[str, Any]:
 
 def device_format(device: Device) -> Dict[str, Any]:
     return {
-        # TODO: complete device formatting
         'port': device.port,
-        'contactDetails': '',
+        'ipAddress': device.ipAddress,
         'username': device.username,
         'password': device.password,
-        'ipAddress': device.ipAddress,
-        'ne_id': f'{device.ipAddress}:{device.port}',
-        'deviceId': device.deviceId,
-        'serialNumber': device.deviceId,
-        'hostname': f'{device.ipAddress}:{device.port}',
-        'platformVersion': '1.7.0.7',
-        'status': 'DISCOVERED',
+        # TODO: Extract the fields
+        'usedCPU': 0,
+        'usedMEM': 0,
+        'apps': [],
     }

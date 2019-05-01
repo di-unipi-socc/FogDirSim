@@ -76,7 +76,6 @@ def device() -> Device:
         ipAddress='ipAddress',
         username='username',
         password='password',
-        timeOfCreation=1,
         isAlive=True,
         reservedCPU=1.0,
         totalCPU=2,

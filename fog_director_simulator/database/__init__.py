@@ -226,6 +226,26 @@ class DatabaseLogic:
         ).delete()
 
     @with_session
+    def get_device_from_arguments(
+        self,
+        session: Session,
+        port: str,
+        ipAddress: str,
+        username: str,
+        password: str,
+    ) -> Device:
+        query = session.query(
+            Device,
+        ).filter(
+            Device.port == port,
+            Device.ipAddress == ipAddress,
+            Device.username == username,
+            Device.password == password,
+        )
+
+        return query.one()
+
+    @with_session
     def get_devices(
         self,
         session: Session,

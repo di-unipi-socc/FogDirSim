@@ -52,6 +52,10 @@ definitions:
           type: array
           items:
             type: integer
+      required:
+      - usedCPU
+      - usedMEM
+      - apps
     type: object
   deviceMinimal:
     properties:
