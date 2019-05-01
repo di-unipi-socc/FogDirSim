@@ -59,20 +59,25 @@ class ApplicationProfile(enum.Enum):
     Custom = 5
 
     def iox_name(self) -> str:
-        if self == ApplicationProfile.Tiny:
-            return 'c1.tiny'
-        elif self == ApplicationProfile.Small:
-            return 'c1.small'
-        elif self == ApplicationProfile.Medium:
-            return 'c1.medium'
-        elif self == ApplicationProfile.Large:
-            return 'c1.large'
-        elif self == ApplicationProfile.XLarge:
-            return 'c1.xlarge'
-        elif self == ApplicationProfile.Custom:
-            return 'c1.custom'
-        else:
-            raise RuntimeError('This should not be possible')
+        return _APPLICATION_PROFILE_TO_IOX_NAME_MAPPING[self]
+
+    @classmethod
+    def from_iox_name(cls, iox_name: str) -> 'ApplicationProfile':
+        return _IOX_NAME_TO_APPLICATION_PROFILE_IOX_MAPPING[iox_name]
+
+
+_APPLICATION_PROFILE_TO_IOX_NAME_MAPPING = {
+    ApplicationProfile.Tiny: 'c1.tiny',
+    ApplicationProfile.Small: 'c1.small',
+    ApplicationProfile.Medium: 'c1.medium',
+    ApplicationProfile.Large: 'c1.large',
+    ApplicationProfile.XLarge: 'c1.xlarge',
+    ApplicationProfile.Custom: 'c1.custom',
+}
+_IOX_NAME_TO_APPLICATION_PROFILE_IOX_MAPPING = {
+    v: k
+    for k, v in _APPLICATION_PROFILE_TO_IOX_NAME_MAPPING.items()
+}
 
 
 class Application(Base):  # type: ignore
