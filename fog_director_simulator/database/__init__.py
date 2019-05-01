@@ -116,6 +116,11 @@ class DatabaseLogic:
         return sql_alchemy_mapping
 
     @with_session
+    def delete(self, session: Session, *sql_alchemy_mapping: Base) -> None:
+        for instance in sql_alchemy_mapping:
+            session.delete(instance)
+
+    @with_session
     def get_device(self, session: Session, deviceId: str) -> Optional[Device]:
         return session.query(Device).get(deviceId)
 
@@ -226,6 +231,26 @@ class DatabaseLogic:
         ).delete()
 
     @with_session
+    def get_device_from_arguments(
+        self,
+        session: Session,
+        port: str,
+        ipAddress: str,
+        username: str,
+        password: str,
+    ) -> Device:
+        query = session.query(
+            Device,
+        ).filter(
+            Device.port == port,
+            Device.ipAddress == ipAddress,
+            Device.username == username,
+            Device.password == password,
+        )
+
+        return query.one()
+
+    @with_session
     def get_devices(
         self,
         session: Session,
@@ -241,3 +266,48 @@ class DatabaseLogic:
             query = query.offset(offset)
 
         return query.all()
+
+    @with_session
+    def get_applications(
+        self,
+        session: Session,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+    ) -> Iterable[Application]:
+        query = session.query(
+            Application,
+        )
+        if limit is not None:
+            query = query.limit(limit)
+        if offset is not None:
+            query = query.offset(offset)
+
+        return query.all()
+
+    @with_session
+    def get_application_by_name(
+        self,
+        session: Session,
+        name: str,
+    ) -> Optional[Application]:
+        query = session.query(
+            Application,
+        ).filter(
+            Application.name == name,
+        )
+
+        return query.first()
+
+    @with_session
+    def get_my_app_by_name(
+        self,
+        session: Session,
+        name: str,
+    ) -> Optional[MyApp]:
+        query = session.query(
+            MyApp,
+        ).filter(
+            MyApp.name == name,
+        )
+
+        return query.first()

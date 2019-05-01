@@ -58,6 +58,27 @@ class ApplicationProfile(enum.Enum):
     XLarge = 4
     Custom = 5
 
+    def iox_name(self) -> str:
+        return _APPLICATION_PROFILE_TO_IOX_NAME_MAPPING[self]
+
+    @classmethod
+    def from_iox_name(cls, iox_name: str) -> 'ApplicationProfile':
+        return _IOX_NAME_TO_APPLICATION_PROFILE_IOX_MAPPING[iox_name]
+
+
+_APPLICATION_PROFILE_TO_IOX_NAME_MAPPING = {
+    ApplicationProfile.Tiny: 'c1.tiny',
+    ApplicationProfile.Small: 'c1.small',
+    ApplicationProfile.Medium: 'c1.medium',
+    ApplicationProfile.Large: 'c1.large',
+    ApplicationProfile.XLarge: 'c1.xlarge',
+    ApplicationProfile.Custom: 'custom',
+}
+_IOX_NAME_TO_APPLICATION_PROFILE_IOX_MAPPING = {
+    v: k
+    for k, v in _APPLICATION_PROFILE_TO_IOX_NAME_MAPPING.items()
+}
+
 
 class Application(Base):  # type: ignore
     __tablename__ = 'applications'
@@ -126,6 +147,7 @@ class MyApp(Base):  # type: ignore
     minJobReplicas = Column(Integer, nullable=True)
     creationTime = Column(Integer)
     destructionTime = Column(Integer, nullable=True)
+    jobs = relationship('Job', back_populates='myApp')
 
 
 # Device Related objects
@@ -204,7 +226,7 @@ class Job(Base):  # type: ignore
     myApp = relationship('MyApp')
     status = Column(Enum(JobStatus))
     profile = Column(Enum(JobIntensivity))
-    devices = relationship('JobDeviceAllocation')  # TODO: is this safe???
+    job_device_allocations = relationship('JobDeviceAllocation', back_populates='job')
 
 
 class JobDeviceAllocation(Base):  # type: ignore

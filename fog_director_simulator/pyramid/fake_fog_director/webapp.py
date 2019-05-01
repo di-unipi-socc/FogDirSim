@@ -20,8 +20,17 @@ def create_application() -> Router:
     config.add_route('api.status', '/api/status')
     config.add_route('api.status_slow', '/api/status_slow')
     config.add_route('api.v1.appmgr.alerts', '/api/v1/appmgr/alerts')
-    config.add_route('api.v1.appmgr.apps.local_application_id.version', '/api/v1/appmgr/apps/{local_application_id}:{version}')
+    config.add_route('api.v1.appmgr.apps.local_application_id_version', '/api/v1/appmgr/apps/{local_application_id}:{version}')
     config.add_route('api.v1.appmgr.devices', '/api/v1/appmgr/devices')
+    config.add_route('api.v1.appmgr.devices.device_id', '/api/v1/appmgr/devices/{device_id}')
+    config.add_route('api.v1.appmgr.localapps', '/api/v1/appmgr/localapps')
+    config.add_route('api.v1.appmgr.localapps.local_application_id_version', '/api/v1/appmgr/localapps/{local_application_id}:{version}')
+    config.add_route('api.v1.appmgr.localapps.upload', '/api/v1/appmgr/localapps/upload')
+    config.add_route('api.v1.appmgr.myapps', '/api/v1/appmgr/myapps')
+    config.add_route('api.v1.appmgr.myapps.my_app_id', '/api/v1/appmgr/myapps/{my_app_id}')
+    config.add_route('api.v1.appmgr.myapps.my_app_id.action', '/api/v1/appmgr/myapps/{my_app_id}/action')
+    config.add_route('api.v1.appmgr.tokenservice', '/api/v1/appmgr/tokenservice')
+    config.add_route('api.v1.appmgr.tokenservice.token', '/api/v1/appmgr/tokenservice/{token}')
 
     # Scan the service package to attach any decorated views.
     config.scan(views)

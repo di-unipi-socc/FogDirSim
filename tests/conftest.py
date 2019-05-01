@@ -76,7 +76,6 @@ def device() -> Device:
         ipAddress='ipAddress',
         username='username',
         password='password',
-        timeOfCreation=1,
         isAlive=True,
         reservedCPU=1.0,
         totalCPU=2,
@@ -124,7 +123,7 @@ def job_device_allocation(device: Device, job: Job) -> JobDeviceAllocation:
     return JobDeviceAllocation(
         device=device,
         job=job,
-        profile='profile',  # TODO shouldn't this be a ApplicationProfile
+        profile=ApplicationProfile.Tiny,
     )
 
 

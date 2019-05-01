@@ -2,13 +2,13 @@ language: python
 dist: xenial
 matrix:
   include:
-    - python: '3.6'
-      env: TOXENV=py
-    - python: '3.7'
-      env: TOXENV=py
+  - python: '3.6'
+    env: TOXENV=py
+  - python: '3.7'
+    env: TOXENV=py
 
 before_install:
-  - pip install tox codecov
+- pip install tox codecov
 
 script:
-  - tox -v
+- tox -v
