@@ -116,6 +116,11 @@ class DatabaseLogic:
         return sql_alchemy_mapping
 
     @with_session
+    def delete(self, session: Session, *sql_alchemy_mapping: Base) -> None:
+        for instance in sql_alchemy_mapping:
+            session.delete(instance)
+
+    @with_session
     def get_device(self, session: Session, deviceId: str) -> Optional[Device]:
         return session.query(Device).get(deviceId)
 
