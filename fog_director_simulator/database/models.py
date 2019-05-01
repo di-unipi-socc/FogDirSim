@@ -72,7 +72,7 @@ _APPLICATION_PROFILE_TO_IOX_NAME_MAPPING = {
     ApplicationProfile.Medium: 'c1.medium',
     ApplicationProfile.Large: 'c1.large',
     ApplicationProfile.XLarge: 'c1.xlarge',
-    ApplicationProfile.Custom: 'c1.custom',
+    ApplicationProfile.Custom: 'custom',
 }
 _IOX_NAME_TO_APPLICATION_PROFILE_IOX_MAPPING = {
     v: k
@@ -147,6 +147,7 @@ class MyApp(Base):  # type: ignore
     minJobReplicas = Column(Integer, nullable=True)
     creationTime = Column(Integer)
     destructionTime = Column(Integer, nullable=True)
+    jobs = relationship('Job', back_populates='myApp')
 
 
 # Device Related objects
@@ -225,7 +226,7 @@ class Job(Base):  # type: ignore
     myApp = relationship('MyApp')
     status = Column(Enum(JobStatus))
     profile = Column(Enum(JobIntensivity))
-    devices = relationship('JobDeviceAllocation')  # TODO: is this safe???
+    job_device_allocations = relationship('JobDeviceAllocation', back_populates='job')
 
 
 class JobDeviceAllocation(Base):  # type: ignore

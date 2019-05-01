@@ -4,6 +4,7 @@ from typing import Dict
 from fog_director_simulator.database.models import Alert
 from fog_director_simulator.database.models import Application
 from fog_director_simulator.database.models import Device
+from fog_director_simulator.database.models import Job
 from fog_director_simulator.database.models import MyApp
 
 
@@ -46,4 +47,10 @@ def myapp_format(my_app: MyApp) -> Dict[str, Any]:
     return {
         'myAppId': my_app.myAppId,
         'name': my_app.name,
+    }
+
+
+def job_format(job: Job) -> Dict[str, Any]:
+    return {
+        'jobId': str(job.jobId),
     }

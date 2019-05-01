@@ -123,7 +123,7 @@ def job_device_allocation(device: Device, job: Job) -> JobDeviceAllocation:
     return JobDeviceAllocation(
         device=device,
         job=job,
-        profile='profile',  # TODO shouldn't this be a ApplicationProfile
+        profile=ApplicationProfile.Tiny,
     )
 
 
