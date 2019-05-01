@@ -18,7 +18,6 @@ def test_delete_v1_appmgr_apps_local_application_id_version_no_application(testa
             'X-Token-Id': 'token',
         },
     )
-    assert response.text == 'null'
     assert response.status_code == 200
 
 
@@ -33,5 +32,4 @@ def test_delete_v1_appmgr_apps_local_application_id_version_with_application(tes
             'X-Token-Id': 'token',
         },
     )
-    assert response.text == 'null'
     assert response.status_code == 200

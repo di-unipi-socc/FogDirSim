@@ -56,12 +56,12 @@ def _do_deploy(my_app: MyApp, job_intensivity: JobIntensivity, myAppActionDeploy
 
         cpu_demand = deploy_device['resourceAsk']['resources']['cpu']
         device.reservedCPU += cpu_demand
-        if device.totalCPU > device.reservedCPU:
+        if device.totalCPU < device.reservedCPU:
             raise HTTPBadRequest
 
         mem_demand = deploy_device['resourceAsk']['resources']['memory']
         device.reservedMEM += mem_demand
-        if device.totalMEM > device.reservedMEM:
+        if device.totalMEM < device.reservedMEM:
             raise HTTPBadRequest
 
         job.job_device_allocations.append(
