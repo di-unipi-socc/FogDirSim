@@ -2,6 +2,8 @@ import pytest
 
 from fog_director_simulator.database import Config
 from fog_director_simulator.database import DatabaseClient
+from fog_director_simulator.database.models import Alert
+from fog_director_simulator.database.models import AlertType
 from fog_director_simulator.database.models import Application
 from fog_director_simulator.database.models import ApplicationProfile
 from fog_director_simulator.database.models import Device
@@ -21,7 +23,7 @@ from fog_director_simulator.database.models import MyAppMetric
 from fog_director_simulator.database.models import MyAppMetricType
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def database_config() -> Config:
     return Config(
         drivername='sqlite',
@@ -74,7 +76,6 @@ def device() -> Device:
         ipAddress='ipAddress',
         username='username',
         password='password',
-        timeOfCreation=1,
         isAlive=True,
         reservedCPU=1.0,
         totalCPU=2,
@@ -122,7 +123,7 @@ def job_device_allocation(device: Device, job: Job) -> JobDeviceAllocation:
     return JobDeviceAllocation(
         device=device,
         job=job,
-        profile='profile',  # TODO shouldn't this be a ApplicationProfile
+        profile=ApplicationProfile.Tiny,
     )
 
 
@@ -166,4 +167,15 @@ def device_sampling(device: Device, iterationCount: int) -> DeviceSampling:
         averageCpuUsed=3.0,
         averageMemUsed=4.0,
         averageMyAppCount=5.0,
+    )
+
+
+@pytest.fixture
+def alert(my_app: MyApp, device: Device) -> Alert:
+    return Alert(
+        alertId=0,
+        myApp=my_app,
+        device=device,
+        type=AlertType.APP_HEALTH,
+        time=0,
     )

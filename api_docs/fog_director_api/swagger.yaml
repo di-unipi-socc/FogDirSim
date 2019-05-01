@@ -17,12 +17,45 @@ schemes:
 
 definitions:
   alert:
-    # TODO
     type: object
+    properties:
+      deviceId:
+        type: string
+      ipAddress:
+        type: string
+      appName:
+        type: string
+        description: myApp name
+      type:
+        type: string
+      message:
+        type: string
+      time:
+        type: integer
+    required:
+    - deviceId
+    - ipAddress
+    - appName
+    - type
+    - message
+    - time
   device:
     allOf:
     - $ref: '#/definitions/deviceMinimal'
-    - type: object  # TODO
+    - type: object
+      properties:
+        usedCPU:
+          type: integer
+        usedMEM:
+          type: integer
+        apps:
+          type: array
+          items:
+            type: integer
+      required:
+      - usedCPU
+      - usedMEM
+      - apps
     type: object
   deviceMinimal:
     properties:
@@ -35,13 +68,115 @@ definitions:
       password:
         type: string
     required:
-      - port
-      - ipAddress
-      - username
-      - password
+    - port
+    - ipAddress
+    - username
+    - password
     type: object
   localApp:
-    # TODO
+    type: object
+    properties:
+      creationDate:
+        type: integer
+      localAppId:
+        type: string
+      version:
+        type: string
+      published:
+        type: string
+        enum:
+        - published
+        - unpublished
+      profileNeeded:
+        type: string
+        enum:
+        - c1.tiny
+        - c1.small
+        - c1.medium
+        - c1.large
+        - c1.xlarge
+      cpuUsage:
+        type: integer
+      memoryUsage:
+        type: integer
+      sourceAppName:
+        type: string
+    required:
+    - creationDate
+    - localAppId
+    - version
+    - published
+    - profileNeeded
+    - cpuUsage
+    - memoryUsage
+    - sourceAppName
+  myApp:
+    properties:
+      myAppId:
+        type: integer
+      name:
+        type: string
+    required:
+    - myAppId
+    - name
+  applicationResourceAsk:
+    type: object
+    properties:
+      cpu:
+        type: integer
+      memory:
+        type: integer
+      profile:
+        type: string
+        enum:
+        - c1.tiny
+        - c1.small
+        - c1.medium
+        - c1.large
+        - c1.xlarge
+        - custom
+    required:
+    - cpu
+    - memory
+    - profile
+  myAppActionDeployItem:
+    type: object
+    properties:
+      deviceId:
+        type: string
+      resourceAsk:
+        type: object
+        properties:
+          resources:
+            $ref: '#/definitions/applicationResourceAsk'
+  myAppActionDeploy:
+    properties:
+      devices:
+        type: array
+        items:
+          $ref: '#/definitions/myAppActionDeployItem'
+  myAppAction:
+    properties:
+      deploy:
+        $ref: '#/definitions/myAppActionDeploy'
+      start:
+        type: object
+        additionalProperties: false
+      stop:
+        type: object
+        additionalProperties: false
+      undeploy:
+        type: object
+        properties:
+          devices:
+            description: List Device identifiers to whom uninstall the MyApp
+            type: array
+            items:
+              type: string
+        required:
+        - devices
+    minProperties: 1
+    maxProperties: 1
     type: object
 
 paths:
@@ -92,17 +227,6 @@ paths:
         name: offset
         required: false
         type: integer
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        name: searchByTags
-        required: false
-        type: array
-      - in: query
-        name: searchByAnyMatch
-        required: false
-        type: string
       responses:
         '200':
           description: HTTP/200
@@ -153,14 +277,14 @@ paths:
     get:
       description: Retrive the Local Application available in the Local Store
       parameters:
-        - in: query
-          name: limit
-          required: false
-          type: integer
-        - in: query
-          name: offset
-          required: false
-          type: integer
+      - in: query
+        name: limit
+        required: false
+        type: integer
+      - in: query
+        name: offset
+        required: false
+        type: integer
       responses:
         '200':
           description: HTTP/200
@@ -202,13 +326,19 @@ paths:
       - XTokenId: []
 
   /v1/appmgr/localapps/upload:
-    get:
+    post:
       description: Upload the application archive to the Local Store
+      consumes:
+      - multipart/form-data
       parameters:
       - in: header
         name: X-Publish-On-Upload
         type: boolean
         required: false
+      - in: formData
+        name: file
+        type: file
+        required: true
       responses:
         '200':
           description: HTTP/200
@@ -217,59 +347,151 @@ paths:
       security:
       - XTokenId: []
 
-#  /v1/appmgr/myapps:
-#    get:
-#      responses:
-#        '200':
-#          description: HTTP/200
-#      security:
-#      - XTokenId: []
-#
-#  /v1/appmgr/myapps/{my_app_id}:
-#    get:
-#      responses:
-#        '200':
-#          description: HTTP/200
-#      security:
-#      - XTokenId: []
-#
-#  /v1/appmgr/myapps/{my_app_id}/action:
-#    get:
-#      responses:
-#        '200':
-#          description: HTTP/200
-#      security:
-#      - XTokenId: []
-#
-#  /v1/appmgr/tags:
-#    get:
-#      responses:
-#        '200':
-#          description: HTTP/200
-#      security:
-#      - XTokenId: []
-#
-#  /v1/appmgr/tags/{tag_id}/devices:
-#    get:
-#      responses:
-#        '200':
-#          description: HTTP/200
-#      security:
-#      - XTokenId: []
-#
-#  /v1/appmgr/tokenservice:
-#    get:
-#      responses:
-#        '200':
-#          description: HTTP/200
-#
-#  /v1/appmgr/tokenservice/{token}:
-#    get:
-#      responses:
-#        '200':
-#          description: HTTP/200
-#      security:
-#      - XTokenId: []
+  /v1/appmgr/myapps:
+    post:
+      description: Create a new deployment hook
+      parameters:
+      - in: query
+        name: minjobs
+        type: integer
+        required: false
+        description: Parameter added by FogDirSim to permit to specify minimal amount of job required to consider the myapp up and running
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          properties:
+            name:
+              type: string
+            sourceAppName:
+              type: string
+            version:
+              type: string
+          required:
+          - name
+          - sourceAppName
+          - version
+      responses:
+        '200':
+          description: MyApp correctly created
+          schema:
+            $ref: '#/definitions/myApp'
+      security:
+      - XTokenId: []
+
+    get:
+      description: Get the myapp created in the system
+      parameters:
+      - in: query
+        name: searchByName
+        type: string
+        required: false
+      responses:
+        '200':
+          description: HTTP/200
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: '#/definitions/myApp'
+            required:
+            - data
+      security:
+      - XTokenId: []
+
+  /v1/appmgr/myapps/{my_app_id}:
+    delete:
+      description: Remove the myApp if it is not installed on any device, returns error otherwise
+      parameters:
+      - in: path
+        name: my_app_id
+        type: integer
+        required: true
+        description: myApp identifier to remove
+      responses:
+        '200':
+          description: HTTP/200
+          schema:
+            $ref: '#/definitions/myApp'
+      security:
+      - XTokenId: []
+
+  /v1/appmgr/myapps/{my_app_id}/action:
+    post:
+      description: Manage the myapp state applying action on it
+      parameters:
+      - in: path
+        name: my_app_id
+        type: integer
+        required: true
+        description: myApp identifier
+      - in: query
+        name: job_intensivity
+        type: string
+        required: false
+        default: normal
+        enum:
+        - quiet
+        - normal
+        - heavy
+        description: Simulator job intensitivy profile used to represent an heavy resources application usage
+      - in: body
+        name: body
+        schema:
+          $ref: '#/definitions/myAppAction'
+      responses:
+        '200':
+          description: HTTP/200
+          schema:
+            type: object
+            properties:
+              jobId:
+                type: string
+            required:
+            - jobId
+      security:
+      - XTokenId: []
+
+  /v1/appmgr/tokenservice:
+    post:
+      parameters:
+      - in: header
+        name: Authorization
+        type: string
+        description: Basic Authentication Header
+      responses:
+        '200':
+          description: HTTP/200
+          schema:
+            type: object
+            properties:
+              token:
+                type: string
+              expiryTime:
+                type: integer
+              serverEpochTime:
+                type: integer
+            required:
+            - token
+            - expiryTime
+            - serverEpochTime
+
+  /v1/appmgr/tokenservice/{token}:
+    delete:
+      parameters:
+      - in: path
+        name: token
+        description: token to delete
+        required: true
+        type: string
+      responses:
+        '200':
+          description: HTTP/200
+      security:
+      - XTokenId: []
 
 securityDefinitions:
   XTokenId:

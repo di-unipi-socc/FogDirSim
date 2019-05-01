@@ -5,10 +5,12 @@ from typing import Optional
 from typing import Tuple
 
 from sqlalchemy import create_engine
+from sqlalchemy import func
 from sqlalchemy.engine.url import URL
 from sqlalchemy.orm import Session
 from sqlalchemy.orm import sessionmaker
 
+from fog_director_simulator.database.models import Alert
 from fog_director_simulator.database.models import AlertType
 from fog_director_simulator.database.models import Application
 from fog_director_simulator.database.models import Base
@@ -16,6 +18,7 @@ from fog_director_simulator.database.models import create_all_tables
 from fog_director_simulator.database.models import Device
 from fog_director_simulator.database.models import DeviceMetric
 from fog_director_simulator.database.models import DeviceMetricType
+from fog_director_simulator.database.models import DeviceSampling
 from fog_director_simulator.database.models import Job
 from fog_director_simulator.database.models import JobMetric
 from fog_director_simulator.database.models import JobMetricType
@@ -59,35 +62,40 @@ class DatabaseClient:
             echo=verbose,
         )
         create_all_tables(self._engine)
-        self._Session = sessionmaker(bind=self._engine)
+        self._SessionClass = sessionmaker(bind=self._engine)
+        self._session = None
         self.logic = DatabaseLogic(self)
 
     def reset_database(self):
         prune_all_tables(self._engine)
 
     def __enter__(self):
-        self.current_session = self._Session(autocommit=True)
-        self.current_session.begin()
-        return self.current_session
+        if self._session is None:
+            self._session = self._SessionClass()
+        self._session.begin_nested()
+        return self._session
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_type is not None:
-            self.current_session.rollback()
+            self._session.rollback()
         else:
-            self.current_session.commit()
-        self.current_session.close()
-        self.current_session = None
+            self._session.commit()
+
+        if not self._session.transaction.nested:
+            if exc_type is not None:
+                self._session.rollback()
+            else:
+                self._session.commit()
+            self._session.close()
 
 
 def with_session(func):
     def wrapper(self, *args, **kwargs):
         if args and isinstance(args[0], Session):
             return func(self, *args, **kwargs)
-        elif self._client.current_session is None:
+        else:
             with self._client as session:
                 return func(self, session, *args, **kwargs)
-        else:
-            return func(self, self._client.current_session, *args, **kwargs)
     return wrapper
 
 
@@ -95,11 +103,22 @@ class DatabaseLogic:
     def __init__(self, database_client: DatabaseClient):
         self._client = database_client
 
+    def __enter__(self):
+        return self._client.__enter__()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        return self._client.__exit__(exc_type, exc_val, exc_tb)
+
     @with_session
     def create(self, session: Session, *sql_alchemy_mapping: Base) -> Tuple[Base, ...]:
         session.add_all(sql_alchemy_mapping)
         session.flush(sql_alchemy_mapping)
         return sql_alchemy_mapping
+
+    @with_session
+    def delete(self, session: Session, *sql_alchemy_mapping: Base) -> None:
+        for instance in sql_alchemy_mapping:
+            session.delete(instance)
 
     @with_session
     def get_device(self, session: Session, deviceId: str) -> Optional[Device]:
@@ -185,3 +204,110 @@ class DatabaseLogic:
         )
 
         return query.one_or_none()
+
+    @with_session
+    def get_alerts(
+        self,
+        session: Session,
+        iterationCount: int,
+    ) -> Iterable[MyAppAlertStatistic]:
+        query = session.query(Alert).filter(
+            Alert.time == iterationCount,
+        )
+
+        return query.all()
+
+    @with_session
+    def get_simulation_time(self, session: Session) -> int:
+        return session.query(func.max(DeviceSampling.iterationCount)).scalar() or 0
+
+    @with_session
+    def delete_application(self, session: Session, localAppId: str, version: int) -> None:
+        session.query(
+            Application,
+        ).filter(
+            Application.localAppId == localAppId,
+            Application.version == version,
+        ).delete()
+
+    @with_session
+    def get_device_from_arguments(
+        self,
+        session: Session,
+        port: str,
+        ipAddress: str,
+        username: str,
+        password: str,
+    ) -> Device:
+        query = session.query(
+            Device,
+        ).filter(
+            Device.port == port,
+            Device.ipAddress == ipAddress,
+            Device.username == username,
+            Device.password == password,
+        )
+
+        return query.one()
+
+    @with_session
+    def get_devices(
+        self,
+        session: Session,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+    ) -> Iterable[Device]:
+        query = session.query(
+            Device,
+        )
+        if limit is not None:
+            query = query.limit(limit)
+        if offset is not None:
+            query = query.offset(offset)
+
+        return query.all()
+
+    @with_session
+    def get_applications(
+        self,
+        session: Session,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+    ) -> Iterable[Application]:
+        query = session.query(
+            Application,
+        )
+        if limit is not None:
+            query = query.limit(limit)
+        if offset is not None:
+            query = query.offset(offset)
+
+        return query.all()
+
+    @with_session
+    def get_application_by_name(
+        self,
+        session: Session,
+        name: str,
+    ) -> Optional[Application]:
+        query = session.query(
+            Application,
+        ).filter(
+            Application.name == name,
+        )
+
+        return query.first()
+
+    @with_session
+    def get_my_app_by_name(
+        self,
+        session: Session,
+        name: str,
+    ) -> Optional[MyApp]:
+        query = session.query(
+            MyApp,
+        ).filter(
+            MyApp.name == name,
+        )
+
+        return query.first()
