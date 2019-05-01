@@ -1,6 +1,6 @@
 from collections import defaultdict
-from typing import cast
-from typing import List
+from typing import Any
+from typing import Dict
 from typing import Optional
 
 from fog_director_simulator.database import Device
@@ -28,7 +28,7 @@ class SmartResort(BaseScenario):
     to be considered with JobIntensivity.HEAVY
     """
 
-    def _get_best_fit_device(self, cpu_required, mem_required):
+    def _get_best_fit_device(self, cpu_required: float, mem_required: float) -> Optional[Dict[str, Any]]:
         devices = self.fog_director_client.get_devices()
         devices = [
             dev
@@ -42,15 +42,15 @@ class SmartResort(BaseScenario):
             reverse=True,
             key=lambda dev: (dev['capabilities']['nodes'][0]['cpu']['available'], dev['capabilities']['nodes'][0]['memory']['available']),
         )
-        return next(devices)
+        return next(iter(devices))
 
-    def _get_best_fit_device_until_success(self, cpu_required, mem_required, max_trial=None):
+    def _get_best_fit_device_until_success(self, cpu_required: float, mem_required: float, max_trial: int = 1000) -> str:
         count = 0
         while max_trial is None or count < max_trial:
             device = self._get_best_fit_device(cpu_required, mem_required)
             if device is not None:
-                return device
-        return None
+                return device['deviceId']
+        raise RuntimeError('Too many iterations without finding a suitable device.')
 
     def __init__(
         self,
@@ -120,12 +120,12 @@ class SmartResort(BaseScenario):
         self.scenario_devices.extend(medium_devices)
         self.scenario_devices.extend(small_devices)
 
-    def _install_my_app(self, my_app: MyApp, device: Device):
+    def _install_my_app(self, my_app_id: int, device_id: str):
         self.install_my_app(
-            my_app=my_app,
+            my_app_id=my_app_id,
             device_allocations=[
                 JobDeviceAllocation(
-                    device=device,
+                    deviceId=device_id,
                     profile=ApplicationProfile.Tiny,
                     cpu=100,
                     memory=32,
@@ -139,22 +139,30 @@ class SmartResort(BaseScenario):
         self.register_devices(*self.scenario_devices)
 
         # Uploading .tar.gz
-        application = self.register_application('NettestApp2')
+        self.application = self.register_application('NettestApp2')
 
         for deployment_id in range(0, self.number_of_deployments):
             # Creating myApp
             myapp = MyApp(name=f'SmartResortApplication {deployment_id}')
-            myapp.applicationLocalAppId = application.localAppId
+            myapp.applicationLocalAppId = self.application.localAppId
             self.register_my_apps(myapp)
 
             self._install_my_app(
-                my_app=myapp,
-                device=self._get_best_fit_device_until_success(application.cpuUsage, application.memoryUsage),
+                my_app_id=myapp.myAppId,
+                device_id=self._get_best_fit_device_until_success(self.application.cpuUsage, self.application.memoryUsage),
             )
             self.start_my_apps()
 
     def manage_iteration(self):
-        alerts = cast(List[Alert], self.fog_director_client.get_alerts().result()['data'])  # THIS IS WRONG :)
+        alerts = [
+            Alert(
+                myAppId=alert['myAppId'],
+                deviceId=alert['deviceId'],
+                type=alert['type'],
+                time=alert['time'],
+            )
+            for alert in self.fog_director_client.get_alerts().result()['data']
+        ]
         already_migrated = []
         not_reachable_devices = defaultdict(list)
         for alert in alerts:
@@ -163,25 +171,32 @@ class SmartResort(BaseScenario):
                     continue
 
                 already_migrated.append(alert.myAppId)
-                self.stop_my_apps(alert.myApp)
-                self.uninstall_my_app(alert.myApp, devices=[alert.device])
+                self.stop_my_apps(alert.myAppId)
+                self.uninstall_my_app(my_app_id=alert.myAppId, device_ids=[alert.deviceId])
                 self._install_my_app(
-                    my_app=alert.myApp,
-                    device=self._get_best_fit_device_until_success(
+                    my_app_id=alert.myAppId,
+                    device_id=self._get_best_fit_device_until_success(
+                        # TODO: this has to be fixed, via the API we do not have application available
                         alert.myApp.application.cpuUsage,
                         alert.myApp.application.memoryUsage,
-                    )
+                    ),
                 )
-                self.stop_my_apps(alert.myApp)
+                self.stop_my_apps(alert.myAppId)
                 if alert.type == AlertType.DEVICE_REACHABILITY:
-                    not_reachable_devices[alert.deviceId].append(alert.myApp)
+                    not_reachable_devices[alert.deviceId].append(alert.myAppId)
 
             elif alert.type == AlertType.CPU_CRITICAL_CONSUMPTION:
                 # TODO: To be implemented according new API found
                 continue
 
         devices = self.get_all_devices()
-        revived_devices = [dev for dev in devices if dev.deviceId in not_reachable_devices]
-        for device in revived_devices:
-            for myApp in not_reachable_devices[device.deviceId]:
-                self.uninstall_my_app(my_app=myApp, devices=[device])
+        revived_device_ids = [
+            device['deviceId']
+            for device in devices
+            if device['deviceId'] in not_reachable_devices
+        ]
+        for device_id, my_app_ids in not_reachable_devices.items():
+            if device_id not in revived_device_ids:
+                continue
+            for my_app_id in my_app_ids:
+                self.uninstall_my_app(my_app_id=my_app_id, device_ids=[device_id])

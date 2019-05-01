@@ -11,6 +11,7 @@ from fog_director_simulator.database.models import MyApp
 @pytest.fixture
 def formatted_device(device: Device) -> Dict[str, Any]:
     return {
+        'deviceId': device.deviceId,
         'port': device.port,
         'ipAddress': device.ipAddress,
         'password': device.password,

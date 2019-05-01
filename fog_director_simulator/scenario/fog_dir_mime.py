@@ -1,6 +1,3 @@
-from typing import cast
-from typing import List
-
 from fog_director_simulator.database import Device
 from fog_director_simulator.database import MyApp
 from fog_director_simulator.database.models import Alert
@@ -65,7 +62,7 @@ class FogDirMime(BaseScenario):
 
     def _install_my_app(self, my_app: MyApp, device: Device):
         self.install_my_app(
-            my_app=my_app,
+            my_app_id=my_app.myAppId,
             device_allocations=[
                 JobDeviceAllocation(
                     device=device,
@@ -90,31 +87,39 @@ class FogDirMime(BaseScenario):
 
         self._install_my_app(my_app=self.building_my_app, device=self.fog_1)
         self._install_my_app(my_app=self.apartment_my_app, device=self.fog_2)
-        self.start_my_apps(self.building_my_app, self.apartment_my_app)
+        self.start_my_apps(self.building_my_app.myAppId, self.apartment_my_app.myAppId)
 
     def manage_iteration(self):
-        alerts = cast(List[Alert], self.fog_director_client.get_alerts().result()['data'])
+        alerts = [
+            Alert(
+                myAppId=alert['myAppId'],
+                deviceId=alert['deviceId'],
+                type=alert['type'],
+                time=alert['time'],
+            )
+            for alert in self.fog_director_client.get_alerts().result()['data']
+        ]
 
         moved_apps = set()
         for alert in alerts:
             if alert.type != AlertType.APP_HEALTH:
                 continue
 
-            if alert.appName == self.building_my_app.name and alert.appName not in moved_apps:
-                self.stop_my_apps(self.building_my_app)
-                self.uninstall_my_app(self.building_my_app, devices=[self.fog_1])
+            if alert.myAppId == self.building_my_app.myAppId and alert.myAppId not in moved_apps:
+                self.stop_my_apps(self.building_my_app.myAppId)
+                self.uninstall_my_app(self.building_my_app.myAppId, device_ids=[self.fog_1.deviceId])
                 self._install_my_app(my_app=self.building_my_app, device=self.fog_3)
-                self.start_my_apps(self.building_my_app)
-                moved_apps.add(self.building_my_app.name)
+                self.start_my_apps(self.building_my_app.myAppId)
+                moved_apps.add(self.building_my_app.myAppId)
 
-            elif alert.appName == self.apartment_my_app.name:
+            elif alert.myAppId == self.apartment_my_app.name:
                 isOnFog1 = alert.deviceId == self.fog_1.deviceId
-                self.stop_my_apps(self.apartment_my_app)
-                self.uninstall_my_app(self.apartment_my_app, devices=[
-                    self.fog_1 if isOnFog1 else self.fog_2
+                self.stop_my_apps(self.apartment_my_app.myAppId)
+                self.uninstall_my_app(self.apartment_my_app.myAppId, device_ids=[
+                    self.fog_1.deviceId if isOnFog1 else self.fog_2.deviceId
                 ])
                 self._install_my_app(my_app=self.apartment_my_app, device=(
                     self.fog_2 if isOnFog1 else self.fog_1
                 ))
-                self.start_my_apps(self.apartment_my_app)
-                moved_apps.add(self.apartment_my_app.name)
+                self.start_my_apps(self.apartment_my_app.myAppId)
+                moved_apps.add(self.apartment_my_app.myAppId)
