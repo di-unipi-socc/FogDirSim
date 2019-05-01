@@ -5,6 +5,7 @@ import pytest
 
 from fog_director_simulator.database import Device
 from fog_director_simulator.database.models import Application
+from fog_director_simulator.database.models import MyApp
 
 
 @pytest.fixture
@@ -31,4 +32,12 @@ def formatted_application(application: Application) -> Dict[str, Any]:
         'cpuUsage': application.cpuUsage,
         'memoryUsage': application.memoryUsage,
         'sourceAppName': f'{application.localAppId}:{application.version}',
+    }
+
+
+@pytest.fixture
+def formatted_my_app(my_app: MyApp) -> Dict[str, Any]:
+    return {
+        'myAppId': my_app.myAppId,
+        'name': my_app.name,
     }

@@ -116,6 +116,9 @@ definitions:
         type: integer
       name:
         type: string
+    required:
+    - myAppId
+    - name
   applicationResourceAsk:
     type: object
     properties:
@@ -342,6 +345,22 @@ paths:
         type: integer
         required: false
         description: Parameter added by FogDirSim to permit to specify minimal amount of job required to consider the myapp up and running
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          properties:
+            name:
+              type: string
+            sourceAppName:
+              type: string
+            version:
+              type: string
+          required:
+          - name
+          - sourceAppName
+          - version
       responses:
         '200':
           description: MyApp correctly created

@@ -1,9 +1,10 @@
 from typing import Any
 from typing import Dict
 
-from fog_director_simulator.database import Alert
-from fog_director_simulator.database import Device
+from fog_director_simulator.database.models import Alert
 from fog_director_simulator.database.models import Application
+from fog_director_simulator.database.models import Device
+from fog_director_simulator.database.models import MyApp
 
 
 def alert_format(alert: Alert) -> Dict[str, Any]:
@@ -38,4 +39,11 @@ def application_format(application: Application) -> Dict[str, Any]:
         'cpuUsage': application.cpuUsage,
         'memoryUsage': application.memoryUsage,
         'sourceAppName': f'{application.localAppId}:{application.version}',
+    }
+
+
+def myapp_format(my_app: MyApp) -> Dict[str, Any]:
+    return {
+        'myAppId': my_app.myAppId,
+        'name': my_app.name,
     }

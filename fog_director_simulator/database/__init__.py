@@ -297,3 +297,17 @@ class DatabaseLogic:
         )
 
         return query.first()
+
+    @with_session
+    def get_my_app_by_name(
+        self,
+        session: Session,
+        name: str,
+    ) -> Optional[MyApp]:
+        query = session.query(
+            MyApp,
+        ).filter(
+            MyApp.name == name,
+        )
+
+        return query.first()
