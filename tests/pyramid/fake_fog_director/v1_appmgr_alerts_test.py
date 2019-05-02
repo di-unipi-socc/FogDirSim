@@ -28,13 +28,4 @@ def test_get_v1_appmgr_alerts_with_alerts(testapp: TestApp, database_logic: Data
             'X-Token-Id': 'token',
         },
     )
-    assert response.json == {
-        'data': [
-            {
-                'deviceId': 'deviceId',
-                'myAppId': 42,
-                'time': 0,
-                'type': 'APP_HEALTH',
-            },
-        ],
-    }
+    assert response.json == {'data': [formatted_alert]}

@@ -1,5 +1,6 @@
 import enum
 from typing import Any
+from typing import cast
 from typing import Dict
 from typing import NamedTuple
 
@@ -90,7 +91,7 @@ class Application(Base):  # type: ignore
     name = Column(String(255))
     description = Column(String(255))
     isPublished = Column(Boolean)
-    profileNeeded = Column(Enum(ApplicationProfile))
+    profileNeeded = cast(ApplicationProfile, Column(Enum(ApplicationProfile)))
     _cpuUsage = Column(Float, nullable=True)
     _memoryUsage = Column(Float, nullable=True)
     # TODO: should we have references?
@@ -135,7 +136,7 @@ class Application(Base):  # type: ignore
 class MyApp(Base):  # type: ignore
     __tablename__ = 'my_apps'
     __table_args__ = (
-        ForeignKeyConstraint(
+        ForeignKeyConstraint(  # type: ignore
             ('applicationLocalAppId', 'applicationVersion'),
             (Application.localAppId, Application.version),
         ),
@@ -145,7 +146,7 @@ class MyApp(Base):  # type: ignore
     applicationLocalAppId = Column(String(255), nullable=False)  # Foreign keys for composite keys need to be defined in __table_args__
     applicationVersion = Column(String(255), nullable=False)  # Foreign keys for composite keys need to be defined in __table_args__
     application = relationship('Application', back_populates='myApps')
-    name = Column(String(255), unique=True)
+    name = Column(String(255), unique=True, nullable=False)
     minJobReplicas = Column(Integer, nullable=True)
     creationTime = Column(Integer)
     destructionTime = Column(Integer, nullable=True)
@@ -169,16 +170,16 @@ class Device(Base):  # type: ignore
 
     # Fields provided by public interface
     deviceId = Column(String(255), primary_key=True)
-    ipAddress = Column(String(255))
-    username = Column(String(255))
-    password = Column(String(255))
+    ipAddress = Column(String(255), nullable=False)
+    username = Column(String(255), nullable=False)
+    password = Column(String(255), nullable=False)
     port = Column(String, default='8443')
 
     # Fields added for internal use
     timeOfCreation = Column(Integer, nullable=True)
     timeOfRemoval = Column(Integer, nullable=True)
     isAlive = Column(Boolean, default=True)
-    reservedCPU = Column(Float, default=0)
+    reservedCPU = Column(Float, default=0, nullable=False)
     totalCPU = Column(Integer, nullable=False)
     _cpuMetricsDistributionMean = Column(Float)
     _cpuMetricsDistributionStdDev = Column(Float)
@@ -191,7 +192,7 @@ class Device(Base):  # type: ignore
     chaosDieProb = Column(Float, nullable=False)
     chaosReviveProb = Column(Float, nullable=False)
     tags = relationship('DeviceTag', back_populates='device')
-    energyConsumptionType = Column(Enum(EnergyConsumptionType), default=EnergyConsumptionType.MEDIUM)
+    energyConsumptionType = cast(EnergyConsumptionType, Column(Enum(EnergyConsumptionType), default=EnergyConsumptionType.MEDIUM))
 
     @property
     def isInFogDirector(self) -> bool:
@@ -201,7 +202,7 @@ class Device(Base):  # type: ignore
 class DeviceTag(Base):  # type: ignore  # TODO: we might nuke this
     __tablename__ = 'device_tags'
 
-    deviceId = Column(ForeignKey(f'{Device.__tablename__}.deviceId'), primary_key=True)
+    deviceId = Column(String(255), ForeignKey(f'{Device.__tablename__}.deviceId'), primary_key=True)
     device = relationship('Device', back_populates='tags')
     tag = Column(String(255), primary_key=True)
 
@@ -226,19 +227,19 @@ class Job(Base):  # type: ignore
     jobId = Column(Integer, primary_key=True, autoincrement=True)
     myAppId = Column(Integer, ForeignKey(f'{MyApp.__tablename__}.myAppId'), nullable=False)
     myApp = relationship('MyApp')
-    status = Column(Enum(JobStatus))
-    profile = Column(Enum(JobIntensivity))
+    status = cast(JobStatus, Column(Enum(JobStatus)))
+    profile = cast(JobIntensivity, Column(Enum(JobIntensivity)))
     job_device_allocations = relationship('JobDeviceAllocation', back_populates='job')
 
 
 class JobDeviceAllocation(Base):  # type: ignore
     __tablename__ = 'job_device_allocations'
 
-    deviceId = Column(ForeignKey(f'{Device.__tablename__}.deviceId'), primary_key=True)
+    deviceId = Column(String(255), ForeignKey(f'{Device.__tablename__}.deviceId'), primary_key=True)
     device = relationship('Device')
-    jobId = Column(ForeignKey(f'{Job.__tablename__}.jobId'), primary_key=True)
+    jobId = Column(Integer, ForeignKey(f'{Job.__tablename__}.jobId'), primary_key=True)
     job = relationship('Job')
-    profile = Column(Enum(ApplicationProfile))
+    profile = cast(ApplicationProfile, Column(Enum(ApplicationProfile)))
     cpu = Column(Integer)
     memory = Column(Integer)
 
@@ -259,10 +260,10 @@ class DeviceMetric(Base):  # type: ignore
     )
 
     iterationCount = Column(Integer, primary_key=True)
-    deviceId = Column(ForeignKey(f'{Device.__tablename__}.deviceId'), primary_key=True)
+    deviceId = Column(String(255), ForeignKey(f'{Device.__tablename__}.deviceId'), primary_key=True)
     device = relationship('Device')
-    metricType = Column(Enum(DeviceMetricType), primary_key=True)
-    value = Column(Float)
+    metricType = cast(DeviceMetricType, Column(Enum(DeviceMetricType), primary_key=True))
+    value = Column(Float, nullable=False)
 
 
 class JobMetricType(enum.Enum):
@@ -278,9 +279,9 @@ class JobMetric(Base):  # type: ignore
     )
 
     iterationCount = Column(Integer, primary_key=True)
-    jobId = Column(ForeignKey(f'{Job.__tablename__}.jobId'), primary_key=True)
+    jobId = Column(Integer, ForeignKey(f'{Job.__tablename__}.jobId'), primary_key=True)
     job = relationship('Job')
-    metricType = Column(Enum(JobMetricType), primary_key=True)
+    metricType = cast(JobMetricType, Column(Enum(JobMetricType), primary_key=True))
     value = Column(Float)
 
 
@@ -295,9 +296,9 @@ class MyAppMetric(Base):  # type: ignore
     )
 
     iterationCount = Column(Integer, primary_key=True)
-    myAppId = Column(ForeignKey(f'{MyApp.__tablename__}.myAppId'), primary_key=True)
+    myAppId = Column(Integer, ForeignKey(f'{MyApp.__tablename__}.myAppId'), primary_key=True)
     myApp = relationship('MyApp')
-    metricType = Column(Enum(MyAppMetricType))
+    metricType = cast(MyAppMetricType, Column(Enum(MyAppMetricType)))
     value = Column(Float)
 
 
@@ -306,7 +307,7 @@ class DeviceSampling(Base):  # type: ignore
     __tablename__ = 'device_samplings'
 
     iterationCount = Column(Integer, primary_key=True)
-    deviceId = Column(ForeignKey(f'{Device.__tablename__}.deviceId'), primary_key=True)
+    deviceId = Column(String(255), ForeignKey(f'{Device.__tablename__}.deviceId'), primary_key=True)
     device = relationship('Device')
 
     criticalCpuPercentage = Column(Float)
@@ -318,11 +319,11 @@ class DeviceSampling(Base):  # type: ignore
 
 # Alerts
 class AlertType(enum.Enum):
-    NO_ALERT = 0
-    APP_HEALTH = 1
-    DEVICE_REACHABILITY = 2
-    CPU_CRITICAL_CONSUMPTION = 3
-    MEM_CRITICAL_CONSUMPTION = 4
+    NO_ALERT = 'NO_ALERT'
+    APP_HEALTH = 'APP_HEALTH'
+    DEVICE_REACHABILITY = 'DEVICE_REACHABILITY'
+    CPU_CRITICAL_CONSUMPTION = 'CPU_CRITICAL_CONSUMPTION'
+    MEM_CRITICAL_CONSUMPTION = 'MEM_CRITICAL_CONSUMPTION'
 
 
 class Alert(Base):  # type: ignore
@@ -332,21 +333,21 @@ class Alert(Base):  # type: ignore
     )
 
     alertId = Column(Integer, primary_key=True)
-    myAppId = Column(ForeignKey(f'{MyApp.__tablename__}.myAppId'), primary_key=True)
+    myAppId = Column(Integer, ForeignKey(f'{MyApp.__tablename__}.myAppId'), primary_key=True)
     myApp = relationship('MyApp')
-    deviceId = Column(ForeignKey(f'{Device.__tablename__}.deviceId'), primary_key=True)
+    deviceId = Column(String(255), ForeignKey(f'{Device.__tablename__}.deviceId'), primary_key=True)
     device = relationship('Device')
-    type = Column(Enum(AlertType), primary_key=True)
+    type = cast(AlertType, Column(Enum(AlertType), primary_key=True))
     time = Column(Integer, primary_key=True)
 
 
 class MyAppAlertStatistic(Base):  # type: ignore
     __tablename__ = 'my_app_alert_statistics'
 
-    myAppId = Column(ForeignKey(f'{MyApp.__tablename__}.myAppId'), primary_key=True)
+    myAppId = Column(Integer, ForeignKey(f'{MyApp.__tablename__}.myAppId'), primary_key=True)
     myApp = relationship('MyApp')
-    type = Column(Enum(AlertType), primary_key=True)
-    count = Column(Integer)
+    type = cast(AlertType, Column(Enum(AlertType), primary_key=True))
+    count = Column(Integer, nullable=False)
 
 
 configure_mappers()  # Force inter-table relations setup

@@ -66,7 +66,7 @@ class FogDirMime(BaseScenario):
         self.install_my_app(
             my_app_id=my_app.myAppId,
             device_allocations=[
-                JobDeviceAllocation(
+                JobDeviceAllocation(  # type: ignore
                     device=device,
                     profile=ApplicationProfile.Tiny,
                     cpu=100,
@@ -93,7 +93,7 @@ class FogDirMime(BaseScenario):
 
     def manage_iteration(self) -> None:
         alerts = [
-            Alert(
+            Alert(  # type: ignore
                 myAppId=alert['myAppId'],
                 deviceId=alert['deviceId'],
                 type=alert['type'],

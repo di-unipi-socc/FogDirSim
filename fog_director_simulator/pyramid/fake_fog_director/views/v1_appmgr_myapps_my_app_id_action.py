@@ -22,34 +22,35 @@ def _do_start(my_app: MyApp) -> Job:
     if not my_app.jobs:
         raise HTTPBadRequest
 
-    for job in my_app.jobs:
+    for job in my_app.jobs:  # type: ignore
         if job.status not in {JobStatus.DEPLOY, JobStatus.START}:
             raise HTTPBadRequest
         job.status = JobStatus.START
 
-    return next(iter(my_app.jobs))  # NOTE: the real fog-director does create a new job, we're not willing to do it for simulation proposes
+    return my_app.jobs[0]  # type: ignore # NOTE: the real fog-director does create a new job, we're not willing to do it for simulation proposes
 
 
 def _do_stop(my_app: MyApp) -> Job:
     if not my_app.jobs:
         raise HTTPBadRequest
 
-    for job in my_app.jobs:
+    for job in my_app.jobs:  # type: ignore
         if job.status != JobStatus.START:
             raise HTTPBadRequest
         job.status = JobStatus.STOP
 
-    return next(iter(my_app.jobs))  # NOTE: the real fog-director does create a new job, we're not willing to do it for simulation proposes
+    return my_app.jobs[0]  # type: ignore # NOTE: the real fog-director does create a new job, we're not willing to do it for simulation proposes
 
 
 def _do_deploy(my_app: MyApp, job_intensivity: JobIntensivity, myAppActionDeploy: Dict[str, Any], devices: Dict[str, Device]) -> Job:
-    job = Job(
+    job = Job(  # type: ignore
         myApp=my_app,
         status=JobStatus.DEPLOY,
         profile=job_intensivity,
         job_device_allocations=[],
     )
 
+    job_device_allocations = []
     for deploy_device in myAppActionDeploy['devices']:
         device = devices['deviceId']
 
@@ -66,8 +67,8 @@ def _do_deploy(my_app: MyApp, job_intensivity: JobIntensivity, myAppActionDeploy
         if device.totalMEM < device.reservedMEM:
             raise HTTPBadRequest
 
-        job.job_device_allocations.append(
-            JobDeviceAllocation(
+        job_device_allocations.append(
+            JobDeviceAllocation(  # type: ignore
                 device=device,
                 job=job,
                 profile=ApplicationProfile.from_iox_name(deploy_device['resourceAsk']['resources']['profile']),
@@ -76,11 +77,12 @@ def _do_deploy(my_app: MyApp, job_intensivity: JobIntensivity, myAppActionDeploy
             ),
         )
 
+    job.job_device_allocations.extend(job_device_allocations)  # type: ignore
     return job
 
 
 def _do_undeploy(my_app: MyApp, devices: Dict[str, Device]) -> Job:
-    for job in my_app.jobs:
+    for job in my_app.jobs:  # type: ignore
         if job.status == JobStatus.UNINSTALLED:
             continue
         to_remove = []
@@ -99,7 +101,7 @@ def _do_undeploy(my_app: MyApp, devices: Dict[str, Device]) -> Job:
         ]
         job.status = JobStatus.UNINSTALLED
 
-    return next(iter(my_app.jobs))  # NOTE: the real fog-director does create a new job, we're not willing to do it for simulation proposes
+    return my_app.jobs[0]  # type: ignore # NOTE: the real fog-director does create a new job, we're not willing to do it for simulation proposes
 
 
 @view_config(route_name='api.v1.appmgr.myapps.my_app_id.action', request_method='POST')

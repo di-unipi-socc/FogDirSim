@@ -58,7 +58,7 @@ def iterationCount() -> int:
 
 @pytest.fixture
 def application() -> Application:
-    return Application(
+    return Application(  # type: ignore
         localAppId='localAppId',
         version='1',
         name='name',
@@ -70,7 +70,7 @@ def application() -> Application:
 
 @pytest.fixture
 def device() -> Device:
-    return Device(
+    return Device(  # type: ignore
         deviceId='deviceId',
         port='1',
         ipAddress='ipAddress',
@@ -111,7 +111,7 @@ def device_tag(device: Device) -> DeviceTag:
 
 @pytest.fixture
 def job(my_app: MyApp) -> Job:
-    return Job(
+    return Job(  # type: ignore
         myApp=my_app,
         status=JobStatus.DEPLOY,
         profile=JobIntensivity.NORMAL,
@@ -120,7 +120,7 @@ def job(my_app: MyApp) -> Job:
 
 @pytest.fixture
 def job_device_allocation(device: Device, job: Job) -> JobDeviceAllocation:
-    return JobDeviceAllocation(
+    return JobDeviceAllocation(  # type: ignore
         device=device,
         job=job,
         profile=ApplicationProfile.Tiny,
@@ -129,7 +129,7 @@ def job_device_allocation(device: Device, job: Job) -> JobDeviceAllocation:
 
 @pytest.fixture
 def device_metric(device: Device, iterationCount: int) -> DeviceMetric:
-    return DeviceMetric(
+    return DeviceMetric(  # type: ignore
         iterationCount=iterationCount,
         device=device,
         metricType=DeviceMetricType.CPU,
@@ -139,7 +139,7 @@ def device_metric(device: Device, iterationCount: int) -> DeviceMetric:
 
 @pytest.fixture
 def job_metric(job: Job, iterationCount: int) -> JobMetric:
-    return JobMetric(
+    return JobMetric(  # type: ignore
         iterationCount=iterationCount,
         job=job,
         metricType=JobMetricType.UP_STATUS,
@@ -149,7 +149,7 @@ def job_metric(job: Job, iterationCount: int) -> JobMetric:
 
 @pytest.fixture
 def my_app_metric(my_app: MyApp, iterationCount: int) -> MyAppMetric:
-    return MyAppMetric(
+    return MyAppMetric(  # type: ignore
         iterationCount=iterationCount,
         myApp=my_app,
         metricType=MyAppMetricType.UP_STATUS,
@@ -172,7 +172,7 @@ def device_sampling(device: Device, iterationCount: int) -> DeviceSampling:
 
 @pytest.fixture
 def alert(my_app: MyApp, device: Device) -> Alert:
-    return Alert(
+    return Alert(  # type: ignore
         alertId=0,
         myApp=my_app,
         device=device,

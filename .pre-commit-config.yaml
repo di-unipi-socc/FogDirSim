@@ -35,6 +35,8 @@ repos:
   hooks:
   - id: mypy
     exclude: ^(setup\.py|.*\.wsgi)$
+    additional_dependencies:
+    - sqlalchemy-stubs
 - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
   rev: v1.2.3
   hooks:

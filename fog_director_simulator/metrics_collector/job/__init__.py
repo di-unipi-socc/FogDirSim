@@ -31,7 +31,7 @@ def scaled_random_sample(job_intensivity: JobIntensivity, scale_factor: float, u
     )
 
 
-def collect(db_logic: DatabaseLogic, iterationCount: int, jobId: str) -> List[JobMetric]:
+def collect(db_logic: DatabaseLogic, iterationCount: int, jobId: int) -> List[JobMetric]:
     return [
         JobMetric(  # type: ignore
             iterationCount=iterationCount,

@@ -127,7 +127,7 @@ class SmartResort(BaseScenario):
         self.install_my_app(
             my_app_id=my_app_id,
             device_allocations=[
-                JobDeviceAllocation(
+                JobDeviceAllocation(  # type: ignore
                     deviceId=device_id,
                     profile=ApplicationProfile.Tiny,
                     cpu=100,
@@ -158,7 +158,7 @@ class SmartResort(BaseScenario):
 
     def manage_iteration(self) -> None:
         alerts = [
-            Alert(
+            Alert(  # type: ignore
                 myAppId=alert['myAppId'],
                 deviceId=alert['deviceId'],
                 type=alert['type'],

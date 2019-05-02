@@ -75,7 +75,7 @@ class DatabaseClient:
         if self._session is None:
             self._session = self._SessionClass()
         self._session.begin_nested()  # type: ignore
-        return self._session
+        return self._session  # type: ignore
 
     def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> bool:
         assert self._session  # type guard for type checking to ensure that `self._session is not None`
@@ -133,7 +133,7 @@ class DatabaseLogic:
                 raise NoResultFound()
             return device_metric
 
-    def get_job(self, jobId: str) -> Job:
+    def get_job(self, jobId: int) -> Job:
         with self as session:
             job = session.query(Job).get(jobId)
             if job is None:
@@ -168,25 +168,59 @@ class DatabaseLogic:
                 raise NoResultFound()
             return my_app
 
-    def get_all_devices(self, currently_on_the_infrastructure: bool = True) -> Iterable[Device]:
+    def get_all_devices(
+        self,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+        currently_on_the_infrastructure: bool = True,
+    ) -> Iterable[Device]:
         with self as session:
             query = session.query(Device)
+            if limit is not None:
+                query = query.limit(limit)
+            if offset is not None:
+                query = query.offset(offset)
+
             if currently_on_the_infrastructure:
                 query = query.filter(Device.timeOfRemoval is None)
+
             return query.all()
 
-    def get_all_jobs(self, jobStatus: Optional[Iterable[JobStatus]] = None, myAppId: Optional[int] = None) -> Iterable[Job]:
+    def get_all_jobs(
+        self,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+        jobStatus: Optional[Iterable[JobStatus]] = None,
+        myAppId: Optional[int] = None,
+    ) -> Iterable[Job]:
         with self as session:
             query = session.query(Job)
+            if limit is not None:
+                query = query.limit(limit)
+            if offset is not None:
+                query = query.offset(offset)
+
             if jobStatus is None:
                 query = query.filter(Job.status != JobStatus.UNINSTALLED)
             elif not jobStatus:
                 return []  # Let's avoid to issue the query as we already know the result
             else:
-                query = query.filter(Job.status.in_(jobStatus))
+                query = query.filter(Job.status.in_(jobStatus))  # type: ignore
 
             if myAppId is not None:
                 query = query.filter(Job.myAppId == myAppId)
+
+            return query.all()
+
+    def get_all_my_apps(self, limit: Optional[int] = None, offset: Optional[int] = None) -> Iterable[MyApp]:
+        with self as session:
+            query = session.query(
+                MyApp,
+            )
+            if limit is not None:
+                query = query.limit(limit)
+            if offset is not None:
+                query = query.offset(offset)
 
             return query.all()
 
