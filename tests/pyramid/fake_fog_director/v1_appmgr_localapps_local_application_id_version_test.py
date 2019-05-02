@@ -1,16 +1,18 @@
-from webtest import TestApp
+import typing
 
 from fog_director_simulator.database import DatabaseLogic
 from fog_director_simulator.database.models import Application
 from fog_director_simulator.pyramid.fake_fog_director.formatters import ApplicationApi
+if typing.TYPE_CHECKING:
+    from webtest import TestApp
 
 
-def test_put_v1_appmgr_localapps_local_application_id_version_without_tokens(testapp: TestApp) -> None:
+def test_put_v1_appmgr_localapps_local_application_id_version_without_tokens(testapp: 'TestApp') -> None:
     response = testapp.put('/api/v1/appmgr/localapps/{local_application_id}:{version}', expect_errors=True)
     assert response.status_code == 400
 
 
-def test_put_v1_appmgr_localapps_local_application_id_version_without_application(testapp: TestApp) -> None:
+def test_put_v1_appmgr_localapps_local_application_id_version_without_application(testapp: 'TestApp') -> None:
     response = testapp.put_json(
         '/api/v1/appmgr/localapps/local_application_id:version',
         expect_errors=True,
@@ -34,7 +36,7 @@ def test_put_v1_appmgr_localapps_local_application_id_version_without_applicatio
 
 
 def test_put_v1_appmgr_localapps_local_application_id_version_with_application(
-    testapp: TestApp, database_logic: DatabaseLogic, application: Application, formatted_application: ApplicationApi,
+    testapp: 'TestApp', database_logic: DatabaseLogic, application: Application, formatted_application: ApplicationApi,
 ) -> None:
     params = {
         'creationDate': 0,

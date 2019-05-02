@@ -1,13 +1,14 @@
+import typing
 from unittest import mock
-
-from webtest import TestApp
 
 from fog_director_simulator.database import DatabaseLogic
 from fog_director_simulator.database.models import Application
 from fog_director_simulator.database.models import MyApp
+if typing.TYPE_CHECKING:
+    from webtest import TestApp
 
 
-def test_post_v1_appmgr_myapps_without_tokens(testapp: TestApp) -> None:
+def test_post_v1_appmgr_myapps_without_tokens(testapp: 'TestApp') -> None:
     response = testapp.post('/api/v1/appmgr/myapps', expect_errors=True)
     assert response.status_code == 400
 
@@ -32,7 +33,7 @@ def test_post_v1_appmgr_myapps_with_invalid_application_parameters(testapp, data
     assert response.status_code == 400
 
 
-def test_post_v1_appmgr_myapps_with_already_created_name(testapp: TestApp, database_logic: DatabaseLogic, application: Application, my_app: MyApp) -> None:
+def test_post_v1_appmgr_myapps_with_already_created_name(testapp: 'TestApp', database_logic: DatabaseLogic, application: Application, my_app: MyApp) -> None:
     params = {
         'name': my_app.name,
         'sourceAppName': f'{application.localAppId}:{application.version}',
@@ -50,7 +51,7 @@ def test_post_v1_appmgr_myapps_with_already_created_name(testapp: TestApp, datab
     assert response.status_code == 409
 
 
-def test_post_v1_appmgr_myapps_with_valid_application_parameters(testapp: TestApp, database_logic: DatabaseLogic, application: Application) -> None:
+def test_post_v1_appmgr_myapps_with_valid_application_parameters(testapp: 'TestApp', database_logic: DatabaseLogic, application: Application) -> None:
     params = {
         'name': 'new_app_name',
         'sourceAppName': f'{application.localAppId}:{application.version}',
@@ -71,6 +72,6 @@ def test_post_v1_appmgr_myapps_with_valid_application_parameters(testapp: TestAp
     }
 
 
-def test_get_v1_appmgr_myapps_without_tokens(testapp: TestApp) -> None:
+def test_get_v1_appmgr_myapps_without_tokens(testapp: 'TestApp') -> None:
     response = testapp.get('/api/v1/appmgr/myapps', expect_errors=True)
     assert response.status_code == 400
