@@ -1,7 +1,10 @@
 from collections import defaultdict
 from typing import Any
+from typing import DefaultDict
 from typing import Dict
+from typing import List
 from typing import Optional
+from typing import Set
 
 from fog_director_simulator.database import Device
 from fog_director_simulator.database import MyApp
@@ -120,11 +123,11 @@ class SmartResort(BaseScenario):
         self.scenario_devices.extend(medium_devices)
         self.scenario_devices.extend(small_devices)
 
-    def _install_my_app(self, my_app_id: int, device_id: str):
+    def _install_my_app(self, my_app_id: int, device_id: str) -> None:
         self.install_my_app(
             my_app_id=my_app_id,
             device_allocations=[
-                JobDeviceAllocation(
+                JobDeviceAllocation(  # type: ignore
                     deviceId=device_id,
                     profile=ApplicationProfile.Tiny,
                     cpu=100,
@@ -134,7 +137,7 @@ class SmartResort(BaseScenario):
             retry_on_failure=True,
         )
 
-    def configure_infrastructure(self):
+    def configure_infrastructure(self) -> None:
         # Adding Devices to FogDirector
         self.register_devices(*self.scenario_devices)
 
@@ -144,18 +147,18 @@ class SmartResort(BaseScenario):
         for deployment_id in range(0, self.number_of_deployments):
             # Creating myApp
             myapp = MyApp(name=f'SmartResortApplication {deployment_id}')
-            myapp.applicationLocalAppId = self.application.localAppId
+            myapp.applicationLocalAppId = self.application['localAppId']
             self.register_my_apps(myapp)
 
             self._install_my_app(
                 my_app_id=myapp.myAppId,
-                device_id=self._get_best_fit_device_until_success(self.application.cpuUsage, self.application.memoryUsage),
+                device_id=self._get_best_fit_device_until_success(self.application['cpuUsage'], self.application['memoryUsage']),
             )
             self.start_my_apps()
 
-    def manage_iteration(self):
+    def manage_iteration(self) -> None:
         alerts = [
-            Alert(
+            Alert(  # type: ignore
                 myAppId=alert['myAppId'],
                 deviceId=alert['deviceId'],
                 type=alert['type'],
@@ -163,14 +166,14 @@ class SmartResort(BaseScenario):
             )
             for alert in self.fog_director_client.get_alerts().result()['data']
         ]
-        already_migrated = []
-        not_reachable_devices = defaultdict(list)
+        already_migrated: Set[int] = set()
+        not_reachable_devices: DefaultDict[str, List[int]] = defaultdict(list)
         for alert in alerts:
             if alert.type in (AlertType.APP_HEALTH, AlertType.DEVICE_REACHABILITY):
                 if alert.myAppId in already_migrated:
                     continue
 
-                already_migrated.append(alert.myAppId)
+                already_migrated.add(alert.myAppId)
                 self.stop_my_apps(alert.myAppId)
                 self.uninstall_my_app(my_app_id=alert.myAppId, device_ids=[alert.deviceId])
                 self._install_my_app(

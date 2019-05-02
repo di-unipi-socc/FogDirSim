@@ -1,4 +1,5 @@
 import os
+from typing import Any
 from typing import Iterable
 from typing import NamedTuple
 from typing import Optional
@@ -9,6 +10,7 @@ from sqlalchemy import func
 from sqlalchemy.engine.url import URL
 from sqlalchemy.orm import Session
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm.exc import NoResultFound
 
 from fog_director_simulator.database.models import Alert
 from fog_director_simulator.database.models import AlertType
@@ -66,16 +68,17 @@ class DatabaseClient:
         self._session = None
         self.logic = DatabaseLogic(self)
 
-    def reset_database(self):
+    def reset_database(self) -> None:
         prune_all_tables(self._engine)
 
-    def __enter__(self):
+    def __enter__(self) -> Session:
         if self._session is None:
             self._session = self._SessionClass()
-        self._session.begin_nested()
-        return self._session
+        self._session.begin_nested()  # type: ignore
+        return self._session  # type: ignore
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> bool:
+        assert self._session  # type guard for type checking to ensure that `self._session is not None`
         if exc_type is not None:
             self._session.rollback()
         else:
@@ -88,226 +91,231 @@ class DatabaseClient:
                 self._session.commit()
             self._session.close()
 
-
-def with_session(func):
-    def wrapper(self, *args, **kwargs):
-        if args and isinstance(args[0], Session):
-            return func(self, *args, **kwargs)
-        else:
-            with self._client as session:
-                return func(self, session, *args, **kwargs)
-    return wrapper
+        return False
 
 
 class DatabaseLogic:
     def __init__(self, database_client: DatabaseClient):
         self._client = database_client
 
-    def __enter__(self):
+    def __enter__(self) -> Session:
         return self._client.__enter__()
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> bool:
         return self._client.__exit__(exc_type, exc_val, exc_tb)
 
-    @with_session
-    def create(self, session: Session, *sql_alchemy_mapping: Base) -> Tuple[Base, ...]:
-        session.add_all(sql_alchemy_mapping)
-        session.flush(sql_alchemy_mapping)
-        return sql_alchemy_mapping
+    def create(self, *sql_alchemy_mapping: Base) -> Tuple[Base, ...]:
+        with self as session:
+            session.add_all(sql_alchemy_mapping)
+            session.flush(sql_alchemy_mapping)
+            return sql_alchemy_mapping
 
-    @with_session
-    def delete(self, session: Session, *sql_alchemy_mapping: Base) -> None:
-        for instance in sql_alchemy_mapping:
-            session.delete(instance)
+    def delete(self, *sql_alchemy_mapping: Base) -> None:
+        with self as session:
+            for instance in sql_alchemy_mapping:
+                session.delete(instance)
 
-    @with_session
-    def get_device(self, session: Session, deviceId: str) -> Optional[Device]:
-        return session.query(Device).get(deviceId)
+    def get_device(self, deviceId: str) -> Device:
+        with self as session:
+            device = session.query(Device).get(deviceId)
+            if device is None:
+                raise NoResultFound()
+            return device
 
-    @with_session
-    def get_device_metric(self, session: Session, iterationCount: int, deviceId: str, metricType: DeviceMetricType) -> Optional[DeviceMetric]:
-        return session.query(DeviceMetric).get({
-            'iterationCount': iterationCount,
-            'deviceId': deviceId,
-            'metricType': metricType,
-        })
+    def get_device_metric(self, iterationCount: int, deviceId: str, metricType: DeviceMetricType) -> DeviceMetric:
+        with self as session:
+            device_metric = session.query(DeviceMetric).get({
+                'iterationCount': iterationCount,
+                'deviceId': deviceId,
+                'metricType': metricType,
+            })
+            if device_metric is None:
+                raise NoResultFound()
+            return device_metric
 
-    @with_session
-    def get_job(self, session: Session, jobId: str) -> Optional[Job]:
-        return session.query(Job).get(jobId)
+    def get_job(self, jobId: int) -> Job:
+        with self as session:
+            job = session.query(Job).get(jobId)
+            if job is None:
+                raise NoResultFound()
+            return job
 
-    @with_session
-    def get_job_metric(self, session: Session, iterationCount: int, jobId: str, metricType: JobMetricType) -> Optional[JobMetric]:
-        return session.query(JobMetric).get({
-            'iterationCount': iterationCount,
-            'jobId': jobId,
-            'metricType': metricType,
-        })
+    def get_job_metric(self, iterationCount: int, jobId: int, metricType: JobMetricType) -> JobMetric:
+        with self as session:
+            job_metric = session.query(JobMetric).get({
+                'iterationCount': iterationCount,
+                'jobId': jobId,
+                'metricType': metricType,
+            })
+            if job_metric is None:
+                raise NoResultFound()
+            return job_metric
 
-    @with_session
-    def get_application(self, session: Session, localAppId: str, version: int) -> Optional[Application]:
-        return session.query(Application).get({
-            'localAppId': localAppId,
-            'version': version,
-        })
+    def get_application(self, localAppId: str, version: str) -> Application:
+        with self as session:
+            application = session.query(Application).get({
+                'localAppId': localAppId,
+                'version': version,
+            })
+            if application is None:
+                raise NoResultFound()
+            return application
 
-    @with_session
-    def get_my_app(self, session: Session, myAppId: str) -> Optional[MyApp]:
-        return session.query(MyApp).get(myAppId)
+    def get_my_app(self, myAppId: int) -> MyApp:
+        with self as session:
+            my_app = session.query(MyApp).get(myAppId)
+            if my_app is None:
+                raise NoResultFound()
+            return my_app
 
-    @with_session
-    def get_all_devices(self, session: Session, currently_on_the_infrastructure: bool = True) -> Iterable[Device]:
-        query = session.query(Device)
-        if currently_on_the_infrastructure:
-            query = query.filter(Device.timeOfRemoval is None)
-        return query.all()
-
-    @with_session
-    def get_all_jobs(self, session: Session, jobStatus: Optional[Iterable[JobStatus]] = None, myAppId: Optional[str] = None) -> Iterable[Job]:
-        query = session.query(Job)
-        if jobStatus is None:
-            query = query.filter(Job.status != JobStatus.UNINSTALLED)
-        elif not jobStatus:
-            return []  # Let's avoid to issue the query as we already know the result
-        else:
-            query = query.filter(Job.status.in_(jobStatus))
-
-        if myAppId is not None:
-            query = query.filter(Job.myAppId == myAppId)
-
-        return query.all()
-
-    @with_session
-    def get_device_metrics(
+    def get_all_devices(
         self,
-        session: Session,
-        deviceId: str,
-        metricType: DeviceMetricType,
-    ) -> Iterable[DeviceMetric]:
-        query = session.query(DeviceMetric).filter(
-            DeviceMetric.deviceId == deviceId,
-            DeviceMetric.metricType == metricType,
-        )
-
-        return query.all()
-
-    @with_session
-    def get_my_app_alert_statistics(
-        self,
-        session: Session,
-        myApp: MyApp,
-        alert_type: AlertType,
-    ) -> Optional[MyAppAlertStatistic]:
-        query = session.query(MyAppAlertStatistic).filter(
-            MyAppAlertStatistic.myApp == myApp,
-            MyAppAlertStatistic.type == alert_type,
-        )
-
-        return query.one_or_none()
-
-    @with_session
-    def get_alerts(
-        self,
-        session: Session,
-        iterationCount: int,
-    ) -> Iterable[MyAppAlertStatistic]:
-        query = session.query(Alert).filter(
-            Alert.time == iterationCount,
-        )
-
-        return query.all()
-
-    @with_session
-    def get_simulation_time(self, session: Session) -> int:
-        return session.query(func.max(DeviceSampling.iterationCount)).scalar() or 0
-
-    @with_session
-    def delete_application(self, session: Session, localAppId: str, version: int) -> None:
-        session.query(
-            Application,
-        ).filter(
-            Application.localAppId == localAppId,
-            Application.version == version,
-        ).delete()
-
-    @with_session
-    def get_device_from_arguments(
-        self,
-        session: Session,
-        port: str,
-        ipAddress: str,
-        username: str,
-        password: str,
-    ) -> Device:
-        query = session.query(
-            Device,
-        ).filter(
-            Device.port == port,
-            Device.ipAddress == ipAddress,
-            Device.username == username,
-            Device.password == password,
-        )
-
-        return query.one()
-
-    @with_session
-    def get_devices(
-        self,
-        session: Session,
         limit: Optional[int] = None,
         offset: Optional[int] = None,
+        currently_on_the_infrastructure: bool = True,
     ) -> Iterable[Device]:
-        query = session.query(
-            Device,
-        )
-        if limit is not None:
-            query = query.limit(limit)
-        if offset is not None:
-            query = query.offset(offset)
+        with self as session:
+            query = session.query(Device)
+            if limit is not None:
+                query = query.limit(limit)
+            if offset is not None:
+                query = query.offset(offset)
 
-        return query.all()
+            if currently_on_the_infrastructure:
+                query = query.filter(Device.timeOfRemoval is None)
 
-    @with_session
-    def get_applications(
+            return query.all()
+
+    def get_all_jobs(
         self,
-        session: Session,
         limit: Optional[int] = None,
         offset: Optional[int] = None,
-    ) -> Iterable[Application]:
-        query = session.query(
-            Application,
-        )
-        if limit is not None:
-            query = query.limit(limit)
-        if offset is not None:
-            query = query.offset(offset)
+        jobStatus: Optional[Iterable[JobStatus]] = None,
+        myAppId: Optional[int] = None,
+    ) -> Iterable[Job]:
+        with self as session:
+            query = session.query(Job)
+            if limit is not None:
+                query = query.limit(limit)
+            if offset is not None:
+                query = query.offset(offset)
 
-        return query.all()
+            if jobStatus is None:
+                query = query.filter(Job.status != JobStatus.UNINSTALLED)
+            elif not jobStatus:
+                return []  # Let's avoid to issue the query as we already know the result
+            else:
+                query = query.filter(Job.status.in_(jobStatus))  # type: ignore
 
-    @with_session
-    def get_application_by_name(
-        self,
-        session: Session,
-        name: str,
-    ) -> Optional[Application]:
-        query = session.query(
-            Application,
-        ).filter(
-            Application.name == name,
-        )
+            if myAppId is not None:
+                query = query.filter(Job.myAppId == myAppId)
 
-        return query.first()
+            return query.all()
 
-    @with_session
-    def get_my_app_by_name(
-        self,
-        session: Session,
-        name: str,
-    ) -> Optional[MyApp]:
-        query = session.query(
-            MyApp,
-        ).filter(
-            MyApp.name == name,
-        )
+    def get_all_my_apps(self, limit: Optional[int] = None, offset: Optional[int] = None) -> Iterable[MyApp]:
+        with self as session:
+            query = session.query(
+                MyApp,
+            )
+            if limit is not None:
+                query = query.limit(limit)
+            if offset is not None:
+                query = query.offset(offset)
 
-        return query.first()
+            return query.all()
+
+    def get_device_metrics(self, deviceId: str, metricType: DeviceMetricType) -> Iterable[DeviceMetric]:
+        with self as session:
+            query = session.query(DeviceMetric).filter(
+                DeviceMetric.deviceId == deviceId,
+                DeviceMetric.metricType == metricType,
+            )
+
+            return query.all()
+
+    def get_my_app_alert_statistics(self, myApp: MyApp, alert_type: AlertType) -> Optional[MyAppAlertStatistic]:
+        with self as session:
+            query = session.query(MyAppAlertStatistic).filter(
+                MyAppAlertStatistic.myApp == myApp,
+                MyAppAlertStatistic.type == alert_type,
+            )
+
+            return query.one_or_none()
+
+    def get_alerts(self, iterationCount: int) -> Iterable[MyAppAlertStatistic]:
+        with self as session:
+            query = session.query(Alert).filter(
+                Alert.time == iterationCount,
+            )
+
+            return query.all()
+
+    def get_simulation_time(self) -> int:
+        with self as session:
+            return session.query(func.max(DeviceSampling.iterationCount)).scalar() or 0
+
+    def delete_application(self, localAppId: str, version: int) -> None:
+        with self as session:
+            session.query(
+                Application,
+            ).filter(
+                Application.localAppId == localAppId,
+                Application.version == version,
+            ).delete()
+
+    def get_device_from_arguments(self, port: str, ipAddress: str, username: str, password: str) -> Device:
+        with self as session:
+            query = session.query(
+                Device,
+            ).filter(
+                Device.port == port,
+                Device.ipAddress == ipAddress,
+                Device.username == username,
+                Device.password == password,
+            )
+
+            return query.one()
+
+    def get_devices(self, limit: Optional[int] = None, offset: Optional[int] = None) -> Iterable[Device]:
+        with self as session:
+            query = session.query(
+                Device,
+            )
+            if limit is not None:
+                query = query.limit(limit)
+            if offset is not None:
+                query = query.offset(offset)
+
+            return query.all()
+
+    def get_applications(self, limit: Optional[int] = None, offset: Optional[int] = None) -> Iterable[Application]:
+        with self as session:
+            query = session.query(
+                Application,
+            )
+            if limit is not None:
+                query = query.limit(limit)
+            if offset is not None:
+                query = query.offset(offset)
+
+            return query.all()
+
+    def get_application_by_name(self, name: str) -> Optional[Application]:
+        with self as session:
+            query = session.query(
+                Application,
+            ).filter(
+                Application.name == name,
+            )
+
+            return query.first()
+
+    def get_my_app_by_name(self, name: str) -> Optional[MyApp]:
+        with self as session:
+            query = session.query(
+                MyApp,
+            ).filter(
+                MyApp.name == name,
+            )
+
+            return query.first()

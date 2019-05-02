@@ -7,13 +7,13 @@ from fog_director_simulator.metrics_collector.job import scaled_random_sample
 METRIC_TYPE = JobMetricType.ENOUGH_CPU
 
 
-def collect(db_logic: DatabaseLogic, job_id: str) -> bool:
-    job = db_logic.get_job(job_id=job_id)
-    myApp = db_logic.get_my_app(my_app_id=job.myappId)
-    application = db_logic.get_application(source_app_name=myApp.sourceAppName)
+def collect(db_logic: DatabaseLogic, job_id: int) -> bool:
+    job = db_logic.get_job(jobId=job_id)
+    myApp = db_logic.get_my_app(myAppId=job.myAppId)
+    application = db_logic.get_application(localAppId=myApp.applicationLocalAppId, version=myApp.applicationVersion)
 
-    for device in job.devices:
-        reserved_cpu = device.resourceAsk.cpu
+    for job_device_allocation in job.job_device_allocations:  # type: ignore
+        reserved_cpu = job_device_allocation.cpu
         required_cpu = application.cpuUsage
 
         current_cpu_usage = scaled_random_sample(

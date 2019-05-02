@@ -1,7 +1,9 @@
 from functools import partial
 from typing import Callable
 from typing import Dict
+from typing import List
 from typing import Mapping
+from typing import Union
 
 from fog_director_simulator import database
 from fog_director_simulator.database import DatabaseLogic
@@ -28,8 +30,8 @@ def _send_alert(db_logic: DatabaseLogic, iterationCount: int, job: Job, device: 
     my_app_statistics = db_logic.get_my_app_alert_statistics(myApp=job.myApp, alert_type=alert_type)
     alert_count = my_app_statistics.count if my_app_statistics else 0
 
-    alerts_to_create = [
-        MyAppAlertStatistic(
+    alerts_to_create: List[Union[MyAppAlertStatistic, Alert]] = [
+        MyAppAlertStatistic(  # type: ignore
             myApp=job.myApp,
             type=alert_type,
             count=alert_count + 1,
@@ -37,7 +39,7 @@ def _send_alert(db_logic: DatabaseLogic, iterationCount: int, job: Job, device: 
     ]
     if alert_type != AlertType.NO_ALERT:
         alerts_to_create.append(
-            Alert(
+            Alert(  # type: ignore
                 myApp=job.myApp,
                 device=device,
                 type=alert_type,
@@ -83,89 +85,86 @@ def _maybe_alert_alive_device(
 class Simulator:
 
     def __init__(self, database_config: database.Config):
-        self.database_client = database.DatabaseClient(database_config)
+        self.database_logic = database.DatabaseClient(database_config).logic
         self.iteration_count = 0
         self.is_alive = True
 
     def _evaluate_device_metrics(self) -> Dict[Device, Dict[DeviceMetricType, DeviceMetric]]:
-        with self.database_client as db_logic:
-            metrics = {
-                current_device: {
-                    device_metric.metricType: device_metric
-                    for device_metric in device.collect(
-                        iterationCount=self.iteration_count,
-                        db_logic=db_logic,
-                        device_id=current_device.deviceId,
-                    )
-                }
-                for current_device in db_logic.get_all_devices()
+        metrics = {
+            current_device: {
+                device_metric.metricType: device_metric
+                for device_metric in device.collect(
+                    iterationCount=self.iteration_count,
+                    db_logic=self.database_logic,
+                    device_id=current_device.deviceId,
+                )
             }
-            # Save all the metrics on the db
-            db_logic.create(
-                metric
-                for metrics_mapping in metrics.values()
-                for metric in metrics_mapping.values()
-            )
+            for current_device in self.database_logic.get_all_devices()
+        }
+        # Save all the metrics on the db
 
-            return metrics
+        self.database_logic.create(*[
+            metric
+            for metrics_mapping in metrics.values()
+            for metric in metrics_mapping.values()
+        ])
+
+        return metrics
 
     def _evaluate_job_metrics(self) -> Dict[Job, Dict[JobMetricType, JobMetric]]:
-        with self.database_client as db_logic:
-            metrics = {
-                current_job: {
-                    job_metric.metricType: job_metric
-                    for job_metric in job.collect(
-                        iterationCount=self.iteration_count,
-                        db_logic=db_logic,
-                        jobId=current_job.jobId,
-                    )
-                }
-                for current_job in db_logic.get_all_jobs()
+        metrics = {
+            current_job: {
+                job_metric.metricType: job_metric
+                for job_metric in job.collect(
+                    iterationCount=self.iteration_count,
+                    db_logic=self.database_logic,
+                    jobId=current_job.jobId,
+                )
             }
-            # Save all the metrics on the db
-            db_logic.create(
-                metric
-                for metrics_mapping in metrics.values()
-                for metric in metrics_mapping.values()
-            )
+            for current_job in self.database_logic.get_all_jobs()
+        }
+        # Save all the metrics on the db
+        self.database_logic.create(*[
+            metric
+            for metrics_mapping in metrics.values()
+            for metric in metrics_mapping.values()
+        ])
 
-            return metrics
+        return metrics
 
     def _evaluate_my_app_metrics(self) -> Dict[MyApp, Dict[MyAppMetricType, MyAppMetric]]:
-        with self.database_client as db_logic:
-            metrics = {
-                current_my_apps: {
-                    my_app_metric.metricType: my_app_metric
-                    for my_app_metric in my_app.collect(
-                        iterationCount=self.iteration_count,
-                        db_logic=db_logic,
-                        myAppId=current_my_apps.myAppId,
-                    )
-                }
-                for current_my_apps in db_logic.get_all_my_apps()
+        metrics = {
+            current_my_apps: {
+                my_app_metric.metricType: my_app_metric
+                for my_app_metric in my_app.collect(
+                    iterationCount=self.iteration_count,
+                    db_logic=self.database_logic,
+                    myAppId=current_my_apps.myAppId,
+                )
             }
-            # Save all the metrics on the db
-            db_logic.create(
-                metric
-                for metrics_mapping in metrics.values()
-                for metric in metrics_mapping.values()
-            )
+            for current_my_apps in self.database_logic.get_all_my_apps()
+        }
+        # Save all the metrics on the db
+        self.database_logic.create(*[
+            metric
+            for metrics_mapping in metrics.values()
+            for metric in metrics_mapping.values()
+        ])
 
-            return metrics
+        return metrics
 
     def _evaluate_device_sampling(
         self,
-        db_logic: DatabaseLogic,
         device: Device,
         device_metrics: Mapping[Device, Dict[DeviceMetricType, DeviceMetric]],
         job_metrics: Mapping[Job, Dict[JobMetricType, JobMetric]],
         my_app_metrics: Mapping[MyApp, Dict[MyAppMetricType, MyAppMetric]],
     ) -> DeviceSampling:
-        device_lifetime = (device.timeOfRemoval or self.iteration_count) - device.timeOfCreation
+        device_lifetime = (device.timeOfRemoval or self.iteration_count) - (device.timeOfCreation or 0)
 
-        cpu_metrics = db_logic.get_device_metrics(deviceId=device.deviceId, metricType=DeviceMetricType.CPU)
-        mem_metrics = db_logic.get_device_metrics(deviceId=device.deviceId, metricType=DeviceMetricType.MEM)
-        myapps_metrics = db_logic.get_device_metrics(deviceId=device.deviceId, metricType=DeviceMetricType.APPS)
+        cpu_metrics = self.database_logic.get_device_metrics(deviceId=device.deviceId, metricType=DeviceMetricType.CPU)
+        mem_metrics = self.database_logic.get_device_metrics(deviceId=device.deviceId, metricType=DeviceMetricType.MEM)
+        myapps_metrics = self.database_logic.get_device_metrics(deviceId=device.deviceId, metricType=DeviceMetricType.APPS)
 
         instants_cpu_critical = sum(
             1
@@ -199,25 +198,23 @@ class Simulator:
         job_metrics: Mapping[Job, Dict[JobMetricType, JobMetric]],
         my_app_metrics: Mapping[MyApp, Dict[MyAppMetricType, MyAppMetric]],
     ) -> Dict[Device, DeviceSampling]:
-        with self.database_client as db_logic:
-            metrics = {
-                iteration_device: self._evaluate_device_sampling(
-                    db_logic=db_logic,
-                    device=iteration_device,
-                    device_metrics=device_metrics,
-                    job_metrics=job_metrics,
-                    my_app_metrics=my_app_metrics,
-                )
-                for iteration_device in device_metrics
-            }
-            # Save all the metrics on the db
-            db_logic.create(metric for metric in metrics.values())
+        metrics = {
+            iteration_device: self._evaluate_device_sampling(
+                device=iteration_device,
+                device_metrics=device_metrics,
+                job_metrics=job_metrics,
+                my_app_metrics=my_app_metrics,
+            )
+            for iteration_device in device_metrics
+        }
+        # Save all the metrics on the db
 
-            return metrics
+        self.database_logic.create(*[metric for metric in metrics.values()])
+
+        return metrics
 
     def _handle_alerts(
         self,
-        db_logic: DatabaseLogic,
         device_metrics: Mapping[Device, Dict[DeviceMetricType, DeviceMetric]],
         job_metrics: Mapping[Job, Dict[JobMetricType, JobMetric]],
         my_app_metrics: Mapping[MyApp, Dict[MyAppMetricType, MyAppMetric]],
@@ -225,10 +222,12 @@ class Simulator:
         for current_job, current_job_metrics in job_metrics.items():
             if current_job.status is not JobStatus.START:
                 continue
-            for current_device in current_job.devices:
+
+            for current_job_device_allocation in current_job.job_device_allocations:  # type: ignore
+                current_device = current_job_device_allocation.device
                 send_alert = partial(
                     _send_alert,
-                    db_logic=db_logic,
+                    db_logic=self.database_logic,
                     iterationCount=self.iteration_count,
                     job=job,
                     device=device,
@@ -237,7 +236,7 @@ class Simulator:
                 if current_device.isAlive:
                     created_alert = _maybe_alert_alive_device(
                         send_alert=send_alert,
-                        job_metrics=current_job_metrics[current_job],
+                        job_metrics=current_job_metrics,
                         device=current_device,
                         device_metrics=device_metrics[current_device],
                     )
@@ -249,30 +248,28 @@ class Simulator:
 
     def run(self) -> None:
         while self.is_alive:
-            with self.database_client as db_logic:
-                self.iteration_count += 1
-                device_metrics = self._evaluate_device_metrics()
-                job_metrics = self._evaluate_job_metrics()
-                my_app_metrics = self._evaluate_my_app_metrics()
+            self.iteration_count += 1
+            device_metrics = self._evaluate_device_metrics()
+            job_metrics = self._evaluate_job_metrics()
+            my_app_metrics = self._evaluate_my_app_metrics()
 
-                # Evaluate pre-aggregated metrics to simplify front-end efforts
-                # for data retrieval (no need to run a lot of queries all the time)
-                # and to provide information about the current state of the simulation
-                # (NOTE: this is an hack ... but we're ok-ish for now with this)
-                self._evaluate_samplings(
-                    device_metrics=device_metrics,
-                    job_metrics=job_metrics,
-                    my_app_metrics=my_app_metrics,
-                )
+            # Evaluate pre-aggregated metrics to simplify front-end efforts
+            # for data retrieval (no need to run a lot of queries all the time)
+            # and to provide information about the current state of the simulation
+            # (NOTE: this is an hack ... but we're ok-ish for now with this)
+            self._evaluate_samplings(
+                device_metrics=device_metrics,
+                job_metrics=job_metrics,
+                my_app_metrics=my_app_metrics,
+            )
 
-                self._handle_alerts(
-                    db_logic=db_logic,
-                    device_metrics=device_metrics,
-                    job_metrics=job_metrics,
-                    my_app_metrics=my_app_metrics,
-                )
+            self._handle_alerts(
+                device_metrics=device_metrics,
+                job_metrics=job_metrics,
+                my_app_metrics=my_app_metrics,
+            )
 
-                # FIXME: Update device status ... if the device is dead ... what has to be done on the db?
+            # FIXME: Update device status ... if the device is dead ... what has to be done on the db?
 
 
 if __name__ == '__main__':

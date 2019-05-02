@@ -1,20 +1,19 @@
+import typing
 from typing import Any
 from typing import Dict
 
-from webtest import TestApp
-
 from fog_director_simulator.database import DatabaseLogic
 from fog_director_simulator.database.models import Application
+if typing.TYPE_CHECKING:
+    from webtest import TestApp
 
 
-def test_get_v1_appmgr_localapps_without_tokens(testapp):
-    # type: (TestApp) -> None
+def test_get_v1_appmgr_localapps_without_tokens(testapp: 'TestApp') -> None:
     response = testapp.get('/api/v1/appmgr/localapps', expect_errors=True)
     assert response.status_code == 400
 
 
-def test_get_v1_appmgr_localapps_no_application(testapp):
-    # type: (TestApp) -> None
+def test_get_v1_appmgr_localapps_no_application(testapp: 'TestApp') -> None:
     response = testapp.get(
         '/api/v1/appmgr/localapps',
         headers={

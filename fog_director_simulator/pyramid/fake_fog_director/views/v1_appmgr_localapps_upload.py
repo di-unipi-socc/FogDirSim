@@ -10,6 +10,7 @@ from pyramid.view import view_config
 from fog_director_simulator.database.models import Application
 from fog_director_simulator.database.models import ApplicationProfile
 from fog_director_simulator.pyramid.fake_fog_director.formatters import application_format
+from fog_director_simulator.pyramid.fake_fog_director.formatters import ApplicationApi
 
 
 def _extract_package_yaml_from_archive(fileobj: Any) -> Dict[str, Any]:
@@ -20,7 +21,7 @@ def _extract_package_yaml_from_archive(fileobj: Any) -> Dict[str, Any]:
 
 
 @view_config(route_name='api.v1.appmgr.localapps.upload', request_method='POST')
-def post_v1_appmgr_localapps_upload(request: Request) -> Dict[str, Any]:
+def post_v1_appmgr_localapps_upload(request: Request) -> ApplicationApi:
     # TODO: make sure that we support tar file as well
     package_metadata = _extract_package_yaml_from_archive(request.swagger_data['file'])
     info = package_metadata['info']
@@ -29,7 +30,7 @@ def post_v1_appmgr_localapps_upload(request: Request) -> Dict[str, Any]:
     if request.database_logic.get_application_by_name(name=info['name']):
         raise HTTPConflict
 
-    application = Application(
+    application = Application(  # type: ignore
         localAppId=info['name'],  # This is an internal detail meant to simplify things (we don't know how CISCO creates it)
         version=info['version'],
         name=info['name'],

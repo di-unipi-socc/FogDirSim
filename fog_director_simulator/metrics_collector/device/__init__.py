@@ -11,7 +11,7 @@ from fog_director_simulator.metrics_collector.device import up_status
 
 def collect(db_logic: DatabaseLogic, iterationCount: int, device_id: str) -> List[DeviceMetric]:
     return [
-        DeviceMetric(
+        DeviceMetric(  # type: ignore
             iterationCount=iterationCount,
             deviceId=device_id,
             metricType=mod.METRIC_TYPE,  # type: ignore
