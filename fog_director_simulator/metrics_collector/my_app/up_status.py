@@ -6,12 +6,12 @@ from fog_director_simulator.database.models import MyAppMetricType
 METRIC_TYPE = MyAppMetricType.UP_STATUS
 
 
-def collect(db_logic: DatabaseLogic, iterationCount: int, myAppId: str) -> bool:
-    min_replicas = db_logic.get_my_app(my_app_id=myAppId).minJobReplicas
+def collect(db_logic: DatabaseLogic, iterationCount: int, myAppId: int) -> bool:
+    min_replicas = db_logic.get_my_app(myAppId=myAppId).minJobReplicas
     jobs = {
         job: (
-            db_logic.get_job_metric(iterationCount=iterationCount, job_id=job.jobId, metric_type=JobMetricType.ENOUGH_CPU).value or
-            db_logic.get_job_metric(iterationCount=iterationCount, job_id=job.jobId, metric_type=JobMetricType.ENOUGH_MEM).value
+            db_logic.get_job_metric(iterationCount=iterationCount, jobId=job.jobId, metricType=JobMetricType.ENOUGH_CPU).value or
+            db_logic.get_job_metric(iterationCount=iterationCount, jobId=job.jobId, metricType=JobMetricType.ENOUGH_MEM).value
         )
         for job in db_logic.get_all_jobs(myAppId=myAppId)
     }

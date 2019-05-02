@@ -7,7 +7,7 @@ METRIC_TYPE = DeviceMetricType.UP_STATUS
 
 
 def collect(db_logic: DatabaseLogic, device_id: str) -> bool:
-    device = db_logic.get_device(device_id=device_id)
+    device = db_logic.get_device(deviceId=device_id)
     return random_flag(
-        device.chaos_die_prob if device.alive else device.chaos_revive_prob
+        device.chaosDieProb if device.isAlive else device.chaosReviveProb
     )

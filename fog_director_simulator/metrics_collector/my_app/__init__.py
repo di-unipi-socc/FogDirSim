@@ -5,9 +5,9 @@ from fog_director_simulator.database.models import MyAppMetric
 from fog_director_simulator.metrics_collector.my_app import up_status
 
 
-def collect(db_logic: DatabaseLogic, iterationCount: int, myAppId: str) -> List[MyAppMetric]:
+def collect(db_logic: DatabaseLogic, iterationCount: int, myAppId: int) -> List[MyAppMetric]:
     return [
-        MyAppMetric(
+        MyAppMetric(  # type: ignore
             iterationCount=iterationCount,
             myAppId=myAppId,
             metricType=mod.METRIC_TYPE,  # type: ignore

@@ -46,12 +46,12 @@ _ENERGY_CONSUMPTION = {
 }
 
 
-def collect(db_logic: DatabaseLogic, device_id: str) -> float:
-    device = db_logic.get_device(device_id=device_id)
-    cpu_usage = db_logic.get_device_metric(device_id=device_id, metric_type=DeviceMetricType.CPU).value
-    mem_usage = db_logic.get_device_metric(device_id=device_id, metric_type=DeviceMetricType.MEM).value
+def collect(db_logic: DatabaseLogic, iterationCount: int, device_id: str) -> float:
+    device = db_logic.get_device(deviceId=device_id)
+    cpu_usage = db_logic.get_device_metric(iterationCount=iterationCount, deviceId=device_id, metricType=DeviceMetricType.CPU).value
+    mem_usage = db_logic.get_device_metric(iterationCount=iterationCount, deviceId=device_id, metricType=DeviceMetricType.MEM).value
 
     if cpu_usage is None or mem_usage is None:
         raise RuntimeError('This should not happen as this metric should be computed only after CPU and MEM collection')
 
-    return _ENERGY_CONSUMPTION[device.energy_consumption_type](cpu_usage, mem_usage)
+    return _ENERGY_CONSUMPTION[device.energyConsumptionType](cpu_usage, mem_usage)

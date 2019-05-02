@@ -142,8 +142,8 @@ class MyApp(Base):  # type: ignore
     )
 
     myAppId = Column(Integer, primary_key=True, autoincrement=True)
-    applicationLocalAppId = Column(String(255))  # Foreign keys for composite keys need to be defined in __table_args__
-    applicationVersion = Column(String(255))  # Foreign keys for composite keys need to be defined in __table_args__
+    applicationLocalAppId = Column(String(255), nullable=False)  # Foreign keys for composite keys need to be defined in __table_args__
+    applicationVersion = Column(String(255), nullable=False)  # Foreign keys for composite keys need to be defined in __table_args__
     application = relationship('Application', back_populates='myApps')
     name = Column(String(255), unique=True)
     minJobReplicas = Column(Integer, nullable=True)
@@ -179,17 +179,17 @@ class Device(Base):  # type: ignore
     timeOfRemoval = Column(Integer, nullable=True)
     isAlive = Column(Boolean, default=True)
     reservedCPU = Column(Float, default=0)
-    totalCPU = Column(Integer)
+    totalCPU = Column(Integer, nullable=False)
     _cpuMetricsDistributionMean = Column(Float)
     _cpuMetricsDistributionStdDev = Column(Float)
     cpuMetricsDistribution = composite(Distribution, _cpuMetricsDistributionMean, _cpuMetricsDistributionStdDev)
     reservedMEM = Column(Float, default=0)
-    totalMEM = Column(Integer)
+    totalMEM = Column(Integer, nullable=False)
     _memMetricsDistributionMean = Column(Float)
     _memMetricsDistributionStdDev = Column(Float)
     memMetricsDistribution = composite(Distribution, _memMetricsDistributionMean, _memMetricsDistributionStdDev)
-    chaosDieProb = Column(Float)
-    chaosReviveProb = Column(Float)
+    chaosDieProb = Column(Float, nullable=False)
+    chaosReviveProb = Column(Float, nullable=False)
     tags = relationship('DeviceTag', back_populates='device')
     energyConsumptionType = Column(Enum(EnergyConsumptionType), default=EnergyConsumptionType.MEDIUM)
 
@@ -224,7 +224,7 @@ class Job(Base):  # type: ignore
     __tablename__ = 'jobs'
 
     jobId = Column(Integer, primary_key=True, autoincrement=True)
-    myAppId = Column(ForeignKey(f'{MyApp.__tablename__}.myAppId'))
+    myAppId = Column(Integer, ForeignKey(f'{MyApp.__tablename__}.myAppId'), nullable=False)
     myApp = relationship('MyApp')
     status = Column(Enum(JobStatus))
     profile = Column(Enum(JobIntensivity))

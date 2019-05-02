@@ -10,14 +10,12 @@ from fog_director_simulator.database.models import JobStatus
 from fog_director_simulator.database.models import MyApp
 
 
-def test_post_v1_appmgr_myapps_my_app_id_action_without_tokens(testapp):
-    # type: (TestApp) -> None
+def test_post_v1_appmgr_myapps_my_app_id_action_without_tokens(testapp: TestApp) -> None:
     response = testapp.post('/api/v1/appmgr/myapps/{my_app_id}/action', expect_errors=True)
     assert response.status_code == 400
 
 
-def test_post_v1_appmgr_myapps_my_app_id_action_deploy_without_my_app(testapp, database_logic, my_app, device):
-    # type: (TestApp, DatabaseLogic, MyApp, Device) -> None
+def test_post_v1_appmgr_myapps_my_app_id_action_deploy_without_my_app(testapp: TestApp, database_logic: DatabaseLogic, my_app: MyApp, device: Device) -> None:
     my_app_id = my_app.myAppId
     device_id = device.deviceId
 
@@ -49,8 +47,7 @@ def test_post_v1_appmgr_myapps_my_app_id_action_deploy_without_my_app(testapp, d
     assert response.status_code == 404
 
 
-def test_post_v1_appmgr_myapps_my_app_id_action_deploy_with_unpublished_my_app(testapp, database_logic, my_app, device):
-    # type: (TestApp, DatabaseLogic, MyApp, Device) -> None
+def test_post_v1_appmgr_myapps_my_app_id_action_deploy_with_unpublished_my_app(testapp: TestApp, database_logic: DatabaseLogic, my_app: MyApp, device: Device) -> None:
     my_app_id = my_app.myAppId
     device_id = device.deviceId
 
@@ -83,8 +80,7 @@ def test_post_v1_appmgr_myapps_my_app_id_action_deploy_with_unpublished_my_app(t
     assert response.status_code == 400
 
 
-def test_post_v1_appmgr_myapps_my_app_id_action_deploy_with_dead_device(testapp, database_logic, my_app, device):
-    # type: (TestApp, DatabaseLogic, MyApp, Device) -> None
+def test_post_v1_appmgr_myapps_my_app_id_action_deploy_with_dead_device(testapp: TestApp, database_logic: DatabaseLogic, my_app: MyApp, device: Device) -> None:
     my_app_id = my_app.myAppId
     device_id = device.deviceId
 
@@ -118,8 +114,7 @@ def test_post_v1_appmgr_myapps_my_app_id_action_deploy_with_dead_device(testapp,
     assert response.status_code == 400
 
 
-def test_post_v1_appmgr_myapps_my_app_id_action_deploy_with_not_enough_cpu(testapp, database_logic, my_app, device):
-    # type: (TestApp, DatabaseLogic, MyApp, Device) -> None
+def test_post_v1_appmgr_myapps_my_app_id_action_deploy_with_not_enough_cpu(testapp: TestApp, database_logic: DatabaseLogic, my_app: MyApp, device: Device) -> None:
     my_app_id = my_app.myAppId
     device_id = device.deviceId
 
@@ -155,8 +150,7 @@ def test_post_v1_appmgr_myapps_my_app_id_action_deploy_with_not_enough_cpu(testa
     assert response.status_code == 400
 
 
-def test_post_v1_appmgr_myapps_my_app_id_action_deploy_with_not_enough_mem(testapp, database_logic, my_app, device):
-    # type: (TestApp, DatabaseLogic, MyApp, Device) -> None
+def test_post_v1_appmgr_myapps_my_app_id_action_deploy_with_not_enough_mem(testapp: TestApp, database_logic: DatabaseLogic, my_app: MyApp, device: Device) -> None:
     my_app_id = my_app.myAppId
     device_id = device.deviceId
 
@@ -192,8 +186,7 @@ def test_post_v1_appmgr_myapps_my_app_id_action_deploy_with_not_enough_mem(testa
     assert response.status_code == 400
 
 
-def test_post_v1_appmgr_myapps_my_app_id_action_deploy_with_success(testapp, database_logic, my_app, device):
-    # type: (TestApp, DatabaseLogic, MyApp, Device) -> None
+def test_post_v1_appmgr_myapps_my_app_id_action_deploy_with_success(testapp: TestApp, database_logic: DatabaseLogic, my_app: MyApp, device: Device) -> None:
     my_app_id = my_app.myAppId
     device_id = device.deviceId
 
@@ -233,8 +226,7 @@ def test_post_v1_appmgr_myapps_my_app_id_action_deploy_with_success(testapp, dat
     }
 
 
-def test_post_v1_appmgr_myapps_my_app_id_action_start_with_no_jobs(testapp, database_logic, my_app, device):
-    # type: (TestApp, DatabaseLogic, MyApp, Device) -> None
+def test_post_v1_appmgr_myapps_my_app_id_action_start_with_no_jobs(testapp: TestApp, database_logic: DatabaseLogic, my_app: MyApp, device: Device) -> None:
     my_app_id = my_app.myAppId
 
     my_app.application.isPublished = True
@@ -256,8 +248,7 @@ def test_post_v1_appmgr_myapps_my_app_id_action_start_with_no_jobs(testapp, data
     assert response.status_code == 400
 
 
-def test_post_v1_appmgr_myapps_my_app_id_action_start_with_a_stopped_job(testapp, database_logic, my_app, device, job):
-    # type: (TestApp, DatabaseLogic, MyApp, Device, Job) -> None
+def test_post_v1_appmgr_myapps_my_app_id_action_start_with_a_stopped_job(testapp: TestApp, database_logic: DatabaseLogic, my_app: MyApp, device: Device, job: Job) -> None:
     my_app_id = my_app.myAppId
 
     my_app.application.isPublished = True
@@ -280,8 +271,7 @@ def test_post_v1_appmgr_myapps_my_app_id_action_start_with_a_stopped_job(testapp
     assert response.status_code == 400
 
 
-def test_post_v1_appmgr_myapps_my_app_id_action_start_with_success(testapp, database_logic, my_app, device, job):
-    # type: (TestApp, DatabaseLogic, MyApp, Device, Job) -> None
+def test_post_v1_appmgr_myapps_my_app_id_action_start_with_success(testapp: TestApp, database_logic: DatabaseLogic, my_app: MyApp, device: Device, job: Job) -> None:
     my_app_id = my_app.myAppId
 
     my_app.application.isPublished = True
@@ -306,8 +296,7 @@ def test_post_v1_appmgr_myapps_my_app_id_action_start_with_success(testapp, data
     }
 
 
-def test_post_v1_appmgr_myapps_my_app_id_action_stop_with_no_jobs(testapp, database_logic, my_app, device):
-    # type: (TestApp, DatabaseLogic, MyApp, Device) -> None
+def test_post_v1_appmgr_myapps_my_app_id_action_stop_with_no_jobs(testapp: TestApp, database_logic: DatabaseLogic, my_app: MyApp, device: Device) -> None:
     my_app_id = my_app.myAppId
 
     my_app.application.isPublished = True
@@ -329,8 +318,7 @@ def test_post_v1_appmgr_myapps_my_app_id_action_stop_with_no_jobs(testapp, datab
     assert response.status_code == 400
 
 
-def test_post_v1_appmgr_myapps_my_app_id_action_stop_with_a_stopped_job(testapp, database_logic, my_app, device, job):
-    # type: (TestApp, DatabaseLogic, MyApp, Device, Job) -> None
+def test_post_v1_appmgr_myapps_my_app_id_action_stop_with_a_stopped_job(testapp: TestApp, database_logic: DatabaseLogic, my_app: MyApp, device: Device, job: Job) -> None:
     my_app_id = my_app.myAppId
 
     my_app.application.isPublished = True
@@ -353,8 +341,7 @@ def test_post_v1_appmgr_myapps_my_app_id_action_stop_with_a_stopped_job(testapp,
     assert response.status_code == 400
 
 
-def test_post_v1_appmgr_myapps_my_app_id_action_stop_with_success(testapp, database_logic, my_app, device, job):
-    # type: (TestApp, DatabaseLogic, MyApp, Device, Job) -> None
+def test_post_v1_appmgr_myapps_my_app_id_action_stop_with_success(testapp: TestApp, database_logic: DatabaseLogic, my_app: MyApp, device: Device, job: Job) -> None:
     my_app_id = my_app.myAppId
 
     my_app.application.isPublished = True
@@ -379,8 +366,7 @@ def test_post_v1_appmgr_myapps_my_app_id_action_stop_with_success(testapp, datab
     }
 
 
-def test_post_v1_appmgr_myapps_my_app_id_action_undeploy_with_a_undeployped_job(testapp, database_logic, my_app, device, job):
-    # type: (TestApp, DatabaseLogic, MyApp, Device, Job) -> None
+def test_post_v1_appmgr_myapps_my_app_id_action_undeploy_with_a_undeployped_job(testapp: TestApp, database_logic: DatabaseLogic, my_app: MyApp, device: Device, job: Job) -> None:
     my_app_id = my_app.myAppId
     device_id = device.deviceId
 
@@ -406,8 +392,7 @@ def test_post_v1_appmgr_myapps_my_app_id_action_undeploy_with_a_undeployped_job(
     }
 
 
-def test_post_v1_appmgr_myapps_my_app_id_action_undeploy_with_success(testapp, database_logic, my_app, device, job):
-    # type: (TestApp, DatabaseLogic, MyApp, Device, Job) -> None
+def test_post_v1_appmgr_myapps_my_app_id_action_undeploy_with_success(testapp: TestApp, database_logic: DatabaseLogic, my_app: MyApp, device: Device, job: Job) -> None:
     my_app_id = my_app.myAppId
     device_id = device.deviceId
 

@@ -36,7 +36,7 @@ def database_config() -> Config:
 
 
 @pytest.fixture
-def database(database_config):
+def database(database_config: Config) -> DatabaseClient:
     return DatabaseClient(
         config=database_config,
         verbose=False,
@@ -44,7 +44,7 @@ def database(database_config):
 
 
 @pytest.fixture
-def verbose_database(database_config):
+def verbose_database(database_config: Config) -> DatabaseClient:
     return DatabaseClient(
         config=database_config,
         verbose=True,

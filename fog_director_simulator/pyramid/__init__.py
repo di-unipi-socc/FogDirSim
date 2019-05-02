@@ -1,8 +1,12 @@
 import os
 from time import sleep
+from typing import Any
+from typing import Callable
 
 import pyramid_swagger
 from pyramid.config import Configurator
+from pyramid.request import Request
+from pyramid.response import Response
 from pyramid.tweens import INGRESS
 from pyramid_swagger import PyramidSwaggerRendererFactory
 
@@ -14,9 +18,9 @@ SIMULATION_TIME_START_HEADER = 'X-Simulation-Time-Start'
 SIMULATION_TIME_END_HEADER = 'X-Simulation-Time-End'
 
 
-def slow_down_request(wrapped):
+def slow_down_request(wrapped: Callable[[Any, Request], Response]) -> Callable[[Any, Request], Response]:
 
-    def wrapper(context, request):
+    def wrapper(context: Any, request: Request) -> Response:
         initial_simulation_time = request.simulation_time
         response = wrapped(context, request)
         while request.database_logic.get_simulation_time() <= initial_simulation_time:
@@ -30,8 +34,8 @@ def _database_logic(database_verbose: bool) -> DatabaseLogic:
     return database.DatabaseClient(database.Config.from_environment(), verbose=database_verbose).logic
 
 
-def _add_simulation_time_response_header_factory(handler, registry):
-    def add_simulation_time_response_header(request):
+def _add_simulation_time_response_header_factory(handler: Any, registry: Any) -> Callable[[Request], Response]:
+    def add_simulation_time_response_header(request: Request) -> Response:
         request.response.headers[SIMULATION_TIME_START_HEADER] = str(request.simulation_time)
         response = handler(request)
         response.headers[SIMULATION_TIME_END_HEADER] = str(request.database_logic.get_simulation_time())
@@ -40,8 +44,8 @@ def _add_simulation_time_response_header_factory(handler, registry):
     return add_simulation_time_response_header
 
 
-def _open_database_session_factory(handler, registry):
-    def open_database_session(request):
+def _open_database_session_factory(handler: Any, registry: Any) -> Callable[[Request], Response]:
+    def open_database_session(request: Request) -> Response:
         with request.database_logic:
             return handler(request)
 

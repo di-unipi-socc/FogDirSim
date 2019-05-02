@@ -4,7 +4,9 @@ from contextlib import contextmanager
 from functools import lru_cache
 from pathlib import Path
 from time import sleep
+from typing import Dict
 from typing import Generator
+from typing import List
 from typing import Optional
 
 from bravado.client import SwaggerClient
@@ -21,7 +23,7 @@ from fog_director_simulator.context_utils import noop_context
 
 
 @lru_cache(maxsize=1)
-def _api_client(swagger_spec_url):
+def _api_client(swagger_spec_url: str) -> SwaggerClient:
     with (Path('api_docs') / 'simulator_api' / 'swagger.yaml').open() as f:
         return SwaggerClient.from_spec(
             spec_dict=safe_load(f),
@@ -31,7 +33,7 @@ def _api_client(swagger_spec_url):
 
 
 @lru_cache(maxsize=1)
-def _fog_director_client(fog_director_api: str):  # TODO: provide better info on how to use it
+def _fog_director_client(fog_director_api: str) -> SwaggerClient:  # TODO: provide better info on how to use it
     with (Path('api_docs') / 'fog_director_api' / 'swagger.yaml').open() as f:
         client = SwaggerClient.from_spec(
             spec_dict=safe_load(f),
@@ -108,18 +110,23 @@ def simulator_context() -> Generator[None, None, None]:
         ports={
             '3306/tcp': None,
         },
-    ) as container:
+    ):
         with background_process(args=[
             sys.executable,
             '-m',
             'fog_director_simulator.simulator.engine',
             # TODO: add params
         ]):
-            yield container
+            yield
 
 
 @contextmanager
-def run_docker_container(image_name, command=None, ports=None, environment=None):
+def run_docker_container(
+    image_name: str,
+    command: Optional[List[str]] = None,
+    ports: Optional[Dict[str, Optional[str]]] = None,
+    environment: Optional[Dict[str, str]] = None,
+) -> Generator[None, None, None]:
     client = DockerClient.from_env()
     container = client.containers.run(
         image=image_name,
@@ -130,6 +137,6 @@ def run_docker_container(image_name, command=None, ports=None, environment=None)
         environment=environment,
     )
     try:
-        yield container
+        yield
     finally:
         container.stop()

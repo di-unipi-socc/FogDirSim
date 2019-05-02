@@ -15,6 +15,7 @@ from fog_director_simulator.database.models import JobIntensivity
 from fog_director_simulator.database.models import JobStatus
 from fog_director_simulator.database.models import MyApp
 from fog_director_simulator.pyramid.fake_fog_director.formatters import job_format
+from fog_director_simulator.pyramid.fake_fog_director.formatters import JobApi
 
 
 def _do_start(my_app: MyApp) -> Job:
@@ -102,7 +103,7 @@ def _do_undeploy(my_app: MyApp, devices: Dict[str, Device]) -> Job:
 
 
 @view_config(route_name='api.v1.appmgr.myapps.my_app_id.action', request_method='POST')
-def post_v1_appmgr_myapps_my_app_id_action(request: Request) -> Dict[str, Any]:
+def post_v1_appmgr_myapps_my_app_id_action(request: Request) -> JobApi:
     try:
         my_app = request.database_logic.get_my_app(myAppId=request.swagger_data['my_app_id'])
     except NoResultFound:

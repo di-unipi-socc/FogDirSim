@@ -1,6 +1,5 @@
 from abc import ABC
 from abc import abstractmethod
-from functools import lru_cache
 from typing import Any
 from typing import Dict
 from typing import Iterable
@@ -11,23 +10,14 @@ from typing import Tuple
 from bravado.client import SwaggerClient
 from bravado.exception import HTTPError
 
-from fog_director_simulator.database import Application
-from fog_director_simulator.database import Device
-from fog_director_simulator.database import MyApp
+from fog_director_simulator.database.models import Device
 from fog_director_simulator.database.models import JobDeviceAllocation
+from fog_director_simulator.database.models import MyApp
+from fog_director_simulator.pyramid.fake_fog_director.formatters import ApplicationApi
+from fog_director_simulator.pyramid.fake_fog_director.formatters import JobApi
 from fog_director_simulator.scenario.context import api_context
 from fog_director_simulator.scenario.context import fog_director_context
 from fog_director_simulator.scenario.context import simulator_context
-
-
-@lru_cache(maxsize=2)
-def fog_director_token(self):
-    # TODO: implement
-    # response = self.api_client.fog_director.get_token(
-    #     authorization="Basic TODO",  # IMPLEMENT THIS???
-    # ).result()
-    # return response.token
-    return '42'
 
 
 class BaseScenario(ABC):
@@ -108,14 +98,14 @@ class BaseScenario(ABC):
             my_app.myAppId = my_app_name_id_mapping[my_app.name]
         return my_apps
 
-    def register_application(self, application_name) -> Application:
+    def register_application(self, application_name: str) -> ApplicationApi:
         # TODO: we should send around the messy tar.gz files and/or generate them for readability
         raise NotImplementedError()
 
-    def install_my_app(self, my_app_id: int, device_allocations: Iterable[JobDeviceAllocation], retry_on_failure=False):
-        def _build_device_allocation(device_allocation: JobDeviceAllocation):
+    def install_my_app(self, my_app_id: int, device_allocations: Iterable[JobDeviceAllocation], retry_on_failure: bool = False) -> JobApi:
+        def _build_device_allocation(device_allocation: JobDeviceAllocation) -> Dict[str, Any]:
             return {
-                'deviceId': device_allocation.device.deviceId,
+                'deviceId': device_allocation.deviceId,
                 'resourceAsk': {
                     'resources': {
                         'profile': device_allocation.profile.iox_name(),
@@ -187,20 +177,20 @@ class BaseScenario(ABC):
         ).result()
 
     @abstractmethod
-    def configure_infrastructure(self):
+    def configure_infrastructure(self) -> None:
         """
         Add devices or myapps or whatever via Fog Director APIs
         """
         pass
 
     @abstractmethod
-    def manage_iteration(self):
+    def manage_iteration(self) -> None:
         """
         React to alerts and stuff
         """
         pass
 
-    def run(self):
+    def run(self) -> None:
         with api_context(self.fog_director_api) as self.api_client, \
                 fog_director_context(self.fog_director_api) as self.fog_director_client:
 

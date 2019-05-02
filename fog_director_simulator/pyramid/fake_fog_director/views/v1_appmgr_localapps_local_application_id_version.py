@@ -1,6 +1,3 @@
-from typing import Any
-from typing import Dict
-
 from pyramid.httpexceptions import HTTPNotFound
 from pyramid.request import Request
 from pyramid.view import view_config
@@ -8,10 +5,11 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from fog_director_simulator.database.models import ApplicationProfile
 from fog_director_simulator.pyramid.fake_fog_director.formatters import application_format
+from fog_director_simulator.pyramid.fake_fog_director.formatters import ApplicationApi
 
 
 @view_config(route_name='api.v1.appmgr.localapps.local_application_id_version', request_method='PUT')
-def put_v1_appmgr_localapps_local_application_id_version(request: Request) -> Dict[str, Any]:
+def put_v1_appmgr_localapps_local_application_id_version(request: Request) -> ApplicationApi:
     body = request.swagger_data['body']
     body['profileNeeded'] = ApplicationProfile.from_iox_name(body['profileNeeded'])
 

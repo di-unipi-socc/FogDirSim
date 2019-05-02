@@ -140,7 +140,7 @@ class DatabaseLogic:
                 raise NoResultFound()
             return job
 
-    def get_job_metric(self, iterationCount: int, jobId: str, metricType: JobMetricType) -> JobMetric:
+    def get_job_metric(self, iterationCount: int, jobId: int, metricType: JobMetricType) -> JobMetric:
         with self as session:
             job_metric = session.query(JobMetric).get({
                 'iterationCount': iterationCount,
@@ -161,7 +161,7 @@ class DatabaseLogic:
                 raise NoResultFound()
             return application
 
-    def get_my_app(self, myAppId: str) -> MyApp:
+    def get_my_app(self, myAppId: int) -> MyApp:
         with self as session:
             my_app = session.query(MyApp).get(myAppId)
             if my_app is None:
@@ -175,7 +175,7 @@ class DatabaseLogic:
                 query = query.filter(Device.timeOfRemoval is None)
             return query.all()
 
-    def get_all_jobs(self, jobStatus: Optional[Iterable[JobStatus]] = None, myAppId: Optional[str] = None) -> Iterable[Job]:
+    def get_all_jobs(self, jobStatus: Optional[Iterable[JobStatus]] = None, myAppId: Optional[int] = None) -> Iterable[Job]:
         with self as session:
             query = session.query(Job)
             if jobStatus is None:

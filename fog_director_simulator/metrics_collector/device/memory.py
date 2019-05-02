@@ -7,10 +7,10 @@ METRIC_TYPE = DeviceMetricType.MEM
 
 
 def collect(db_logic: DatabaseLogic, device_id: str) -> float:
-    device = db_logic.get_device(device_id=device_id)
+    device = db_logic.get_device(deviceId=device_id)
     return random_sample(
-        mean=device.distributions.MEM.mean,
-        std_deviation=device.distributions.MEM.std_deviation,
+        mean=device.memMetricsDistribution.mean,
+        std_deviation=device.memMetricsDistribution.std_deviation,
         lower_bound=0,
         upper_bound=device.totalMEM,
     )

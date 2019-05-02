@@ -1,3 +1,5 @@
+from typing import Set
+
 from fog_director_simulator.database import Device
 from fog_director_simulator.database import MyApp
 from fog_director_simulator.database.models import Alert
@@ -60,7 +62,7 @@ class FogDirMime(BaseScenario):
 
     scenario_devices = [fog_1, fog_2, fog_3]
 
-    def _install_my_app(self, my_app: MyApp, device: Device):
+    def _install_my_app(self, my_app: MyApp, device: Device) -> None:
         self.install_my_app(
             my_app_id=my_app.myAppId,
             device_allocations=[
@@ -74,14 +76,14 @@ class FogDirMime(BaseScenario):
             retry_on_failure=True,
         )
 
-    def configure_infrastructure(self):
+    def configure_infrastructure(self) -> None:
         self.register_devices(*self.scenario_devices)
 
         application = self.register_application('NettestApp2')
-        self.building_my_app.applicationLocalAppId = application.localAppId
-        self.building_my_app.applicationVersion = application.version
-        self.apartment_my_app.applicationLocalAppId = application.localAppId
-        self.apartment_my_app.applicationVersion = application.version
+        self.building_my_app.applicationLocalAppId = application['localAppId']
+        self.building_my_app.applicationVersion = application['version']
+        self.apartment_my_app.applicationLocalAppId = application['localAppId']
+        self.apartment_my_app.applicationVersion = application['version']
 
         self.register_my_apps(self.building_my_app, self.apartment_my_app)
 
@@ -89,7 +91,7 @@ class FogDirMime(BaseScenario):
         self._install_my_app(my_app=self.apartment_my_app, device=self.fog_2)
         self.start_my_apps(self.building_my_app.myAppId, self.apartment_my_app.myAppId)
 
-    def manage_iteration(self):
+    def manage_iteration(self) -> None:
         alerts = [
             Alert(
                 myAppId=alert['myAppId'],
@@ -100,7 +102,7 @@ class FogDirMime(BaseScenario):
             for alert in self.fog_director_client.get_alerts().result()['data']
         ]
 
-        moved_apps = set()
+        moved_apps: Set[int] = set()
         for alert in alerts:
             if alert.type != AlertType.APP_HEALTH:
                 continue
