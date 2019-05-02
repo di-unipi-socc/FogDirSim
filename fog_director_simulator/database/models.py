@@ -1,4 +1,6 @@
 import enum
+from typing import Any
+from typing import Dict
 from typing import NamedTuple
 
 from sqlalchemy import Boolean
@@ -18,20 +20,20 @@ from sqlalchemy.orm import relationship
 
 
 class SQLORMDictMixin:
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         """Convert this model into a dictionary."""
         # Note: this approach is a best effort approach and not meant to be the most performing one
         return {
             column.name: getattr(self, column.name)
-            for column in self.__table__.columns
+            for column in self.__table__.columns  # type: ignore
         }
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '<{type_name}: {primary_keys}>'.format(
             type_name=type(self).__name__,
             primary_keys=', '.join(
                 f'{column.name}={getattr(self, column.name)}'
-                for column in self.__table__.primary_key.columns
+                for column in self.__table__.primary_key.columns  # type: ignore
             ),
         )
 
@@ -192,7 +194,7 @@ class Device(Base):  # type: ignore
     energyConsumptionType = Column(Enum(EnergyConsumptionType), default=EnergyConsumptionType.MEDIUM)
 
     @property
-    def isInFogDirector(self):
+    def isInFogDirector(self) -> bool:
         return self.timeOfCreation is not None
 
 
