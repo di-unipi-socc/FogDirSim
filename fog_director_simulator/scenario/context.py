@@ -126,7 +126,7 @@ def run_docker_container(
     command: Optional[List[str]] = None,
     ports: Optional[Dict[str, Optional[str]]] = None,
     environment: Optional[Dict[str, str]] = None,
-) -> Generator[None, None, None]:
+) -> Generator[str, None, None]:
     client = DockerClient.from_env()
     container = client.containers.run(
         image=image_name,
@@ -137,6 +137,6 @@ def run_docker_container(
         environment=environment,
     )
     try:
-        yield
+        yield client.api.inspect_container(container.id)['NetworkSettings']['IPAddress']
     finally:
         container.stop()
