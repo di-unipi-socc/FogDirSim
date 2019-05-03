@@ -1,16 +1,18 @@
-[paths]
-source =
-   src
-   */site-packages
-
 [run]
 branch = true
 source =
     fog_director_simulator
     tests
-parallel = true
 
 [report]
-show_missing = true
+exclude_lines =
+    def __repr__
+    raise AssertionError
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    if getattr(typing, 'TYPE_CHECKING', False):
+    pragma: no cover
+
+show_missing = True
+skip_covered = True
 precision = 2
-omit = *migrations*
