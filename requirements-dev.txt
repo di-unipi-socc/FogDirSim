@@ -7,4 +7,5 @@ pytest-benchmark
 pytest-cov
 pytest-travis-fold
 sqlalchemy-stubs
+tox-pip-extensions
 webtest

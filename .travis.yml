@@ -11,10 +11,16 @@ matrix:
     env: TOXENV=pre-commit
 
 before_install:
-- pip install tox codecov
+- pip install tox tox-pip-extensions codecov
 
 script:
 - tox -v
 
 after_success:
 - if [ "${TOXENV}" == "py36" ]; then codecov; fi
+
+cache:
+  directories:
+  - ${HOME}/.cache/pre-commit
+  - ${HOME}/.cache/pip
+  - ${HOME}/.cache/pip-faster
