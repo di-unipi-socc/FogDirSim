@@ -1,7 +1,10 @@
 from abc import ABC
 from abc import abstractmethod
+from argparse import ArgumentParser
+from argparse import Namespace
 from typing import List
 from typing import Optional
+from typing import Type
 from typing import TypeVar
 
 from bravado.client import SwaggerClient
@@ -65,6 +68,46 @@ class BaseScenario(ABC, ScenarioDatabaseUtilMixin):
         React to alerts and stuff
         """
         pass
+
+    @classmethod
+    def _cli_parser(cls) -> ArgumentParser:
+        parser = ArgumentParser(description=cls.__doc__)
+        parser.add_argument(
+            '--verbose',
+            dest='verbose',
+            action='store_true',
+            help='Run the scenario in verbose mode (all reporting and stdout/stderr '
+                 'of all processes will be redirected to stderr)',
+        )
+        parser.add_argument(
+            '--max-simulation-iterations',
+            dest='max_simulation_iterations',
+            type=int,
+            help='Maximum number of iterations that will be simulated in the scenario. '
+                 'NOTE: if the argument is not passed the simulation will never end',
+        )
+        parser.add_argument(
+            '--fog-director-api-url',
+            dest='fog_director_api_url',
+            type=str,
+            help='Run the scenario against a specific CISCO\'s Fog Director instance. '
+                 'NOTE: if missing a complete emulated environment will be spawned.',
+        )
+        return parser
+
+    @classmethod
+    def _init_from_cli_args(cls, args: Namespace) -> 'BaseScenario':
+        return cls(
+            fog_director_api_url=args.fog_director_api_url,
+            max_simulation_iterations=args.max_simulation_iterations,
+            verbose=args.verbose,
+        )
+
+    @classmethod
+    def get_instance(cls: Type[T], argv: Optional[List[str]] = None) -> T:
+        parser = cls._cli_parser()
+        instance = cls._init_from_cli_args(parser.parse_args(args=argv))
+        return instance  # type: ignore
 
     def run(self) -> None:
         with database_context(

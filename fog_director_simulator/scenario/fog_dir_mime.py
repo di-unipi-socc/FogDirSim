@@ -125,3 +125,8 @@ class FogDirMime(BaseScenario):
                 ))
                 self.start_my_apps(self.apartment_my_app.myAppId)
                 moved_apps.add(self.apartment_my_app.myAppId)
+
+
+if __name__ == '__main__':
+    instance = FogDirMime.get_instance()
+    instance.run()
