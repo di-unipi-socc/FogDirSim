@@ -115,15 +115,18 @@ paths:
         name: minIterationCount
         type: integer
         required: false
+        minimum: 0
       - in: query
         name: maxIterationCount
         type: integer
         required: false
+        minimum: 0
       - in: query
         description: TODO
         name: totalNumberOfSamplings
         type: integer
         required: true
+        minimum: 1
       responses:
         '200':
           description: HTTP/200
@@ -152,12 +155,15 @@ paths:
                   type: number
                   format: float
                   minimum: 0
+              alerts:
+                $ref: '#/definitions/AlertStatus'
             required:
             - totalNumberOfSamplings
             - minIterationCount
             - maxIterationCount
             - averageUptime
             - totalEnergyConsumption
+            - alerts
       tags:
       - simulator_frontend
 definitions:
@@ -294,6 +300,13 @@ definitions:
         format: float
         minimum: 0
         maximum: 1
+    required:
+    - NoAlert
+    - AppHealth
+    - DeviceReachability
+    - CpuUsage
+    - MemUsage
+
   MyAppMinimal:
     type: object
     properties:
