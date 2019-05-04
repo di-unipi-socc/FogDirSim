@@ -102,10 +102,10 @@ def device() -> Device:
 @pytest.fixture
 def my_app(application: Application, ) -> MyApp:
     return MyApp(
-        myAppId=42,
+        myAppId=0,
         application=application,
         name='name',
-        creationTime=42,
+        creationTime=0,
     )
 
 

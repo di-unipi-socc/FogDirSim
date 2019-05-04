@@ -1,7 +1,10 @@
 import os
+from itertools import groupby
+from sys import maxsize
 from typing import Any
 from typing import Dict
 from typing import Iterable
+from typing import Mapping
 from typing import NamedTuple
 from typing import Optional
 from typing import Tuple
@@ -28,6 +31,8 @@ from fog_director_simulator.database.models import JobMetricType
 from fog_director_simulator.database.models import JobStatus
 from fog_director_simulator.database.models import MyApp
 from fog_director_simulator.database.models import MyAppAlertStatistic
+from fog_director_simulator.database.models import MyAppMetric
+from fog_director_simulator.database.models import MyAppMetricType
 from fog_director_simulator.database.models import prune_all_tables
 
 
@@ -247,6 +252,70 @@ class DatabaseLogic:
 
             return query.all()
 
+    def get_device_metric_statistics(
+        self,
+        metricType: DeviceMetric,
+        stat_value: Any,  # TODO: give better type
+        minIterationCount: Optional[int] = None,
+        maxIterationCount: Optional[int] = None,
+    ) -> Mapping[int, float]:
+        with self as session:
+            query = session.query(
+                DeviceMetric.iterationCount,
+                stat_value,
+            ).filter(
+                DeviceMetric.metricType == metricType,
+            )
+            if minIterationCount is not None:
+                query = query.filter(
+                    DeviceMetric.iterationCount >= minIterationCount,
+                )
+            if maxIterationCount is not None:
+                query = query.filter(
+                    DeviceMetric.iterationCount <= maxIterationCount,
+                )
+
+            query = query.group_by(
+                DeviceMetric.iterationCount,
+            )
+
+            return {
+                iteration_count: stat_value
+                for (iteration_count, stat_value) in query
+            }
+
+    def get_my_app_metric_statistics(
+        self,
+        metricType: MyAppMetricType,
+        stat_value: Any,  # TODO: give better type
+        minIterationCount: Optional[int] = None,
+        maxIterationCount: Optional[int] = None,
+    ) -> Mapping[int, float]:
+        with self as session:
+            query = session.query(
+                MyAppMetric.iterationCount,
+                stat_value,
+            ).filter(
+                MyAppMetric.metricType == metricType,
+            )
+            if minIterationCount is not None:
+                query = query.filter(
+                    MyAppMetric.iterationCount >= minIterationCount,
+                )
+            if maxIterationCount is not None:
+                query = query.filter(
+                    MyAppMetric.iterationCount <= maxIterationCount,
+                )
+
+            query = query.group_by(
+                MyAppMetric.iterationCount,
+            )
+
+            return {
+                iteration_count: stat_value
+                for (iteration_count, stat_value) in query
+            }
+
     def get_my_app_alert_statistics(self, myApp: MyApp, alert_type: AlertType) -> Optional[MyAppAlertStatistic]:
         with self as session:
             query = session.query(MyAppAlertStatistic).filter(
@@ -333,3 +402,26 @@ class DatabaseLogic:
             )
 
             return query.first()
+
+    def evaluate_custom_alert_statistics(self, simulationTime: int) -> Mapping[AlertType, float]:
+        with self as session:
+            # TODO: maybe optimize to do it in db only
+            query = session.query(MyAppAlertStatistic).order_by(
+                MyAppAlertStatistic.type,
+            )
+            result = {}
+            for alert_type, statistics in groupby(query, lambda my_app_alert_statistic: my_app_alert_statistic.type):
+                total_count, total_lifetime = 0, 0
+                for my_app_alert_statistic in statistics:
+                    my_app_lifetime = (
+                        min(
+                            simulationTime,
+                            my_app_alert_statistic.myApp.destructionTime or maxsize,
+                        ) -
+                        my_app_alert_statistic.myApp.creationTime
+                    )
+                    total_count += my_app_alert_statistic.count
+                    total_lifetime += my_app_lifetime
+                result[alert_type] = total_count / total_lifetime
+
+            return result
