@@ -17,6 +17,10 @@ def create_application() -> Router:
     )
 
     # Add status metrics view with the internal_ip_only predicate
+    config.add_route('api.simulator_frontend.aggregated_device_metric.v1', '/api/simulator_frontend/aggregated_device_metric/v1')
+    config.add_route('api.simulator_frontend.aggregated_my_app_metric.v1', '/api/simulator_frontend/aggregated_my_app_metric/v1')
+    config.add_route('api.simulator_frontend.iteration_count.v1', '/api/simulator_frontend/iteration_count/v1')
+    config.add_route('api.simulator_frontend.simulation_statistic.v1', '/api/simulator_frontend/simulation_statistic/v1')
     config.add_route('api.status', '/api/status')
 
     # Scan the service package to attach any decorated views.
