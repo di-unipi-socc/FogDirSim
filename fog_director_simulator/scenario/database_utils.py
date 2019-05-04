@@ -30,6 +30,10 @@ class ScenarioDatabaseUtilMixin:
             body={'devices': self.scenario_devices},
         ).result()
 
+    @property
+    def iteration_count(self) -> int:
+        raise NotImplementedError(self.api_client)  # TODO: connect the real endpoint
+
     def get_all_devices(self) -> List[Dict[str, Any]]:
         return self.fog_director_client.get_devices().result()["data"]
 
