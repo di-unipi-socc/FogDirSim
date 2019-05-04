@@ -11,7 +11,7 @@ from fog_director_simulator.pyramid.simulator_api import views
 def create_application() -> Router:
     """Create the WSGI application, post-fork."""
     config = default_pyramid_configuration(
-        root_swagger_spec_path=os.path.join('api_docs', 'fog_director_api', 'swagger.yaml'),
+        root_swagger_spec_path=os.path.join('api_docs', 'simulator_api', 'swagger.yaml'),
         base_path_api_docs='/api/',
         database_verbose=False,
     )
