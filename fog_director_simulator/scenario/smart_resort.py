@@ -61,12 +61,15 @@ class SmartResort(BaseScenario):
         number_of_deployments: int = 30,
         percentage_of_heavy_job: int = 0,
         max_simulation_iterations: Optional[int] = None,
-        fog_director_api: Optional[str] = None,
+        fog_director_api_url: Optional[str] = None,
     ):
+        super(SmartResort, self).__init__(
+            max_simulation_iterations=max_simulation_iterations,
+            fog_director_api_url=fog_director_api_url,
+        )
         self.number_of_devices = number_of_devices
         self.number_of_deployments = number_of_deployments
         self.percentage_of_heavy_job = percentage_of_heavy_job
-        BaseScenario.__init__(self, max_simulation_iterations=max_simulation_iterations, fog_director_api=fog_director_api)
 
         big_devices = [
             Device(

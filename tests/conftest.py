@@ -32,23 +32,31 @@ def database_config() -> Config:
         username=None,
         password=None,
         port=None,
+        verbose=False,
+    )
+
+
+@pytest.fixture(scope='session')
+def verbose_database_config() -> Config:
+    return Config(
+        drivername='sqlite',
+        host=None,
+        database_name=None,
+        username=None,
+        password=None,
+        port=None,
+        verbose=True,
     )
 
 
 @pytest.fixture
 def database(database_config: Config) -> DatabaseClient:
-    return DatabaseClient(
-        config=database_config,
-        verbose=False,
-    )
+    return DatabaseClient(config=database_config)
 
 
 @pytest.fixture
-def verbose_database(database_config: Config) -> DatabaseClient:
-    return DatabaseClient(
-        config=database_config,
-        verbose=True,
-    )
+def verbose_database(verbose_database_config: Config) -> DatabaseClient:
+    return DatabaseClient(config=verbose_database_config)
 
 
 @pytest.fixture

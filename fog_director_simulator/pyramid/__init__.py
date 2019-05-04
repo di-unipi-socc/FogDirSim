@@ -30,8 +30,8 @@ def slow_down_request(wrapped: Callable[[Any, Request], Response]) -> Callable[[
     return wrapper
 
 
-def _database_logic(database_verbose: bool) -> DatabaseLogic:
-    return database.DatabaseClient(database.Config.from_environment(), verbose=database_verbose).logic
+def _database_logic() -> DatabaseLogic:
+    return database.DatabaseClient(config=database.Config.from_environment()).logic
 
 
 def _add_simulation_time_response_header_factory(handler: Any, registry: Any) -> Callable[[Request], Response]:
@@ -90,7 +90,7 @@ def default_pyramid_configuration(
     config.add_renderer(None, PyramidSwaggerRendererFactory())
 
     config.add_request_method(
-        lambda request: _database_logic(database_verbose),
+        lambda request: _database_logic(),
         name='database_logic',
         property=True,
         reify=True,
