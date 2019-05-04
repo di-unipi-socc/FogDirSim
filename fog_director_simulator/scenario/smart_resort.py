@@ -1,3 +1,6 @@
+from argparse import ArgumentParser
+from argparse import ArgumentTypeError
+from argparse import Namespace
 from collections import defaultdict
 from typing import Any
 from typing import DefaultDict
@@ -13,6 +16,20 @@ from fog_director_simulator.database.models import AlertType
 from fog_director_simulator.database.models import ApplicationProfile
 from fog_director_simulator.database.models import JobDeviceAllocation
 from fog_director_simulator.scenario.base import BaseScenario
+
+
+def positive_int(value: str) -> int:
+    ivalue = int(value)
+    if ivalue <= 0:
+        raise ArgumentTypeError("%s is an invalid positive int value" % value)
+    return ivalue
+
+
+def percentage(value: str) -> float:
+    fvalue = float(value)
+    if fvalue <= 0 or fvalue >= 1:
+        raise ArgumentTypeError("%s is an invalid percentage (expected a value in [0,1])" % value)
+    return fvalue
 
 
 class SmartResort(BaseScenario):
@@ -31,42 +48,23 @@ class SmartResort(BaseScenario):
     to be considered with JobIntensivity.HEAVY
     """
 
-    def _get_best_fit_device(self, cpu_required: float, mem_required: float) -> Optional[Dict[str, Any]]:
-        devices = self.fog_director_client.get_devices()
-        devices = [
-            dev
-            for dev in devices['data']
-            if (
-                dev['capabilities']['nodes'][0]['cpu']['available'] >= cpu_required
-                and dev['capabilities']['nodes'][0]['memory']['available'] >= mem_required
-            )
-        ]
-        devices.sort(
-            reverse=True,
-            key=lambda dev: (dev['capabilities']['nodes'][0]['cpu']['available'], dev['capabilities']['nodes'][0]['memory']['available']),
-        )
-        return next(iter(devices))
-
-    def _get_best_fit_device_until_success(self, cpu_required: float, mem_required: float, max_trial: int = 1000) -> str:
-        count = 0
-        while max_trial is None or count < max_trial:
-            device = self._get_best_fit_device(cpu_required, mem_required)
-            if device is not None:
-                return device['deviceId']
-        raise RuntimeError('Too many iterations without finding a suitable device.')
-
     def __init__(
         self,
-        number_of_devices: int = 15,
-        number_of_deployments: int = 30,
-        percentage_of_heavy_job: int = 0,
-        max_simulation_iterations: Optional[int] = None,
-        fog_director_api: Optional[str] = None,
+        fog_director_api_url: Optional[str],
+        max_simulation_iterations: Optional[int],
+        number_of_devices: int,
+        number_of_deployments: int,
+        percentage_of_heavy_job: int,
+        verbose: bool,
     ):
+        super(SmartResort, self).__init__(
+            fog_director_api_url=fog_director_api_url,
+            max_simulation_iterations=max_simulation_iterations,
+            verbose=verbose,
+        )
         self.number_of_devices = number_of_devices
         self.number_of_deployments = number_of_deployments
         self.percentage_of_heavy_job = percentage_of_heavy_job
-        BaseScenario.__init__(self, max_simulation_iterations=max_simulation_iterations, fog_director_api=fog_director_api)
 
         big_devices = [
             Device(
@@ -122,6 +120,67 @@ class SmartResort(BaseScenario):
         self.scenario_devices.extend(big_devices)
         self.scenario_devices.extend(medium_devices)
         self.scenario_devices.extend(small_devices)
+
+    @classmethod
+    def _cli_parser(cls) -> ArgumentParser:
+        parser = super(SmartResort, cls)._cli_parser()
+        parser.add_argument(
+            '--number-of-devices',
+            dest='number_of_devices',
+            type=positive_int,
+            default=15,
+            help='Number of devices to simulate. (default: %(default)s)',
+        )
+        parser.add_argument(
+            '--number-of-deployments',
+            dest='number_of_deployments',
+            type=positive_int,
+            default=30,
+            help='Number of deployments to simulate. (default: %(default)s)',
+        )
+        parser.add_argument(
+            '--percentage-of-heavy-jobs',
+            dest='percentage_of_heavy_job',
+            type=percentage,
+            default=0,
+            help='Percentage of heavy jobs (default: %(default)s)',
+        )
+        return parser
+
+    @classmethod
+    def _init_from_cli_args(cls, args: Namespace) -> 'SmartResort':
+        return cls(
+            fog_director_api_url=args.fog_director_api_url,
+            max_simulation_iterations=args.max_simulation_iterations,
+            number_of_deployments=args.number_of_deployments,
+            number_of_devices=args.number_of_devices,
+            percentage_of_heavy_job=args.percentage_of_heavy_job,
+            verbose=args.verbose,
+        )
+
+    def _get_best_fit_device(self, cpu_required: float, mem_required: float) -> Optional[Dict[str, Any]]:
+        devices = self.fog_director_client.get_devices()
+        devices = [
+            dev
+            for dev in devices['data']
+            if (
+                dev['capabilities']['nodes'][0]['cpu']['available'] >= cpu_required
+                and dev['capabilities']['nodes'][0]['memory']['available'] >= mem_required
+            )
+        ]
+        devices.sort(
+            reverse=True,
+            key=lambda dev: (dev['capabilities']['nodes'][0]['cpu']['available'], dev['capabilities']['nodes'][0]['memory']['available']),
+        )
+        return next(iter(devices))
+
+    def _get_best_fit_device_until_success(self, cpu_required: float, mem_required: float, max_trial: int = 1000) -> str:
+        count = 0
+        while max_trial is None or count < max_trial:
+            device = self._get_best_fit_device(cpu_required, mem_required)
+            if device is not None:
+                return device['deviceId']
+        raise RuntimeError('Too many iterations without finding a suitable device.')
 
     def _install_my_app(self, my_app_id: int, device_id: str) -> None:
         self.install_my_app(
@@ -203,3 +262,8 @@ class SmartResort(BaseScenario):
                 continue
             for my_app_id in my_app_ids:
                 self.uninstall_my_app(my_app_id=my_app_id, device_ids=[device_id])
+
+
+if __name__ == '__main__':
+    instance = SmartResort.get_instance()
+    instance.run()

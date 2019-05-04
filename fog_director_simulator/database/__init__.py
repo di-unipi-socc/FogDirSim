@@ -1,5 +1,6 @@
 import os
 from typing import Any
+from typing import Dict
 from typing import Iterable
 from typing import NamedTuple
 from typing import Optional
@@ -37,21 +38,34 @@ class Config(NamedTuple):
     host: Optional[str] = 'database'
     port: Optional[int] = 3306
     database_name: Optional[str] = 'fog_director'
+    verbose: bool = False
 
-    @staticmethod
-    def from_environment() -> 'Config':
-        return Config(
+    @classmethod
+    def from_environment(cls) -> 'Config':
+        return cls(
             drivername=os.environ.get('DB_DRIVERNAME', Config._field_defaults['drivername']),
             username=os.environ.get('DB_USERNAME', Config._field_defaults['username']),
             password=os.environ.get('DB_PASSWORD', Config._field_defaults['password']),
             host=os.environ.get('DB_HOST', Config._field_defaults['host']),
             port=int(os.environ.get('DB_PORT', Config._field_defaults['port'])),
             database_name=os.environ.get('DB_DATABASE_NAME', Config._field_defaults['database_name']),
+            verbose=os.environ.get('DB_VERBOSE', str(Config._field_defaults['verbose'])) == str(True),
         )
+
+    def to_environment_dict(self) -> Dict[str, str]:
+        return {
+            'DB_DRIVERNAME': self.drivername,
+            'DB_USERNAME': self.username or '',
+            'DB_PASSWORD': self.password or '',
+            'DB_HOST': self.host or '',
+            'DB_PORT': str(self.port if self.port is not None else ''),
+            'DB_DATABASE_NAME': self.database_name or '',
+            'DB_VERBOSE': str(self.verbose),
+        }
 
 
 class DatabaseClient:
-    def __init__(self, config: Config, verbose: bool = False) -> None:
+    def __init__(self, config: Config) -> None:
         self._engine = create_engine(
             URL(
                 drivername=config.drivername,
@@ -61,7 +75,7 @@ class DatabaseClient:
                 port=config.port,
                 database=config.database_name,
             ),
-            echo=verbose,
+            echo=config.verbose,
         )
         create_all_tables(self._engine)
         self._SessionClass = sessionmaker(bind=self._engine)

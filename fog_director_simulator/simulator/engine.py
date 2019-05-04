@@ -1,11 +1,14 @@
+from argparse import ArgumentParser
 from functools import partial
 from typing import Callable
 from typing import Dict
 from typing import List
 from typing import Mapping
+from typing import Optional
 from typing import Union
 
 from fog_director_simulator import database
+from fog_director_simulator.database import Config
 from fog_director_simulator.database import DatabaseLogic
 from fog_director_simulator.database import Device
 from fog_director_simulator.database.models import Alert
@@ -246,6 +249,51 @@ class Simulator:
                 if not created_alert:
                     send_alert(AlertType.NO_ALERT)
 
+    @classmethod
+    def get_instance(cls, argv: Optional[List[str]] = None) -> 'Simulator':
+        parser = ArgumentParser(cls.__doc__)
+        parser.add_argument(
+            '--drivername',
+            type=str,
+            default='mysql+mysqldb',
+        )
+        parser.add_argument(
+            '--username',
+            type=str,
+            default='root',
+        )
+        parser.add_argument(
+            '--password',
+            type=str,
+            default='password',
+        )
+        parser.add_argument(
+            '--host',
+            type=str,
+            default='database',
+        )
+        parser.add_argument(
+            '--port',
+            type=int,
+            default=3306,
+        )
+        parser.add_argument(
+            '--database_name',
+            type=str,
+            default='fog_director',
+        )
+        args = parser.parse_args(args=argv)
+        return cls(
+            database_config=Config(
+                drivername=args.drivername,
+                username=args.username,
+                password=args.password,
+                host=args.host,
+                port=args.port,
+                database_name=args.database_name,
+            ),
+        )
+
     def run(self) -> None:
         while self.is_alive:
             self.iteration_count += 1
@@ -273,4 +321,5 @@ class Simulator:
 
 
 if __name__ == '__main__':
-    Simulator(database_config=database.Config()).run()
+    instance = Simulator.get_instance()
+    instance.run()

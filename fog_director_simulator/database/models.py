@@ -173,7 +173,7 @@ class Device(Base):  # type: ignore
     ipAddress = Column(String(255), nullable=False)
     username = Column(String(255), nullable=False)
     password = Column(String(255), nullable=False)
-    port = Column(String, default='8443')
+    port = Column(String(255), default='8443')
 
     # Fields added for internal use
     timeOfCreation = Column(Integer, nullable=True)

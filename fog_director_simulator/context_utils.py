@@ -1,13 +1,27 @@
 import signal
 import subprocess
+import sys
 from contextlib import contextmanager
+from typing import Any
+from typing import Dict
 from typing import Generator
 from typing import List
+from typing import Optional
 
 
 @contextmanager
-def background_process(args: List[str], stdout: int = subprocess.PIPE, stderr: int = subprocess.PIPE) -> Generator[subprocess.Popen, None, None]:
-    process = subprocess.Popen(args=args, encoding='utf-8', stdout=stdout, stderr=stderr)
+def background_process(
+    args: List[str],
+    env: Optional[Dict[str, Any]] = None,
+    redirect_all_to_std_err: bool = False,
+) -> Generator[subprocess.Popen, None, None]:
+    process = subprocess.Popen(
+        args=args,
+        encoding='utf-8',
+        stdout=sys.stderr.buffer if redirect_all_to_std_err else subprocess.PIPE,
+        stderr=sys.stderr.buffer if redirect_all_to_std_err else subprocess.PIPE,
+        env=env,
+    )
     try:
         yield process
     finally:

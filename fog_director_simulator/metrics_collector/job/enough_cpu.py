@@ -1,13 +1,15 @@
 from fog_director_simulator.database import DatabaseLogic
 from fog_director_simulator.database.models import JobMetricType
 from fog_director_simulator.database.models import JobStatus
-from fog_director_simulator.metrics_collector.job import scaled_random_sample
 
 
 METRIC_TYPE = JobMetricType.ENOUGH_CPU
 
 
 def collect(db_logic: DatabaseLogic, job_id: int) -> bool:
+    # Local import to prevent circular import
+    from fog_director_simulator.metrics_collector.job import scaled_random_sample
+
     job = db_logic.get_job(jobId=job_id)
     myApp = db_logic.get_my_app(myAppId=job.myAppId)
     application = db_logic.get_application(localAppId=myApp.applicationLocalAppId, version=myApp.applicationVersion)
