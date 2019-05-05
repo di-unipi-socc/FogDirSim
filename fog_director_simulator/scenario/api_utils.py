@@ -29,9 +29,28 @@ class ScenarioAPIUtilMixin:
         """
         if self.api_client is None:
             return
-        self.api_client.simulator_management.post_devices_v1(
-            body={'devices': self.scenario_devices},
-        ).result()
+        futures = [
+            self.api_client.simulator_management.post_simulator_management_device_v1(
+                body={
+                    'deviceId': device.deviceId,
+                    'ipAddress': device.ipAddress,
+                    'username': device.username,
+                    'password': device.password,
+                    'port': device.port,
+                    'totalCPU': device.totalCPU,
+                    'cpuMetricsDistributionMean': device._cpuMetricsDistributionMean,
+                    'cpuMetricsDistributionStdDev': device._cpuMetricsDistributionStdDev,
+                    'totalMEM': device.totalMEM,
+                    'memMetricsDistributionMean': device._memMetricsDistributionMean,
+                    'memMetricsDistributionStdDev': device._memMetricsDistributionStdDev,
+                    'chaosDieProb': device.chaosDieProb,
+                    'chaosReviveProb': device.chaosReviveProb,
+                },
+            )
+            for device in self.scenario_devices
+        ]
+        for future in futures:
+            future.result()
 
     @property
     def iteration_count(self) -> int:

@@ -45,16 +45,6 @@ class BaseScenario(ABC, ScenarioAPIUtilMixin):
         self.scenario_devices_in_fog_director = self.scenario_devices
         self.verbose = verbose
 
-    def create_devices(self) -> None:
-        """
-        Add devices to DB
-        """
-        if self.api_client is None:
-            return
-        self.api_client.simulator_management.post_devices_v1(
-            body={'devices': self.scenario_devices},
-        ).result()
-
     @abstractmethod
     def configure_infrastructure(self) -> None:
         """
