@@ -20,11 +20,11 @@ from fog_director_simulator.pyramid.fake_fog_director.formatters import JobApi
 
 def _do_start(my_app: MyApp) -> Job:
     if not my_app.jobs:
-        raise HTTPBadRequest
+        raise HTTPBadRequest()
 
     for job in my_app.jobs:  # type: ignore
         if job.status not in {JobStatus.DEPLOY, JobStatus.START}:
-            raise HTTPBadRequest
+            raise HTTPBadRequest()
         job.status = JobStatus.START
 
     return my_app.jobs[0]  # type: ignore # NOTE: the real fog-director does create a new job, we're not willing to do it for simulation proposes
@@ -32,11 +32,11 @@ def _do_start(my_app: MyApp) -> Job:
 
 def _do_stop(my_app: MyApp) -> Job:
     if not my_app.jobs:
-        raise HTTPBadRequest
+        raise HTTPBadRequest()
 
     for job in my_app.jobs:  # type: ignore
         if job.status != JobStatus.START:
-            raise HTTPBadRequest
+            raise HTTPBadRequest()
         job.status = JobStatus.STOP
 
     return my_app.jobs[0]  # type: ignore # NOTE: the real fog-director does create a new job, we're not willing to do it for simulation proposes
@@ -55,17 +55,17 @@ def _do_deploy(my_app: MyApp, job_intensivity: JobIntensivity, myAppActionDeploy
         device = devices['deviceId']
 
         if not device.isAlive:
-            raise HTTPBadRequest
+            raise HTTPBadRequest()
 
         cpu_demand = deploy_device['resourceAsk']['resources']['cpu']
         device.reservedCPU += cpu_demand
         if device.totalCPU < device.reservedCPU:
-            raise HTTPBadRequest
+            raise HTTPBadRequest()
 
         mem_demand = deploy_device['resourceAsk']['resources']['memory']
         device.reservedMEM += mem_demand
         if device.totalMEM < device.reservedMEM:
-            raise HTTPBadRequest
+            raise HTTPBadRequest()
 
         job_device_allocations.append(
             JobDeviceAllocation(  # type: ignore
@@ -112,7 +112,7 @@ def post_v1_appmgr_myapps_my_app_id_action(request: Request) -> JobApi:
         raise HTTPNotFound
 
     if not my_app.application.isPublished:
-        raise HTTPBadRequest
+        raise HTTPBadRequest()
 
     job_intensivity = JobIntensivity[request.swagger_data['job_intensivity'].upper()]
     body = request.swagger_data['body']
@@ -141,6 +141,6 @@ def post_v1_appmgr_myapps_my_app_id_action(request: Request) -> JobApi:
             },
         )
     else:
-        raise HTTPBadRequest
+        raise HTTPBadRequest()
 
     return job_format(job)

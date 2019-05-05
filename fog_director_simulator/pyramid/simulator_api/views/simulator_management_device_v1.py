@@ -27,4 +27,4 @@ def post_simulator_management_device_v1(request: Request) -> None:
         )
     )
 
-    raise HTTPCreated
+    raise HTTPCreated()

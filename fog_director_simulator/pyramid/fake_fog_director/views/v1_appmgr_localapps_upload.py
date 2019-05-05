@@ -28,7 +28,7 @@ def post_v1_appmgr_localapps_upload(request: Request) -> ApplicationApi:
     app = package_metadata['app']
 
     if request.database_logic.get_application_by_name(name=info['name']):
-        raise HTTPConflict
+        raise HTTPConflict()
 
     application = Application(  # type: ignore
         localAppId=info['name'],  # This is an internal detail meant to simplify things (we don't know how CISCO creates it)

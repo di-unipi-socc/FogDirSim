@@ -16,10 +16,10 @@ def post_v1_appmgr_myapps(request: Request) -> MyAppApi:
     version = request.swagger_data['body']['version']
 
     if not sourceAppName.endswith(f':{version}'):
-        raise HTTPBadRequest  # NOTE: This is a personal interpretation, the real specs would just create it :(
+        raise HTTPBadRequest()  # NOTE: This is a personal interpretation, the real specs would just create it :(
 
     if request.database_logic.get_my_app_by_name(name=name):
-        raise HTTPConflict
+        raise HTTPConflict()
 
     local_app_id = sourceAppName[:-len(version) - 1]
     my_app = MyApp(
