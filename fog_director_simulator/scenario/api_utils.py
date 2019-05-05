@@ -1,3 +1,4 @@
+import os
 from typing import Any
 from typing import Dict
 from typing import Iterable
@@ -11,7 +12,9 @@ from bravado.exception import HTTPError
 from fog_director_simulator.database.models import Device
 from fog_director_simulator.database.models import JobDeviceAllocation
 from fog_director_simulator.database.models import MyApp
+from fog_director_simulator.pyramid.fake_fog_director.formatters import AlertApi
 from fog_director_simulator.pyramid.fake_fog_director.formatters import ApplicationApi
+from fog_director_simulator.pyramid.fake_fog_director.formatters import DeviceApi
 from fog_director_simulator.pyramid.fake_fog_director.formatters import JobApi
 
 
@@ -34,8 +37,11 @@ class ScenarioAPIUtilMixin:
     def iteration_count(self) -> int:
         raise NotImplementedError(self.api_client)  # TODO: connect the real endpoint
 
-    def get_all_devices(self) -> List[Dict[str, Any]]:
-        return self.fog_director_client.get_devices().result()["data"]
+    def get_all_devices(self) -> List[DeviceApi]:
+        return self.fog_director_client.v1.get_v1_appmgr_devices().result()["data"]
+
+    def get_all_alerts(self) -> List[AlertApi]:
+        return self.fog_director_client.v1.get_v1_appmgr_alerts().result()['data']
 
     def register_devices(self, *devices: Device) -> Tuple[Device, ...]:
         futures = {
@@ -61,29 +67,39 @@ class ScenarioAPIUtilMixin:
 
     def register_my_apps(self, *my_apps: MyApp) -> Tuple[MyApp, ...]:
         futures = {
-            my_app.name: self.fog_director_client.register_my_app_v1(
+            my_app.name: self.fog_director_client.v1.post_v1_appmgr_myapps(
                 body={
                     'name': my_app.name,
                     'sourceAppName': my_app.applicationLocalAppId,
                     'version': my_app.applicationVersion,
-                    'appSourceType': 'Local_APPSTORE',
+                    'appSourceType': 'LOCAL_STORE',
                 },
             )
             for my_app in my_apps
         }
         # TODO: make it resilient to errors
         my_app_name_id_mapping = {
-            name: future.result().myappId
+            name: future.result()['myAppId']
             for name, future in futures.items()
         }
 
         for my_app in my_apps:
             my_app.myAppId = my_app_name_id_mapping[my_app.name]
+
         return my_apps
 
     def register_application(self, application_name: str) -> ApplicationApi:
-        # TODO: we should send around the messy tar.gz files and/or generate them for readability
-        raise NotImplementedError()
+        with open(
+            os.path.join(
+                os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+                'fog_director_application_archives',
+                application_name,
+            ),
+            mode='rb',
+        ) as f:
+            return self.fog_director_client.v1.post_v1_appmgr_localapps_upload(
+                file=f.read(),  # TODO
+            ).result()
 
     def install_my_app(self, my_app_id: int, device_allocations: Iterable[JobDeviceAllocation], retry_on_failure: bool = False) -> JobApi:
         def _build_device_allocation(device_allocation: JobDeviceAllocation) -> Dict[str, Any]:
@@ -105,7 +121,7 @@ class ScenarioAPIUtilMixin:
             }
 
         try:
-            return self.fog_director_client.post_myapp_action_v1(
+            return self.fog_director_client.v1.post_v1_appmgr_myapps_my_app_id_action(
                 my_app_id=my_app_id,
                 body={
                     'deploy': {
@@ -127,7 +143,7 @@ class ScenarioAPIUtilMixin:
 
     def start_my_apps(self, *my_app_ids: int) -> None:
         futures = [
-            self.fog_director_client.post_myapp_action_v1(
+            self.fog_director_client.v1.post_v1_appmgr_myapps_my_app_id_action(
                 my_app_id=my_app_id,
                 body={'start': {}},
             )
@@ -139,7 +155,7 @@ class ScenarioAPIUtilMixin:
 
     def stop_my_apps(self, *my_app_ids: int) -> None:
         futures = [
-            self.fog_director_client.post_myapp_action_v1(
+            self.fog_director_client.v1.post_v1_appmgr_myapps_my_app_id_action(
                 my_app_id=my_app_id,
                 body={'stop': {}},
             ).result()
@@ -150,7 +166,7 @@ class ScenarioAPIUtilMixin:
             future.result()
 
     def uninstall_my_app(self, my_app_id: int, device_ids: Iterable[str]) -> None:
-        self.fog_director_client.post_myapp_action_v1(
+        self.fog_director_client.v1.post_v1_appmgr_myapps_my_app_id_action(
             my_app_id=my_app_id,
             body={
                 'undeploy': {

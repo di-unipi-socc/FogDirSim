@@ -35,6 +35,7 @@ def test_post_v1_appmgr_myapps_with_invalid_application_parameters(testapp, data
 
 def test_post_v1_appmgr_myapps_with_already_created_name(testapp: 'TestApp', database_logic: DatabaseLogic, application: Application, my_app: MyApp) -> None:
     params = {
+        'appSourceType': 'LOCAL_STORE',
         'name': my_app.name,
         'sourceAppName': f'{application.localAppId}:{application.version}',
         'version': application.version,
@@ -53,6 +54,7 @@ def test_post_v1_appmgr_myapps_with_already_created_name(testapp: 'TestApp', dat
 
 def test_post_v1_appmgr_myapps_with_valid_application_parameters(testapp: 'TestApp', database_logic: DatabaseLogic, application: Application) -> None:
     params = {
+        'appSourceType': 'LOCAL_STORE',
         'name': 'new_app_name',
         'sourceAppName': f'{application.localAppId}:{application.version}',
         'version': application.version,
