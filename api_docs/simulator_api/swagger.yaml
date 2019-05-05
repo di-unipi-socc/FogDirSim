@@ -175,6 +175,37 @@ definitions:
     type: object
     x-model: DeviceMinimal
 
+  DeviceDescription:
+    allOf:
+    - $ref: '#/definitions/DeviceMinimal'
+    - type: object
+      properties:
+        cpuMetricsDistributionMean:
+          type: number
+          format: integer
+        cpuMetricsDistributionStdDev:
+          type: number
+          format: integer
+        memMetricsDistributionMean:
+          type: number
+          format: integer
+        memMetricsDistributionStdDev:
+          type: number
+          format: integer
+        chaosDieProb:
+          type: number
+          format: float
+        chaosReviveProb:
+          type: number
+          format: float
+      required:
+      - cpuMetricsDistributionMean
+      - cpuMetricsDistributionStdDev
+      - memMetricsDistributionMean
+      - memMetricsDistributionStdDev
+      - chaosDieProb
+      - chaosReviveProb
+
   IterationCount:
     properties:
       iteration_count:
@@ -335,6 +366,22 @@ paths:
             $ref: '#/definitions/SimulationStatisticResponse'
       tags:
       - simulator_frontend
+  /simulator_management/device/v1:
+    post:
+      description: Add device to the infrastructure without adding it to FogDirector instance
+      operationId: post_simulator_management_device_v1
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/DeviceDescription'
+      responses:
+        '201':
+          description: Device correctly added to the infrastructure
+      tags:
+      - simulator_management
+
 
 produces:
 - application/json
