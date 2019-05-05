@@ -109,7 +109,7 @@ def post_v1_appmgr_myapps_my_app_id_action(request: Request) -> JobApi:
     try:
         my_app = request.database_logic.get_my_app(myAppId=request.swagger_data['my_app_id'])
     except NoResultFound:
-        raise HTTPNotFound
+        raise HTTPNotFound()
 
     if not my_app.application.isPublished:
         raise HTTPBadRequest()
