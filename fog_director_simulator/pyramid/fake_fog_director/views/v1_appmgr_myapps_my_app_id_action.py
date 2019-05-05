@@ -1,4 +1,4 @@
-from typing import Any
+from typing import cast
 from typing import Dict
 
 from pyramid.httpexceptions import HTTPBadRequest
@@ -16,6 +16,8 @@ from fog_director_simulator.database.models import JobStatus
 from fog_director_simulator.database.models import MyApp
 from fog_director_simulator.pyramid.fake_fog_director.formatters import job_format
 from fog_director_simulator.pyramid.fake_fog_director.formatters import JobApi
+from fog_director_simulator.pyramid.fake_fog_director.request_types import MyAppAction
+from fog_director_simulator.pyramid.fake_fog_director.request_types import MyAppActionDeployDevices
 
 
 def _do_start(my_app: MyApp) -> Job:
@@ -42,7 +44,7 @@ def _do_stop(my_app: MyApp) -> Job:
     return my_app.jobs[0]  # type: ignore # NOTE: the real fog-director does create a new job, we're not willing to do it for simulation proposes
 
 
-def _do_deploy(my_app: MyApp, job_intensivity: JobIntensivity, myAppActionDeploy: Dict[str, Any], devices: Dict[str, Device]) -> Job:
+def _do_deploy(my_app: MyApp, job_intensivity: JobIntensivity, myAppActionDeploy: MyAppActionDeployDevices, devices: Dict[str, Device]) -> Job:
     job = Job(  # type: ignore
         myApp=my_app,
         status=JobStatus.DEPLOY,
@@ -115,7 +117,7 @@ def post_v1_appmgr_myapps_my_app_id_action(request: Request) -> JobApi:
         raise HTTPBadRequest()
 
     job_intensivity = JobIntensivity[request.swagger_data['job_intensivity'].upper()]
-    body = request.swagger_data['body']
+    body = cast(MyAppAction, request.swagger_data['body'])
 
     if body['start'] is not None:
         job = _do_start(my_app=my_app)

@@ -4,7 +4,7 @@ consumes:
 - application/json
 
 definitions:
-  alert:
+  Alert:
     properties:
       appName:
         description: myApp name
@@ -27,9 +27,9 @@ definitions:
     - message
     - time
     type: object
-    x-model: alert
+    x-model: Alert
 
-  applicationResourceAsk:
+  ApplicationResourceAsk:
     properties:
       cpu:
         type: integer
@@ -49,11 +49,33 @@ definitions:
     - memory
     - profile
     type: object
-    x-model: applicationResourceAsk
+    x-model: ApplicationResourceAsk
 
-  device:
+  DeployMyApp:
+    properties:
+      appSourceType:
+        enum:
+        - Docker
+        - LOCAL_STORE
+        - LXC
+        type: string
+      name:
+        type: string
+      sourceAppName:
+        type: string
+      version:
+        type: string
+    required:
+    - appSourceType
+    - name
+    - sourceAppName
+    - version
+    type: object
+    x-model: DeployMyApp
+
+  Device:
     allOf:
-    - $ref: '#/definitions/deviceMinimal'
+    - $ref: '#/definitions/DeviceMinimal'
     - properties:
         apps:
           items:
@@ -72,9 +94,9 @@ definitions:
       - apps
       type: object
     type: object
-    x-model: device
+    x-model: Device
 
-  deviceMinimal:
+  DeviceMinimal:
     properties:
       ipAddress:
         type: string
@@ -90,9 +112,9 @@ definitions:
     - username
     - password
     type: object
-    x-model: deviceMinimal
+    x-model: DeviceMinimal
 
-  localApp:
+  LocalApp:
     properties:
       cpuUsage:
         type: integer
@@ -129,19 +151,15 @@ definitions:
     - memoryUsage
     - sourceAppName
     type: object
-    x-model: localApp
+    x-model: LocalApp
 
-  myAppAction:
+
+  MyAppAction:
     maxProperties: 1
     minProperties: 1
     properties:
       deploy:
-        properties:
-          devices:
-            items:
-              $ref: '#/definitions/myAppActionDeployItem'
-            type: array
-        type: object
+        $ref: '#/definitions/MyAppActionDeployDevices'
       start:
         additionalProperties: false
         type: object
@@ -149,29 +167,42 @@ definitions:
         additionalProperties: false
         type: object
       undeploy:
-        properties:
-          devices:
-            description: List Device identifiers to whom uninstall the MyApp
-            items:
-              type: string
-            type: array
-        required:
-        - devices
-        type: object
+        $ref: '#/definitions/MyAppActionUndeployDevices'
     type: object
-    x-model: myAppAction
+    x-model: MyAppAction
 
-  myAppActionDeployItem:
+  MyAppActionDeployDevices:
+    properties:
+      devices:
+        items:
+          $ref: '#/definitions/MyAppActionDeployItem'
+        type: array
+    type: object
+    x-model: MyAppActionDeployDevices
+
+  MyAppActionDeployItem:
     properties:
       deviceId:
         type: string
       resourceAsk:
         properties:
           resources:
-            $ref: '#/definitions/applicationResourceAsk'
+            $ref: '#/definitions/ApplicationResourceAsk'
         type: object
     type: object
-    x-model: myAppActionDeployItem
+    x-model: MyAppActionDeployItem
+
+  MyAppActionUndeployDevices:
+    properties:
+      devices:
+        description: List Device identifiers to whom uninstall the MyApp
+        items:
+          type: string
+        type: array
+    required:
+    - devices
+    type: object
+    x-model: MyAppActionUndeployDevices
 
 info:
   description: |
@@ -193,7 +224,7 @@ paths:
             properties:
               data:
                 items:
-                  $ref: '#/definitions/alert'
+                  $ref: '#/definitions/Alert'
                 type: array
             required:
             - data
@@ -243,7 +274,7 @@ paths:
             properties:
               data:
                 items:
-                  $ref: '#/definitions/device'
+                  $ref: '#/definitions/Device'
                 type: array
             required:
             - data
@@ -261,12 +292,12 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/deviceMinimal'
+          $ref: '#/definitions/DeviceMinimal'
       responses:
         '200':
           description: HTTP/200
           schema:
-            $ref: '#/definitions/device'
+            $ref: '#/definitions/Device'
       security:
       - XTokenId: []
       tags:
@@ -285,7 +316,7 @@ paths:
         '200':
           description: Removed device
           schema:
-            $ref: '#/definitions/device'
+            $ref: '#/definitions/Device'
       security:
       - XTokenId: []
       tags:
@@ -311,7 +342,7 @@ paths:
             properties:
               data:
                 items:
-                  $ref: '#/definitions/localApp'
+                  $ref: '#/definitions/LocalApp'
                 type: array
             required:
             - data
@@ -340,7 +371,7 @@ paths:
         '200':
           description: HTTP/200
           schema:
-            $ref: '#/definitions/localApp'
+            $ref: '#/definitions/LocalApp'
       security:
       - XTokenId: []
       tags:
@@ -363,12 +394,12 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/localApp'
+          $ref: '#/definitions/LocalApp'
       responses:
         '200':
           description: HTTP/200
           schema:
-            $ref: '#/definitions/localApp'
+            $ref: '#/definitions/LocalApp'
       security:
       - XTokenId: []
       tags:
@@ -420,25 +451,7 @@ paths:
         name: body
         required: true
         schema:
-          properties:
-            appSourceType:
-              enum:
-              - Docker
-              - LOCAL_STORE
-              - LXC
-              type: string
-            name:
-              type: string
-            sourceAppName:
-              type: string
-            version:
-              type: string
-          required:
-          - appSourceType
-          - name
-          - sourceAppName
-          - version
-          type: object
+          $ref: '#/definitions/DeployMyApp'
       responses:
         '200':
           description: MyApp correctly created
@@ -506,7 +519,7 @@ paths:
       - in: body
         name: body
         schema:
-          $ref: '#/definitions/myAppAction'
+          $ref: '#/definitions/MyAppAction'
       responses:
         '200':
           description: HTTP/200

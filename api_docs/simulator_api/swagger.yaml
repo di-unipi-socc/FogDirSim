@@ -161,7 +161,7 @@ definitions:
       ipAddress:
         type: string
       port:
-        type: integer
+        type: string
       totalCpu:
         type: integer
       totalMem:

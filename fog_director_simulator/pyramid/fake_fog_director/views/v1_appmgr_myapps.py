@@ -1,3 +1,5 @@
+from typing import cast
+
 from pyramid.httpexceptions import HTTPBadRequest
 from pyramid.httpexceptions import HTTPConflict
 from pyramid.request import Request
@@ -6,14 +8,16 @@ from pyramid.view import view_config
 from fog_director_simulator.database.models import MyApp
 from fog_director_simulator.pyramid.fake_fog_director.formatters import myapp_format
 from fog_director_simulator.pyramid.fake_fog_director.formatters import MyAppApi
+from fog_director_simulator.pyramid.fake_fog_director.request_types import DeployMyApp
 
 
 @view_config(route_name='api.v1.appmgr.myapps', request_method='POST')
 def post_v1_appmgr_myapps(request: Request) -> MyAppApi:
     minjobs = request.swagger_data['minjobs']
-    name = request.swagger_data['body']['name']
-    sourceAppName = request.swagger_data['body']['sourceAppName']
-    version = request.swagger_data['body']['version']
+    body = cast(DeployMyApp, request.swagger_data['body'])
+    name = body['name']
+    sourceAppName = body['sourceAppName']
+    version = body['version']
 
     if not sourceAppName.endswith(f':{version}'):
         raise HTTPBadRequest()  # NOTE: This is a personal interpretation, the real specs would just create it :(

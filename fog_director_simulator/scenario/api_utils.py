@@ -1,5 +1,4 @@
 import os
-from typing import Any
 from typing import Dict
 from typing import Iterable
 from typing import List
@@ -16,6 +15,15 @@ from fog_director_simulator.pyramid.fake_fog_director.formatters import AlertApi
 from fog_director_simulator.pyramid.fake_fog_director.formatters import ApplicationApi
 from fog_director_simulator.pyramid.fake_fog_director.formatters import DeviceApi
 from fog_director_simulator.pyramid.fake_fog_director.formatters import JobApi
+from fog_director_simulator.pyramid.fake_fog_director.request_types import ApplicationResourceAsk
+from fog_director_simulator.pyramid.fake_fog_director.request_types import DeployMyApp
+from fog_director_simulator.pyramid.fake_fog_director.request_types import DeviceMinimal
+from fog_director_simulator.pyramid.fake_fog_director.request_types import MyAppAction
+from fog_director_simulator.pyramid.fake_fog_director.request_types import MyAppActionDeployDevices
+from fog_director_simulator.pyramid.fake_fog_director.request_types import MyAppActionDeployItem
+from fog_director_simulator.pyramid.fake_fog_director.request_types import MyAppActionUndeployDevices
+from fog_director_simulator.pyramid.fake_fog_director.request_types import ResourceAsk
+from fog_director_simulator.pyramid.simulator_api.request_types import DeviceDescription
 
 
 class ScenarioAPIUtilMixin:
@@ -40,21 +48,21 @@ class ScenarioAPIUtilMixin:
             return
         futures = [
             self.api_client.simulator_management.post_simulator_management_device_v1(
-                body={
-                    'deviceId': device.deviceId,
-                    'ipAddress': device.ipAddress,
-                    'username': device.username,
-                    'password': device.password,
-                    'port': device.port,
-                    'totalCPU': device.totalCPU,
-                    'cpuMetricsDistributionMean': device._cpuMetricsDistributionMean,
-                    'cpuMetricsDistributionStdDev': device._cpuMetricsDistributionStdDev,
-                    'totalMEM': device.totalMEM,
-                    'memMetricsDistributionMean': device._memMetricsDistributionMean,
-                    'memMetricsDistributionStdDev': device._memMetricsDistributionStdDev,
-                    'chaosDieProb': device.chaosDieProb,
-                    'chaosReviveProb': device.chaosReviveProb,
-                },
+                body=DeviceDescription(
+                    deviceId=device.deviceId,
+                    ipAddress=device.ipAddress,
+                    username=device.username,
+                    password=device.password,
+                    port=device.port,
+                    totalCPU=device.totalCPU,
+                    cpuMetricsDistributionMean=device._cpuMetricsDistributionMean,
+                    cpuMetricsDistributionStdDev=device._cpuMetricsDistributionStdDev,
+                    totalMEM=device.totalMEM,
+                    memMetricsDistributionMean=device._memMetricsDistributionMean,
+                    memMetricsDistributionStdDev=device._memMetricsDistributionStdDev,
+                    chaosDieProb=device.chaosDieProb,
+                    chaosReviveProb=device.chaosReviveProb,
+                ),
             )
             for device in self.scenario_devices
         ]
@@ -78,12 +86,12 @@ class ScenarioAPIUtilMixin:
     def register_devices(self, *devices: Device) -> Tuple[Device, ...]:
         futures = {
             (device.ipAddress, device.port): self.fog_director_client.v1.post_v1_appmgr_devices(
-                body={
-                    'port': device.port,
-                    'ipAddress': device.ipAddress,
-                    'username': device.username,
-                    'password': device.password,
-                },
+                body=DeviceMinimal(
+                    port=device.port,
+                    ipAddress=device.ipAddress,
+                    username=device.username,
+                    password=device.password,
+                ),
                 _request_options=self._fog_director_authentication,
             )
             for device in devices
@@ -101,12 +109,12 @@ class ScenarioAPIUtilMixin:
     def register_my_apps(self, *my_apps: MyApp) -> Tuple[MyApp, ...]:
         futures = {
             my_app.name: self.fog_director_client.v1.post_v1_appmgr_myapps(
-                body={
-                    'name': my_app.name,
-                    'sourceAppName': f'{my_app.applicationLocalAppId}:{my_app.applicationVersion}',
-                    'version': my_app.applicationVersion,
-                    'appSourceType': 'LOCAL_STORE',
-                },
+                body=DeployMyApp(
+                    name=my_app.name,
+                    sourceAppName=f'{my_app.applicationLocalAppId}:{my_app.applicationVersion}',
+                    version=my_app.applicationVersion,
+                    appSourceType='LOCAL_STORE',
+                ),
                 _request_options=self._fog_director_authentication,
             )
             for my_app in my_apps
@@ -137,38 +145,38 @@ class ScenarioAPIUtilMixin:
             ).result()
 
     def install_my_app(self, my_app_id: int, device_allocations: Iterable[JobDeviceAllocation], retry_on_failure: bool = False) -> JobApi:
-        def _build_device_allocation(device_allocation: JobDeviceAllocation) -> Dict[str, Any]:
-            return {
-                'deviceId': device_allocation.deviceId,
-                'resourceAsk': {
-                    'resources': {
-                        'profile': device_allocation.profile.iox_name(),
-                        'cpu': device_allocation.cpu,
-                        'memory': device_allocation.memory,
-                        'network': [  # We do not simulate metrics collection on networking stack
+        def _build_action_deploy_item(device_allocation: JobDeviceAllocation) -> MyAppActionDeployItem:
+            return MyAppActionDeployItem(
+                deviceId=device_allocation.deviceId,
+                resourceAsk=ResourceAsk(
+                    resources=ApplicationResourceAsk(
+                        profile=device_allocation.profile.iox_name(),
+                        cpu=device_allocation.cpu,
+                        memory=device_allocation.memory,
+                        network=[  # We do not simulate metrics collection on networking stack
                             {
                                 'interface-name': 'eth0',
                                 'network-name': 'iox-bridge0',
                             },
                         ],
-                    },
-                },
-            }
+                    ),
+                ),
+            )
 
         try:
             return self.fog_director_client.v1.post_v1_appmgr_myapps_my_app_id_action(
                 my_app_id=my_app_id,
-                body={
-                    'deploy': {
-                        'config': {},
-                        'metricsPollingFrequency': '3600000',
-                        'startApp': True,
-                        'devices': [
-                            _build_device_allocation(device_allocation)
+                body=MyAppAction(
+                    deploy=MyAppActionDeployDevices(
+                        config={},
+                        metricsPollingFrequency='3600000',
+                        startApp=True,
+                        devices=[
+                            _build_action_deploy_item(device_allocation)
                             for device_allocation in device_allocations
                         ],
-                    },
-                },
+                    ),
+                ),
                 _request_options=self._fog_director_authentication,
             ).result()
         except HTTPError:
@@ -181,7 +189,7 @@ class ScenarioAPIUtilMixin:
         futures = [
             self.fog_director_client.v1.post_v1_appmgr_myapps_my_app_id_action(
                 my_app_id=my_app_id,
-                body={'start': {}},
+                body=MyAppAction(start={}),
                 _request_options=self._fog_director_authentication,
             )
             for my_app_id in my_app_ids
@@ -194,7 +202,7 @@ class ScenarioAPIUtilMixin:
         futures = [
             self.fog_director_client.v1.post_v1_appmgr_myapps_my_app_id_action(
                 my_app_id=my_app_id,
-                body={'stop': {}},
+                body=MyAppAction(stop={}),
                 _request_options=self._fog_director_authentication,
             ).result()
             for my_app_id in my_app_ids
@@ -206,10 +214,10 @@ class ScenarioAPIUtilMixin:
     def uninstall_my_app(self, my_app_id: int, device_ids: Iterable[str]) -> None:
         self.fog_director_client.v1.post_v1_appmgr_myapps_my_app_id_action(
             my_app_id=my_app_id,
-            body={
-                'undeploy': {
-                    'devices': list(device_ids),
-                },
-            },
+            body=MyAppAction(
+                undeploy=MyAppActionUndeployDevices(
+                    devices=list(device_ids),
+                ),
+            ),
             _request_options=self._fog_director_authentication,
         ).result()
