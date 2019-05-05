@@ -168,6 +168,7 @@ def database_context(start_database: bool, verbose: bool = False) -> Generator[O
     ) as (_, container_ports):
         database_config = Config(host='0.0.0.0', port=container_ports['3306/tcp'])
         _wait_until_mysql_up(database_config)
+        print(f'Database up and running on {LOCALHOST}:{database_config.port}')
         yield database_config
 
 
