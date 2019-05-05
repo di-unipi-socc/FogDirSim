@@ -173,7 +173,11 @@ def database_context(start_database: bool, verbose: bool = False) -> Generator[O
 
 
 @contextmanager
-def simulator_context(database_config: Optional[Config], verbose: bool = False) -> Generator[None, None, None]:
+def simulator_context(
+    database_config: Optional[Config],
+    max_simulation_iteration: Optional[int] = None,
+    verbose: bool = False,
+) -> Generator[None, None, None]:
     if database_config is None:
         with noop_context():
             yield None
@@ -184,6 +188,9 @@ def simulator_context(database_config: Optional[Config], verbose: bool = False) 
             sys.executable,
             '-m',
             'fog_director_simulator.simulator.engine',
+            '--max-simulation-iterations',
+            str(sys.maxsize - 1 if max_simulation_iteration is None else max_simulation_iteration),
+            '--verbose' if verbose else '',
         ],
         env=database_config.to_environment_dict(),
         redirect_all_to_std_err=verbose,
