@@ -1,37 +1,24 @@
-swagger: '2.0'
-info:
-  title: APIs for Cisco's Fog Director
-  description: |
-    The APIs are extracted with best effort,
-    we do not have the ambition to claim that the following
-    are CISCO's Fog Director complete APIs.
-  version: '0.0'
 basePath: /api
+
 consumes:
 - application/json
-produces:
-- application/json
-schemes:
-- http
-- https
 
 definitions:
   alert:
-    type: object
     properties:
+      appName:
+        description: myApp name
+        type: string
       deviceId:
         type: string
       ipAddress:
-        type: string
-      appName:
-        type: string
-        description: myApp name
-      type:
         type: string
       message:
         type: string
       time:
         type: integer
+      type:
+        type: string
     required:
     - deviceId
     - ipAddress
@@ -39,36 +26,63 @@ definitions:
     - type
     - message
     - time
+    type: object
+    x-model: alert
+
+  applicationResourceAsk:
+    properties:
+      cpu:
+        type: integer
+      memory:
+        type: integer
+      profile:
+        enum:
+        - c1.tiny
+        - c1.small
+        - c1.medium
+        - c1.large
+        - c1.xlarge
+        - custom
+        type: string
+    required:
+    - cpu
+    - memory
+    - profile
+    type: object
+    x-model: applicationResourceAsk
+
   device:
     allOf:
     - $ref: '#/definitions/deviceMinimal'
-    - type: object
-      properties:
+    - properties:
+        apps:
+          items:
+            type: integer
+          type: array
         deviceId:
           type: string
         usedCPU:
           type: integer
         usedMEM:
           type: integer
-        apps:
-          type: array
-          items:
-            type: integer
       required:
       - deviceId
       - usedCPU
       - usedMEM
       - apps
+      type: object
     type: object
+    x-model: device
+
   deviceMinimal:
     properties:
-      port:
-        type: string
       ipAddress:
         type: string
-      username:
-        type: string
       password:
+        type: string
+      port:
+        type: string
+      username:
         type: string
     required:
     - port
@@ -76,33 +90,34 @@ definitions:
     - username
     - password
     type: object
+    x-model: deviceMinimal
+
   localApp:
-    type: object
     properties:
+      cpuUsage:
+        type: integer
       creationDate:
         type: integer
       localAppId:
         type: string
-      version:
-        type: string
-      published:
-        type: string
-        enum:
-        - published
-        - unpublished
+      memoryUsage:
+        type: integer
       profileNeeded:
-        type: string
         enum:
         - c1.tiny
         - c1.small
         - c1.medium
         - c1.large
         - c1.xlarge
-      cpuUsage:
-        type: integer
-      memoryUsage:
-        type: integer
+        type: string
+      published:
+        enum:
+        - published
+        - unpublished
+        type: string
       sourceAppName:
+        type: string
+      version:
         type: string
     required:
     - creationDate
@@ -113,103 +128,90 @@ definitions:
     - cpuUsage
     - memoryUsage
     - sourceAppName
-  myApp:
-    properties:
-      myAppId:
-        type: integer
-      name:
-        type: string
-    required:
-    - myAppId
-    - name
-  applicationResourceAsk:
     type: object
+    x-model: localApp
+
+  myAppAction:
+    maxProperties: 1
+    minProperties: 1
     properties:
-      cpu:
-        type: integer
-      memory:
-        type: integer
-      profile:
-        type: string
-        enum:
-        - c1.tiny
-        - c1.small
-        - c1.medium
-        - c1.large
-        - c1.xlarge
-        - custom
-    required:
-    - cpu
-    - memory
-    - profile
+      deploy:
+        properties:
+          devices:
+            items:
+              $ref: '#/definitions/myAppActionDeployItem'
+            type: array
+      start:
+        additionalProperties: false
+        type: object
+      stop:
+        additionalProperties: false
+        type: object
+      undeploy:
+        properties:
+          devices:
+            description: List Device identifiers to whom uninstall the MyApp
+            items:
+              type: string
+            type: array
+        required:
+        - devices
+        type: object
+    type: object
+    x-model: myAppAction
+
   myAppActionDeployItem:
-    type: object
     properties:
       deviceId:
         type: string
       resourceAsk:
-        type: object
         properties:
           resources:
             $ref: '#/definitions/applicationResourceAsk'
-  myAppActionDeploy:
-    properties:
-      devices:
-        type: array
-        items:
-          $ref: '#/definitions/myAppActionDeployItem'
-  myAppAction:
-    properties:
-      deploy:
-        $ref: '#/definitions/myAppActionDeploy'
-      start:
         type: object
-        additionalProperties: false
-      stop:
-        type: object
-        additionalProperties: false
-      undeploy:
-        type: object
-        properties:
-          devices:
-            description: List Device identifiers to whom uninstall the MyApp
-            type: array
-            items:
-              type: string
-        required:
-        - devices
-    minProperties: 1
-    maxProperties: 1
     type: object
+    x-model: myAppActionDeployItem
+
+info:
+  description: |
+    The APIs are extracted with best effort,
+    we do not have the ambition to claim that the following
+    are CISCO''s Fog Director complete APIs.
+  title: APIs for Cisco's Fog Director
+  version: '0.0'
 
 paths:
   /v1/appmgr/alerts:
     get:
       description: Retrieve all the currently available alerts
+      operationId: get_v1_appmgr_alerts
       responses:
         '200':
           description: HTTP/200
           schema:
             properties:
               data:
-                type: array
                 items:
                   $ref: '#/definitions/alert'
+                type: array
             required:
             - data
       security:
       - XTokenId: []
+      tags:
+      - v1
 
   /v1/appmgr/apps/{local_application_id}:{version}:
     delete:
       description: Remove the Application from the Local Store
+      operationId: delete_v1_appmgr_apps_local_application_id_version
       parameters:
-      - name: local_application_id
-        in: path
+      - in: path
+        name: local_application_id
         required: true
         type: string
-      - name: version
-        in: path
+      - in: path
+        name: version
         required: true
         type: string
       responses:
@@ -217,10 +219,13 @@ paths:
           description: HTTP/200
       security:
       - XTokenId: []
+      tags:
+      - v1
 
   /v1/appmgr/devices:
     get:
       description: Retrieve the devices matching the filtering rules
+      operationId: get_v1_appmgr_devices
       parameters:
       - in: query
         name: limit
@@ -236,19 +241,23 @@ paths:
           schema:
             properties:
               data:
-                type: array
                 items:
                   $ref: '#/definitions/device'
+                type: array
             required:
             - data
             type: object
       security:
       - XTokenId: []
+      tags:
+      - v1
+
     post:
       description: Add a Device on the Infrastructure
+      operationId: post_v1_appmgr_devices
       parameters:
-      - name: body
-        in: body
+      - in: body
+        name: body
         required: true
         schema:
           $ref: '#/definitions/deviceMinimal'
@@ -259,15 +268,18 @@ paths:
             $ref: '#/definitions/device'
       security:
       - XTokenId: []
+      tags:
+      - v1
 
   /v1/appmgr/devices/{device_id}:
     delete:
       description: Remove the Device from the Infrastructure
+      operationId: delete_v1_appmgr_devices_device_id
       parameters:
       - in: path
         name: device_id
-        type: string
         required: true
+        type: string
       responses:
         '200':
           description: Removed device
@@ -275,10 +287,13 @@ paths:
             $ref: '#/definitions/device'
       security:
       - XTokenId: []
+      tags:
+      - v1
 
   /v1/appmgr/localapps:
     get:
       description: Retrive the Local Application available in the Local Store
+      operationId: get_v1_appmgr_localapps
       parameters:
       - in: query
         name: limit
@@ -294,29 +309,57 @@ paths:
           schema:
             properties:
               data:
-                type: array
                 items:
                   $ref: '#/definitions/localApp'
+                type: array
             required:
             - data
             type: object
       security:
       - XTokenId: []
+      tags:
+      - v1
+
+  /v1/appmgr/localapps/upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload the application archive to the Local Store
+      operationId: post_v1_appmgr_localapps_upload
+      parameters:
+      - in: header
+        name: X-Publish-On-Upload
+        required: false
+        type: boolean
+      - in: formData
+        name: file
+        required: true
+        type: file
+      responses:
+        '200':
+          description: HTTP/200
+          schema:
+            $ref: '#/definitions/localApp'
+      security:
+      - XTokenId: []
+      tags:
+      - v1
 
   /v1/appmgr/localapps/{local_application_id}:{version}:
     put:
       description: Update the Application status (publish, unpublish)
+      operationId: put_v1_appmgr_localapps_local_application_id_version
       parameters:
-      - name: local_application_id
-        in: path
+      - in: path
+        name: local_application_id
         required: true
         type: string
-      - name: version
-        in: path
+      - in: path
+        name: version
         required: true
         type: string
-      - name: body
-        in: body
+      - in: body
+        name: body
         required: true
         schema:
           $ref: '#/definitions/localApp'
@@ -327,43 +370,55 @@ paths:
             $ref: '#/definitions/localApp'
       security:
       - XTokenId: []
+      tags:
+      - v1
 
-  /v1/appmgr/localapps/upload:
-    post:
-      description: Upload the application archive to the Local Store
-      consumes:
-      - multipart/form-data
+  /v1/appmgr/myapps:
+    get:
+      description: Get the myapp created in the system
+      operationId: get_v1_appmgr_myapps
       parameters:
-      - in: header
-        name: X-Publish-On-Upload
-        type: boolean
+      - in: query
+        name: searchByName
         required: false
-      - in: formData
-        name: file
-        type: file
-        required: true
+        type: string
       responses:
         '200':
           description: HTTP/200
           schema:
-            $ref: '#/definitions/localApp'
+            properties:
+              data:
+                items:
+                  properties:
+                    myAppId:
+                      type: integer
+                    name:
+                      type: string
+                  required:
+                  - myAppId
+                  - name
+                type: array
+            required:
+            - data
+            type: object
       security:
       - XTokenId: []
+      tags:
+      - v1
 
-  /v1/appmgr/myapps:
     post:
       description: Create a new deployment hook
+      operationId: post_v1_appmgr_myapps
       parameters:
-      - in: query
+      - description: Parameter added by FogDirSim to permit to specify minimal amount of job required to consider the myapp up and running
+        in: query
         name: minjobs
-        type: integer
         required: false
-        description: Parameter added by FogDirSim to permit to specify minimal amount of job required to consider the myapp up and running
+        type: integer
       - in: body
         name: body
         required: true
         schema:
-          type: object
           properties:
             name:
               type: string
@@ -375,72 +430,71 @@ paths:
           - name
           - sourceAppName
           - version
+          type: object
       responses:
         '200':
           description: MyApp correctly created
           schema:
-            $ref: '#/definitions/myApp'
-      security:
-      - XTokenId: []
-
-    get:
-      description: Get the myapp created in the system
-      parameters:
-      - in: query
-        name: searchByName
-        type: string
-        required: false
-      responses:
-        '200':
-          description: HTTP/200
-          schema:
-            type: object
             properties:
-              data:
-                type: array
-                items:
-                  $ref: '#/definitions/myApp'
+              myAppId:
+                type: integer
+              name:
+                type: string
             required:
-            - data
+            - myAppId
+            - name
       security:
       - XTokenId: []
+      tags:
+      - v1
 
   /v1/appmgr/myapps/{my_app_id}:
     delete:
       description: Remove the myApp if it is not installed on any device, returns error otherwise
+      operationId: delete_v1_appmgr_myapps_my_app_id
       parameters:
-      - in: path
+      - description: myApp identifier to remove
+        in: path
         name: my_app_id
-        type: integer
         required: true
-        description: myApp identifier to remove
+        type: integer
       responses:
         '200':
           description: HTTP/200
           schema:
-            $ref: '#/definitions/myApp'
+            properties:
+              myAppId:
+                type: integer
+              name:
+                type: string
+            required:
+            - myAppId
+            - name
       security:
       - XTokenId: []
+      tags:
+      - v1
 
   /v1/appmgr/myapps/{my_app_id}/action:
     post:
       description: Manage the myapp state applying action on it
+      operationId: post_v1_appmgr_myapps_my_app_id_action
       parameters:
-      - in: path
+      - description: myApp identifier
+        in: path
         name: my_app_id
-        type: integer
         required: true
-        description: myApp identifier
-      - in: query
-        name: job_intensivity
-        type: string
-        required: false
-        default: normal
+        type: integer
+      - default: normal
+        description: Simulator job intensitivy profile used to represent an heavy resources application usage
         enum:
         - quiet
         - normal
         - heavy
-        description: Simulator job intensitivy profile used to represent an heavy resources application usage
+        in: query
+        name: job_intensivity
+        required: false
+        type: string
       - in: body
         name: body
         schema:
@@ -449,45 +503,51 @@ paths:
         '200':
           description: HTTP/200
           schema:
-            type: object
             properties:
               jobId:
                 type: string
             required:
             - jobId
+            type: object
       security:
       - XTokenId: []
+      tags:
+      - v1
 
   /v1/appmgr/tokenservice:
     post:
+      operationId: post_v1_appmgr_tokenservice
       parameters:
-      - in: header
+      - description: Basic Authentication Header
+        in: header
         name: Authorization
         type: string
-        description: Basic Authentication Header
       responses:
         '200':
           description: HTTP/200
           schema:
-            type: object
             properties:
-              token:
-                type: string
               expiryTime:
                 type: integer
               serverEpochTime:
                 type: integer
+              token:
+                type: string
             required:
             - token
             - expiryTime
             - serverEpochTime
+            type: object
+      tags:
+      - v1
 
   /v1/appmgr/tokenservice/{token}:
     delete:
+      operationId: delete_v1_appmgr_tokenservice_token
       parameters:
-      - in: path
+      - description: token to delete
+        in: path
         name: token
-        description: token to delete
         required: true
         type: string
       responses:
@@ -495,12 +555,21 @@ paths:
           description: HTTP/200
       security:
       - XTokenId: []
+      tags:
+      - v1
+
+produces:
+- application/json
+
+schemes:
+- http
+- https
 
 securityDefinitions:
   XTokenId:
-    description: >
-      Token provided to the user during the login phase.
-      The token will provide the right user context to the server.
-    type: apiKey
+    description: Token provided to the user during the login phase. The token will provide the right user context to the server.
     in: header
     name: X-Token-Id
+    type: apiKey
+
+swagger: '2.0'

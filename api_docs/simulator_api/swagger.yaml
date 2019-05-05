@@ -1,208 +1,44 @@
-swagger: '2.0'
-info:
-  title: APIs for Fog Director Simulator
-  version: '0.0'
 basePath: /api
+
 consumes:
 - application/json
-produces:
-- application/json
-schemes:
-- http
-- https
 
-paths:
-  /simulator_frontend/aggregated_device_metric/v1:
-    get:
-      description: Retrieve the post-aggregated metrics related to the Devices
-      operationId: get_aggregated_device_metrics_v1
-      parameters:
-      - in: query
-        name: iteration_count
-        type: integer
-        required: false
-      - in: query
-        name: device_ids
-        type: array
-        collectionFormat: csv
-        items:
-          type: string
-        required: false
-      responses:
-        '200':
-          description: HTTP/200
-          schema:
-            type: object
-            properties:
-              iteration_count:
-                type: integer
-              metrics:
-                type: array
-                items:
-                  $ref: '#/definitions/AggregatedDeviceMetric'
-            required:
-            - iteration_count
-            - metrics
-      tags:
-      - simulator_frontend
-  /simulator_frontend/aggregated_my_app_metric/v1:
-    get:
-      description: Retrieve the post-aggregated metrics related to the My Apps
-      operationId: get_aggregated_my_app_metrics_v1
-      parameters:
-      - in: query
-        name: iteration_count
-        type: integer
-        required: false
-      - in: query
-        name: my_app_ids
-        type: array
-        collectionFormat: csv
-        items:
-          type: string
-        required: false
-      responses:
-        '200':
-          description: HTTP/200
-          schema:
-            type: object
-            properties:
-              iteration_count:
-                type: integer
-              metrics:
-                type: array
-                items:
-                  $ref: '#/definitions/AggregatedMyAppMetric'
-            required:
-            - iteration_count
-            - metrics
-      tags:
-      - simulator_frontend
-  /simulator_frontend/iteration_count/v1:
-    get:
-      description: Retrieve the current iteration count of the simulation
-      operationId: get_iteration_count_v1
-      parameters:
-      - in: query
-        name: iteration_count
-        type: integer
-        required: false
-      - in: query
-        name: device_ids
-        type: array
-        collectionFormat: csv
-        items:
-          type: string
-        required: false
-      responses:
-        '200':
-          description: HTTP/200
-          schema:
-            type: object
-            properties:
-              iteration_count:
-                type: integer
-            required:
-            - iteration_count
-      tags:
-      - simulator_frontend
-  /simulator_frontend/simulation_statistic/v1:
-    get:
-      description: Retrieve historical information related to the whole simulation
-      operationId: get_simulation_statistic_v1
-      parameters:
-      - in: query
-        name: minIterationCount
-        type: integer
-        required: false
-        minimum: 0
-      - in: query
-        name: maxIterationCount
-        type: integer
-        required: false
-        minimum: 0
-      - in: query
-        description: TODO
-        name: totalNumberOfSamplings
-        type: integer
-        required: true
-        minimum: 1
-      responses:
-        '200':
-          description: HTTP/200
-          schema:
-            type: object
-            properties:
-              totalNumberOfSamplings:
-                type: integer
-              minIterationCount:
-                type: integer
-              maxIterationCount:
-                type: integer
-              averageUptime:
-                description: >
-                  Average of the all myApp uptime for all the iterations
-                  TODO: improve a bit
-                type: array
-                items:
-                  type: number
-                  format: float
-                  minimum: 0
-                  maximum: 1
-              totalEnergyConsumption:
-                type: array
-                items:
-                  type: number
-                  format: float
-                  minimum: 0
-              alerts:
-                $ref: '#/definitions/AlertStatus'
-            required:
-            - totalNumberOfSamplings
-            - minIterationCount
-            - maxIterationCount
-            - averageUptime
-            - totalEnergyConsumption
-            - alerts
-      tags:
-      - simulator_frontend
 definitions:
   AggregatedDeviceMetric:
-    type: object
     properties:
       averageCpuUsed:
-        type: number
         format: float
         minimum: 0
+        type: number
       averageMemUsed:
-        type: number
         format: float
         minimum: 0
+        type: number
       averageMyAppCount:
-        type: number
         format: float
         minimum: 0
+        type: number
       criticalCpuUsagePercentage:
-        type: number
         format: float
-        minimum: 0
         maximum: 1
+        minimum: 0
+        type: number
       criticalMemUsagePercentage:
-        type: number
         format: float
-        minimum: 0
         maximum: 1
-      deviceDownPercentage:
-        type: number
-        format: float
         minimum: 0
-        maximum: 1
-      deviceEnergyConsumption:
         type: number
-        format: float
-        minimum: 0
       device:
         $ref: '#/definitions/DeviceMinimal'
+      deviceDownPercentage:
+        format: float
+        maximum: 1
+        minimum: 0
+        type: number
+      deviceEnergyConsumption:
+        format: float
+        minimum: 0
+        type: number
     required:
     - device
     - averageCpuUsed
@@ -212,8 +48,113 @@ definitions:
     - criticalMemUsagePercentage
     - deviceDownPercentage
     - deviceEnergyConsumption
-  DeviceMinimal:
     type: object
+    x-model: AggregatedDeviceMetric
+
+  AggregatedDeviceMetricResponse:
+    properties:
+      iteration_count:
+        type: integer
+      metrics:
+        items:
+          $ref: '#/definitions/AggregatedDeviceMetric'
+        type: array
+    required:
+    - iteration_count
+    - metrics
+    type: object
+    x-model: AggregatedDeviceMetricResponse
+
+  AggregatedMyAppMetric:
+    properties:
+      alertStatistics:
+        $ref: '#/definitions/AlertStatus'
+      installedTimePercentagePerDevice:
+        additionalProperties:
+          format: float
+          maximum: 1
+          minimum: 0
+          type: number
+        description: Mapping of all the devices and the percentage of time in which the myApp was installed
+      myApp:
+        $ref: '#/definitions/MyAppMinimal'
+      startTimePercentagePerDevice:
+        additionalProperties:
+          format: float
+          maximum: 1
+          minimum: 0
+          type: number
+        description: Mapping of all the devices and the percentage of time in which the myApp was started
+      uptimePercentage:
+        format: float
+        maximum: 1
+        minimum: 0
+        type: number
+    required:
+    - myApp
+    - alertStatistics
+    - startTimePercentagePerDevice
+    - installedTimePercentagePerDevice
+    - uptimePercentage
+    type: object
+    x-model: AggregatedMyAppMetric
+
+  AggregatedMyAppMetricResponse:
+    properties:
+      iteration_count:
+        type: integer
+      metrics:
+        items:
+          $ref: '#/definitions/AggregatedMyAppMetric'
+        type: array
+    required:
+    - iteration_count
+    - metrics
+    type: object
+    x-model: AggregatedMyAppMetricResponse
+
+  AlertStatus:
+    properties:
+      AppHealth:
+        description: Percentage of time where the AppHealth alerts were raised
+        format: float
+        maximum: 1
+        minimum: 0
+        type: number
+      CpuUsage:
+        description: Percentage of time where the CpuUsage alerts were raised
+        format: float
+        maximum: 1
+        minimum: 0
+        type: number
+      DeviceReachability:
+        description: Percentage of time where the DeviceReachability alerts were raised
+        format: float
+        maximum: 1
+        minimum: 0
+        type: number
+      MemUsage:
+        description: Percentage of time where the MemUsage alerts were raised
+        format: float
+        maximum: 1
+        minimum: 0
+        type: number
+      NoAlert:
+        description: Percentage of time where the no alerts were raised
+        format: float
+        maximum: 1
+        minimum: 0
+        type: number
+    required:
+    - NoAlert
+    - AppHealth
+    - DeviceReachability
+    - CpuUsage
+    - MemUsage
+    type: object
+    x-model: AlertStatus
+
+  DeviceMinimal:
     properties:
       deviceId:
         type: string
@@ -231,84 +172,19 @@ definitions:
     - port
     - totalCpu
     - totalMem
-  AggregatedMyAppMetric:
     type: object
+    x-model: DeviceMinimal
+
+  IterationCount:
     properties:
-      uptimePercentage:
-        type: number
-        format: float
-        minimum: 0
-        maximum: 1
-      installedTimePercentagePerDevice:
-        description: >
-          Mapping of all the devices and the percentage
-          of time in which the myApp was installed
-        additionalProperties:
-          type: number
-          format: float
-          minimum: 0
-          maximum: 1
-      startTimePercentagePerDevice:
-        description: >
-          Mapping of all the devices and the percentage
-          of time in which the myApp was started
-        additionalProperties:
-          type: number
-          format: float
-          minimum: 0
-          maximum: 1
-      alertStatistics:
-        $ref: '#/definitions/AlertStatus'
-      myApp:
-        $ref: '#/definitions/MyAppMinimal'
+      iteration_count:
+        type: integer
     required:
-    - myApp
-    - alertStatistics
-    - startTimePercentagePerDevice
-    - installedTimePercentagePerDevice
-    - uptimePercentage
-  AlertStatus:
+    - iteration_count
     type: object
-    properties:
-      NoAlert:
-        description: Percentage of time where the no alerts were raised
-        type: number
-        format: float
-        minimum: 0
-        maximum: 1
-      AppHealth:
-        description: Percentage of time where the AppHealth alerts were raised
-        type: number
-        format: float
-        minimum: 0
-        maximum: 1
-      DeviceReachability:
-        description: Percentage of time where the DeviceReachability alerts were raised
-        type: number
-        format: float
-        minimum: 0
-        maximum: 1
-      CpuUsage:
-        description: Percentage of time where the CpuUsage alerts were raised
-        type: number
-        format: float
-        minimum: 0
-        maximum: 1
-      MemUsage:
-        description: Percentage of time where the MemUsage alerts were raised
-        type: number
-        format: float
-        minimum: 0
-        maximum: 1
-    required:
-    - NoAlert
-    - AppHealth
-    - DeviceReachability
-    - CpuUsage
-    - MemUsage
+    x-model: IterationCount
 
   MyAppMinimal:
-    type: object
     properties:
       myAppId:
         type: string
@@ -317,3 +193,154 @@ definitions:
     required:
     - myAppId
     - name
+    type: object
+    x-model: MyAppMinimal
+
+  SimulationStatisticResponse:
+    properties:
+      alerts:
+        $ref: '#/definitions/AlertStatus'
+      averageUptime:
+        description: Average of the all myApp uptime percentage for all the iterations
+        items:
+          format: float
+          maximum: 1
+          minimum: 0
+          type: number
+        type: array
+      maxIterationCount:
+        type: integer
+      minIterationCount:
+        type: integer
+      totalEnergyConsumption:
+        items:
+          format: float
+          minimum: 0
+          type: number
+        type: array
+      totalNumberOfSamplings:
+        type: integer
+    required:
+    - totalNumberOfSamplings
+    - minIterationCount
+    - maxIterationCount
+    - averageUptime
+    - totalEnergyConsumption
+    - alerts
+    type: object
+    x-model: SimulationStatisticResponse
+
+info:
+  title: APIs for Fog Director Simulator
+  version: '0.0'
+
+paths:
+  /simulator_frontend/aggregated_device_metric/v1:
+    get:
+      description: Retrieve the post-aggregated metrics related to the Devices
+      operationId: get_simulator_frontend_aggregated_device_metric_v1
+      parameters:
+      - in: query
+        name: iteration_count
+        required: false
+        type: integer
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: device_ids
+        required: false
+        type: array
+      responses:
+        '200':
+          description: HTTP/200
+          schema:
+            $ref: '#/definitions/AggregatedDeviceMetricResponse'
+      tags:
+      - simulator_frontend
+
+  /simulator_frontend/aggregated_my_app_metric/v1:
+    get:
+      description: Retrieve the post-aggregated metrics related to the My Apps
+      operationId: get_simulator_frontend_aggregated_my_app_metric_v1
+      parameters:
+      - in: query
+        name: iteration_count
+        required: false
+        type: integer
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: my_app_ids
+        required: false
+        type: array
+      responses:
+        '200':
+          description: HTTP/200
+          schema:
+            $ref: '#/definitions/AggregatedMyAppMetricResponse'
+      tags:
+      - simulator_frontend
+
+  /simulator_frontend/iteration_count/v1:
+    get:
+      description: Retrieve the current iteration count of the simulation
+      operationId: get_simulator_frontend_iteration_count_v1
+      parameters:
+      - in: query
+        name: iteration_count
+        required: false
+        type: integer
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: device_ids
+        required: false
+        type: array
+      responses:
+        '200':
+          description: HTTP/200
+          schema:
+            $ref: '#/definitions/IterationCount'
+      tags:
+      - simulator_frontend
+
+  /simulator_frontend/simulation_statistic/v1:
+    get:
+      description: Retrieve historical information related to the whole simulation
+      operationId: get_simulator_frontend_simulation_statistic_v1
+      parameters:
+      - in: query
+        minimum: 0
+        name: minIterationCount
+        required: false
+        type: integer
+      - in: query
+        minimum: 0
+        name: maxIterationCount
+        required: false
+        type: integer
+      - description: TODO
+        in: query
+        minimum: 1
+        name: totalNumberOfSamplings
+        required: true
+        type: integer
+      responses:
+        '200':
+          description: HTTP/200
+          schema:
+            $ref: '#/definitions/SimulationStatisticResponse'
+      tags:
+      - simulator_frontend
+
+produces:
+- application/json
+
+schemes:
+- http
+- https
+
+swagger: '2.0'
