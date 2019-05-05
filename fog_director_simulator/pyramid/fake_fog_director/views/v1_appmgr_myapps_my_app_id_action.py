@@ -52,7 +52,7 @@ def _do_deploy(my_app: MyApp, job_intensivity: JobIntensivity, myAppActionDeploy
 
     job_device_allocations = []
     for deploy_device in myAppActionDeploy['devices']:
-        device = devices['deviceId']
+        device = devices[deploy_device['deviceId']]
 
         if not device.isAlive:
             raise HTTPBadRequest()

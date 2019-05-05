@@ -141,6 +141,7 @@ definitions:
             items:
               $ref: '#/definitions/myAppActionDeployItem'
             type: array
+        type: object
       start:
         additionalProperties: false
         type: object

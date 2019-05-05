@@ -16,6 +16,7 @@ class FogDirMime(BaseScenario):
     fog_1 = Device(
         deviceId='dev-1',
         ipAddress='10.10.20.51',
+        port='8443',
         username='username',
         password='password',
         totalCPU=200,
@@ -30,6 +31,7 @@ class FogDirMime(BaseScenario):
     fog_2 = Device(
         deviceId='dev-2',
         ipAddress='10.10.20.52',
+        port='8443',
         username='username',
         password='password',
         totalCPU=200,
@@ -44,6 +46,7 @@ class FogDirMime(BaseScenario):
     fog_3 = Device(
         deviceId='dev-3',
         ipAddress='10.10.20.53',
+        port='8443',
         username='username',
         password='password',
         totalCPU=400,
@@ -66,19 +69,21 @@ class FogDirMime(BaseScenario):
             my_app_id=my_app.myAppId,
             device_allocations=[
                 JobDeviceAllocation(  # type: ignore
-                    device=device,
+                    deviceId=device.deviceId,
                     profile=ApplicationProfile.Tiny,
                     cpu=100,
                     memory=32,
                 ),
             ],
-            retry_on_failure=True,
+            retry_on_failure=False,
         )
 
     def configure_infrastructure(self) -> None:
         self.register_devices(*self.scenario_devices)
 
         application = self.register_application('NettestApp2V1_lxc.tar.gz')
+        # TODO: publish application
+
         self.building_my_app.applicationLocalAppId = application['localAppId']
         self.building_my_app.applicationVersion = application['version']
         self.apartment_my_app.applicationLocalAppId = application['localAppId']

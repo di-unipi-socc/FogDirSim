@@ -21,7 +21,16 @@ from fog_director_simulator.pyramid.fake_fog_director.formatters import JobApi
 class ScenarioAPIUtilMixin:
     api_client: Optional[SwaggerClient]
     fog_director_client: SwaggerClient
+    fog_director_token: str
     scenario_devices: List[Device]
+
+    @property
+    def _fog_director_authentication(self) -> Dict[str, Dict[str, str]]:
+        return {
+            'headers': {
+                'X-Token-Id': self.fog_director_token,
+            },
+        }
 
     def create_devices(self) -> None:
         """
@@ -57,20 +66,25 @@ class ScenarioAPIUtilMixin:
         raise NotImplementedError(self.api_client)  # TODO: connect the real endpoint
 
     def get_all_devices(self) -> List[DeviceApi]:
-        return self.fog_director_client.v1.get_v1_appmgr_devices().result()["data"]
+        return self.fog_director_client.v1.get_v1_appmgr_devices(
+            _request_options=self._fog_director_authentication,
+        ).result()["data"]
 
     def get_all_alerts(self) -> List[AlertApi]:
-        return self.fog_director_client.v1.get_v1_appmgr_alerts().result()['data']
+        return self.fog_director_client.v1.get_v1_appmgr_alerts(
+            _request_options=self._fog_director_authentication,
+        ).result()['data']
 
     def register_devices(self, *devices: Device) -> Tuple[Device, ...]:
         futures = {
-            (device.ipAddress, device.port): self.fog_director_client.register_device_v1(
+            (device.ipAddress, device.port): self.fog_director_client.v1.post_v1_appmgr_devices(
                 body={
                     'port': device.port,
                     'ipAddress': device.ipAddress,
                     'username': device.username,
                     'password': device.password,
                 },
+                _request_options=self._fog_director_authentication,
             )
             for device in devices
         }
@@ -89,10 +103,11 @@ class ScenarioAPIUtilMixin:
             my_app.name: self.fog_director_client.v1.post_v1_appmgr_myapps(
                 body={
                     'name': my_app.name,
-                    'sourceAppName': my_app.applicationLocalAppId,
+                    'sourceAppName': f'{my_app.applicationLocalAppId}:{my_app.applicationVersion}',
                     'version': my_app.applicationVersion,
                     'appSourceType': 'LOCAL_STORE',
                 },
+                _request_options=self._fog_director_authentication,
             )
             for my_app in my_apps
         }
@@ -117,7 +132,8 @@ class ScenarioAPIUtilMixin:
             mode='rb',
         ) as f:
             return self.fog_director_client.v1.post_v1_appmgr_localapps_upload(
-                file=f.read(),  # TODO
+                file=f.read(),
+                _request_options=self._fog_director_authentication,
             ).result()
 
     def install_my_app(self, my_app_id: int, device_allocations: Iterable[JobDeviceAllocation], retry_on_failure: bool = False) -> JobApi:
@@ -153,6 +169,7 @@ class ScenarioAPIUtilMixin:
                         ],
                     },
                 },
+                _request_options=self._fog_director_authentication,
             ).result()
         except HTTPError:
             if retry_on_failure:
@@ -165,6 +182,7 @@ class ScenarioAPIUtilMixin:
             self.fog_director_client.v1.post_v1_appmgr_myapps_my_app_id_action(
                 my_app_id=my_app_id,
                 body={'start': {}},
+                _request_options=self._fog_director_authentication,
             )
             for my_app_id in my_app_ids
         ]
@@ -177,6 +195,7 @@ class ScenarioAPIUtilMixin:
             self.fog_director_client.v1.post_v1_appmgr_myapps_my_app_id_action(
                 my_app_id=my_app_id,
                 body={'stop': {}},
+                _request_options=self._fog_director_authentication,
             ).result()
             for my_app_id in my_app_ids
         ]
@@ -192,4 +211,5 @@ class ScenarioAPIUtilMixin:
                     'devices': list(device_ids),
                 },
             },
+            _request_options=self._fog_director_authentication,
         ).result()
