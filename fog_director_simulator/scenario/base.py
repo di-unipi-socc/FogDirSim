@@ -11,17 +11,17 @@ from bravado.client import SwaggerClient
 
 from fog_director_simulator.database import Config
 from fog_director_simulator.database.models import Device
+from fog_director_simulator.scenario.api_utils import ScenarioAPIUtilMixin
 from fog_director_simulator.scenario.context import api_context
 from fog_director_simulator.scenario.context import database_context
 from fog_director_simulator.scenario.context import fog_director_context
 from fog_director_simulator.scenario.context import simulator_context
-from fog_director_simulator.scenario.database_utils import ScenarioDatabaseUtilMixin
 
 
 T = TypeVar('T', bound='BaseScenario')
 
 
-class BaseScenario(ABC, ScenarioDatabaseUtilMixin):
+class BaseScenario(ABC, ScenarioAPIUtilMixin):
     """
     This class has a lot of code-duplication ... we should clean it up to make it presentable and more importantly usable
     """

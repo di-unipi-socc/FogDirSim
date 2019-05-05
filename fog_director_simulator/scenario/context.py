@@ -39,13 +39,11 @@ def _api_client(swagger_spec_url: str) -> SwaggerClient:
 @lru_cache(maxsize=1)
 def _fog_director_client(fog_director_api: str) -> SwaggerClient:  # TODO: provide better info on how to use it
     with (Path('api_docs') / 'fog_director_api' / 'swagger.yaml').open() as f:
-        client = SwaggerClient.from_spec(
+        return SwaggerClient.from_spec(
             spec_dict=safe_load(f),
             origin_url=fog_director_api,
             http_client=AsyncioClient(),
         )
-
-        return client
 
 
 def _wait_until_is_up(status_url: str) -> None:

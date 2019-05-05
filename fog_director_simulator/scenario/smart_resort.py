@@ -11,10 +11,10 @@ from typing import Set
 
 from fog_director_simulator.database import Device
 from fog_director_simulator.database import MyApp
-from fog_director_simulator.database.models import Alert
 from fog_director_simulator.database.models import AlertType
 from fog_director_simulator.database.models import ApplicationProfile
 from fog_director_simulator.database.models import JobDeviceAllocation
+from fog_director_simulator.pyramid.fake_fog_director.formatters import ApplicationApi
 from fog_director_simulator.scenario.base import BaseScenario
 
 
@@ -47,6 +47,9 @@ class SmartResort(BaseScenario):
     This scanario, moreover, permits to define with amount of deployments has
     to be considered with JobIntensivity.HEAVY
     """
+
+    application: ApplicationApi
+    my_apps_mapping: Dict[str, MyApp]
 
     def __init__(
         self,
@@ -182,9 +185,9 @@ class SmartResort(BaseScenario):
                 return device['deviceId']
         raise RuntimeError('Too many iterations without finding a suitable device.')
 
-    def _install_my_app(self, my_app_id: int, device_id: str) -> None:
+    def _install_my_app(self, my_app_name: str, device_id: str) -> None:
         self.install_my_app(
-            my_app_id=my_app_id,
+            my_app_id=self.my_apps_mapping[my_app_name].myAppId,
             device_allocations=[
                 JobDeviceAllocation(  # type: ignore
                     deviceId=device_id,
@@ -201,53 +204,54 @@ class SmartResort(BaseScenario):
         self.register_devices(*self.scenario_devices)
 
         # Uploading .tar.gz
-        self.application = self.register_application('NettestApp2')
+        self.application = self.register_application('NettestApp2V1_lxc.tar.gz')
+
+        self.my_apps_mapping = {}
 
         for deployment_id in range(0, self.number_of_deployments):
             # Creating myApp
-            myapp = MyApp(name=f'SmartResortApplication {deployment_id}')
-            myapp.applicationLocalAppId = self.application['localAppId']
-            self.register_my_apps(myapp)
+            my_app = MyApp(
+                name=f'SmartResortApplication {deployment_id}',
+                applicationLocalAppId=self.application['localAppId'],
+                applicationVersion=self.application['version'],
+            )
+            self.my_apps_mapping[my_app.name] = my_app
+            self.register_my_apps(my_app)
 
             self._install_my_app(
-                my_app_id=myapp.myAppId,
+                my_app_name=my_app.name,
                 device_id=self._get_best_fit_device_until_success(self.application['cpuUsage'], self.application['memoryUsage']),
             )
             self.start_my_apps()
 
     def manage_iteration(self) -> None:
-        alerts = [
-            Alert(  # type: ignore
-                myAppId=alert['myAppId'],
-                deviceId=alert['deviceId'],
-                type=alert['type'],
-                time=alert['time'],
-            )
-            for alert in self.fog_director_client.get_alerts().result()['data']
-        ]
-        already_migrated: Set[int] = set()
-        not_reachable_devices: DefaultDict[str, List[int]] = defaultdict(list)
-        for alert in alerts:
-            if alert.type in (AlertType.APP_HEALTH, AlertType.DEVICE_REACHABILITY):
-                if alert.myAppId in already_migrated:
+        already_migrated: Set[str] = set()
+        not_reachable_device_my_apps_mapping: DefaultDict[str, List[MyApp]] = defaultdict(list)
+
+        for alert in self.get_all_alerts():
+            if alert['type'] in (AlertType.APP_HEALTH.value, AlertType.DEVICE_REACHABILITY.value):
+                if alert['appName'] in already_migrated:
                     continue
 
-                already_migrated.add(alert.myAppId)
-                self.stop_my_apps(alert.myAppId)
-                self.uninstall_my_app(my_app_id=alert.myAppId, device_ids=[alert.deviceId])
+                already_migrated.add(alert['appName'])
+                self.stop_my_apps(self.my_apps_mapping[alert['appName']].myAppId)
+                self.uninstall_my_app(
+                    my_app_id=self.my_apps_mapping[alert['appName']].myAppId,
+                    device_ids=[alert['deviceId']],
+                )
                 self._install_my_app(
-                    my_app_id=alert.myAppId,
+                    my_app_name=alert['appName'],
                     device_id=self._get_best_fit_device_until_success(
-                        # TODO: this has to be fixed, via the API we do not have application available
-                        alert.myApp.application.cpuUsage,
-                        alert.myApp.application.memoryUsage,
+                        cpu_required=self.application['cpuUsage'],
+                        mem_required=self.application['memoryUsage'],
                     ),
                 )
-                self.stop_my_apps(alert.myAppId)
-                if alert.type == AlertType.DEVICE_REACHABILITY:
-                    not_reachable_devices[alert.deviceId].append(alert.myAppId)
+                self.stop_my_apps(self.my_apps_mapping[alert['appName']].myAppId)
 
-            elif alert.type == AlertType.CPU_CRITICAL_CONSUMPTION:
+                if alert['type'] == AlertType.DEVICE_REACHABILITY.value:
+                    not_reachable_device_my_apps_mapping[alert['deviceId']].append(self.my_apps_mapping[alert['appName']])
+
+            elif alert['type'] == AlertType.CPU_CRITICAL_CONSUMPTION.value:
                 # TODO: To be implemented according new API found
                 continue
 
@@ -255,13 +259,17 @@ class SmartResort(BaseScenario):
         revived_device_ids = [
             device['deviceId']
             for device in devices
-            if device['deviceId'] in not_reachable_devices
+            if device['deviceId'] in not_reachable_device_my_apps_mapping
         ]
-        for device_id, my_app_ids in not_reachable_devices.items():
+        for device_id, my_apps in not_reachable_device_my_apps_mapping.items():
             if device_id not in revived_device_ids:
                 continue
-            for my_app_id in my_app_ids:
-                self.uninstall_my_app(my_app_id=my_app_id, device_ids=[device_id])
+
+            for my_app in my_apps:
+                self.uninstall_my_app(
+                    my_app_id=my_app.myAppId,
+                    device_ids=[device_id],
+                )
 
 
 if __name__ == '__main__':

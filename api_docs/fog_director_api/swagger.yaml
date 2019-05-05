@@ -420,6 +420,12 @@ paths:
         required: true
         schema:
           properties:
+            appSourceType:
+              enum:
+              - Docker
+              - LOCAL_STORE
+              - LXC
+              type: string
             name:
               type: string
             sourceAppName:
@@ -427,6 +433,7 @@ paths:
             version:
               type: string
           required:
+          - appSourceType
           - name
           - sourceAppName
           - version
