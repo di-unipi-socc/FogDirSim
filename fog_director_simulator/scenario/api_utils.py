@@ -15,7 +15,7 @@ from fog_director_simulator.pyramid.fake_fog_director.formatters import Applicat
 from fog_director_simulator.pyramid.fake_fog_director.formatters import JobApi
 
 
-class ScenarioDatabaseUtilMixin:
+class ScenarioAPIUtilMixin:
     api_client: Optional[SwaggerClient]
     fog_director_client: SwaggerClient
     scenario_devices: List[Device]
