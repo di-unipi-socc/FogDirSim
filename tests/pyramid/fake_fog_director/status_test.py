@@ -7,14 +7,14 @@ if typing.TYPE_CHECKING:
 
 
 def test_get_status(testapp_not_increasing_time: 'TestApp') -> None:
-    response = testapp_not_increasing_time.get('/api/status')
+    response = testapp_not_increasing_time.get('/status')
     assert response.json == {}
     assert response.headers[SIMULATION_TIME_START_HEADER] == '0'
     assert response.headers[SIMULATION_TIME_END_HEADER] == '0'
 
 
 def test_get_status_slow(testapp: 'TestApp') -> None:
-    response = testapp.get('/api/status_slow')
+    response = testapp.get('/status_slow')
     assert response.json == {}
     assert response.headers[SIMULATION_TIME_START_HEADER] == '0'
     assert response.headers[SIMULATION_TIME_END_HEADER] == '2'

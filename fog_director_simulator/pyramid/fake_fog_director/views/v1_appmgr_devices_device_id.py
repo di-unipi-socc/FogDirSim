@@ -14,7 +14,7 @@ def delete_v1_appmgr_devices_device_id(request: Request) -> DeviceApi:
             deviceId=request.swagger_data['device_id'],
         )
     except NoResultFound:
-        raise HTTPNotFound
+        raise HTTPNotFound()
 
     device.timeOfRemoval = request.simulation_time
     formatted_device = device_format(device)

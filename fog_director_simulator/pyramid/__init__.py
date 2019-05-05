@@ -1,14 +1,21 @@
 import os
+from contextlib import contextmanager
 from time import sleep
 from typing import Any
 from typing import Callable
+from typing import Generator
+from typing import Optional
 
 import pyramid_swagger
 from pyramid.config import Configurator
+from pyramid.httpexceptions import HTTPBadRequest
+from pyramid.httpexceptions import HTTPInternalServerError
 from pyramid.request import Request
 from pyramid.response import Response
 from pyramid.tweens import INGRESS
 from pyramid_swagger import PyramidSwaggerRendererFactory
+from pyramid_swagger.exceptions import RequestValidationError
+from pyramid_swagger.exceptions import ResponseValidationError
 
 from fog_director_simulator import database
 from fog_director_simulator.database import DatabaseLogic
@@ -52,6 +59,16 @@ def _open_database_session_factory(handler: Any, registry: Any) -> Callable[[Req
     return open_database_session
 
 
+@contextmanager
+def pyramid_swagger_validation_context(request: Request, response: Optional[Response] = None) -> Generator[None, None, None]:
+    try:
+        yield
+    except ResponseValidationError as response_validation_error:
+        raise HTTPInternalServerError(response_validation_error)
+    except RequestValidationError as request_validation_error:
+        raise HTTPBadRequest(request_validation_error)
+
+
 def default_pyramid_configuration(
     root_swagger_spec_path: str,
     base_path_api_docs: str,
@@ -77,6 +94,7 @@ def default_pyramid_configuration(
             f'{base_path_api_docs}(swagger.json)\\b',
             f'{base_path_api_docs}(swagger.yaml)\\b',
         ],
+        'pyramid_swagger.validation_context_path': f'{pyramid_swagger_validation_context.__module__}.{pyramid_swagger_validation_context.__name__}',  # noqa
 
         # Ensure that swagger.json endpoint retrieves the whole spec
         'pyramid_swagger.dereference_served_schema': True,

@@ -1,5 +1,7 @@
 from argparse import ArgumentParser
+from argparse import ArgumentTypeError
 from functools import partial
+from sys import maxsize
 from typing import Callable
 from typing import Dict
 from typing import List
@@ -27,6 +29,13 @@ from fog_director_simulator.database.models import MyAppMetricType
 from fog_director_simulator.metrics_collector import device
 from fog_director_simulator.metrics_collector import job
 from fog_director_simulator.metrics_collector import my_app
+
+
+def positive_int(value: str) -> int:
+    ivalue = int(value)
+    if ivalue <= 0:
+        raise ArgumentTypeError("%s is an invalid positive int value" % value)
+    return ivalue
 
 
 def _send_alert(db_logic: DatabaseLogic, iterationCount: int, job: Job, device: Device, alert_type: AlertType) -> None:
@@ -87,10 +96,11 @@ def _maybe_alert_alive_device(
 
 class Simulator:
 
-    def __init__(self, database_config: database.Config):
+    def __init__(self, database_config: database.Config, max_simulation_iterations: Optional[int], verbose: bool):
         self.database_logic = database.DatabaseClient(database_config).logic
         self.iteration_count = 0
-        self.is_alive = True
+        self.max_simulation_iterations = max_simulation_iterations or (maxsize - 1)
+        self.verbose = verbose
 
     def _evaluate_device_metrics(self) -> Dict[Device, Dict[DeviceMetricType, DeviceMetric]]:
         metrics = {
@@ -253,50 +263,28 @@ class Simulator:
     def get_instance(cls, argv: Optional[List[str]] = None) -> 'Simulator':
         parser = ArgumentParser(cls.__doc__)
         parser.add_argument(
-            '--drivername',
-            type=str,
-            default='mysql+mysqldb',
+            '--max-simulation-iterations',
+            dest='max_simulation_iterations',
+            type=positive_int,
         )
         parser.add_argument(
-            '--username',
-            type=str,
-            default='root',
-        )
-        parser.add_argument(
-            '--password',
-            type=str,
-            default='password',
-        )
-        parser.add_argument(
-            '--host',
-            type=str,
-            default='database',
-        )
-        parser.add_argument(
-            '--port',
-            type=int,
-            default=3306,
-        )
-        parser.add_argument(
-            '--database_name',
-            type=str,
-            default='fog_director',
+            '--verbose',
+            dest='verbose',
+            action='store_true',
         )
         args = parser.parse_args(args=argv)
         return cls(
-            database_config=Config(
-                drivername=args.drivername,
-                username=args.username,
-                password=args.password,
-                host=args.host,
-                port=args.port,
-                database_name=args.database_name,
-            ),
+            database_config=Config.from_environment(),
+            max_simulation_iterations=args.max_simulation_iterations,
+            verbose=args.verbose,
         )
 
     def run(self) -> None:
-        while self.is_alive:
+        while self.iteration_count < self.max_simulation_iterations:
             self.iteration_count += 1
+            if self.verbose:
+                print(f'Iteration {self.iteration_count}/{self.max_simulation_iterations}')
+
             device_metrics = self._evaluate_device_metrics()
             job_metrics = self._evaluate_job_metrics()
             my_app_metrics = self._evaluate_my_app_metrics()

@@ -1,4 +1,4 @@
-from typing import Any
+from typing import cast
 from typing import Dict
 
 from pyramid.httpexceptions import HTTPBadRequest
@@ -16,15 +16,17 @@ from fog_director_simulator.database.models import JobStatus
 from fog_director_simulator.database.models import MyApp
 from fog_director_simulator.pyramid.fake_fog_director.formatters import job_format
 from fog_director_simulator.pyramid.fake_fog_director.formatters import JobApi
+from fog_director_simulator.pyramid.fake_fog_director.request_types import MyAppAction
+from fog_director_simulator.pyramid.fake_fog_director.request_types import MyAppActionDeployDevices
 
 
 def _do_start(my_app: MyApp) -> Job:
     if not my_app.jobs:
-        raise HTTPBadRequest
+        raise HTTPBadRequest()
 
     for job in my_app.jobs:  # type: ignore
         if job.status not in {JobStatus.DEPLOY, JobStatus.START}:
-            raise HTTPBadRequest
+            raise HTTPBadRequest()
         job.status = JobStatus.START
 
     return my_app.jobs[0]  # type: ignore # NOTE: the real fog-director does create a new job, we're not willing to do it for simulation proposes
@@ -32,17 +34,17 @@ def _do_start(my_app: MyApp) -> Job:
 
 def _do_stop(my_app: MyApp) -> Job:
     if not my_app.jobs:
-        raise HTTPBadRequest
+        raise HTTPBadRequest()
 
     for job in my_app.jobs:  # type: ignore
         if job.status != JobStatus.START:
-            raise HTTPBadRequest
+            raise HTTPBadRequest()
         job.status = JobStatus.STOP
 
     return my_app.jobs[0]  # type: ignore # NOTE: the real fog-director does create a new job, we're not willing to do it for simulation proposes
 
 
-def _do_deploy(my_app: MyApp, job_intensivity: JobIntensivity, myAppActionDeploy: Dict[str, Any], devices: Dict[str, Device]) -> Job:
+def _do_deploy(my_app: MyApp, job_intensivity: JobIntensivity, myAppActionDeploy: MyAppActionDeployDevices, devices: Dict[str, Device]) -> Job:
     job = Job(  # type: ignore
         myApp=my_app,
         status=JobStatus.DEPLOY,
@@ -52,20 +54,20 @@ def _do_deploy(my_app: MyApp, job_intensivity: JobIntensivity, myAppActionDeploy
 
     job_device_allocations = []
     for deploy_device in myAppActionDeploy['devices']:
-        device = devices['deviceId']
+        device = devices[deploy_device['deviceId']]
 
         if not device.isAlive:
-            raise HTTPBadRequest
+            raise HTTPBadRequest()
 
         cpu_demand = deploy_device['resourceAsk']['resources']['cpu']
         device.reservedCPU += cpu_demand
         if device.totalCPU < device.reservedCPU:
-            raise HTTPBadRequest
+            raise HTTPBadRequest()
 
         mem_demand = deploy_device['resourceAsk']['resources']['memory']
         device.reservedMEM += mem_demand
         if device.totalMEM < device.reservedMEM:
-            raise HTTPBadRequest
+            raise HTTPBadRequest()
 
         job_device_allocations.append(
             JobDeviceAllocation(  # type: ignore
@@ -109,13 +111,13 @@ def post_v1_appmgr_myapps_my_app_id_action(request: Request) -> JobApi:
     try:
         my_app = request.database_logic.get_my_app(myAppId=request.swagger_data['my_app_id'])
     except NoResultFound:
-        raise HTTPNotFound
+        raise HTTPNotFound()
 
     if not my_app.application.isPublished:
-        raise HTTPBadRequest
+        raise HTTPBadRequest()
 
     job_intensivity = JobIntensivity[request.swagger_data['job_intensivity'].upper()]
-    body = request.swagger_data['body']
+    body = cast(MyAppAction, request.swagger_data['body'])
 
     if body['start'] is not None:
         job = _do_start(my_app=my_app)
@@ -141,6 +143,6 @@ def post_v1_appmgr_myapps_my_app_id_action(request: Request) -> JobApi:
             },
         )
     else:
-        raise HTTPBadRequest
+        raise HTTPBadRequest()
 
     return job_format(job)

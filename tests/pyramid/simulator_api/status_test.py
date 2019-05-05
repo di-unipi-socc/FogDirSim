@@ -7,7 +7,7 @@ if typing.TYPE_CHECKING:
 
 
 def test_status(testapp: 'TestApp') -> None:
-    response = testapp.get('/api/status')
+    response = testapp.get('/status')
     assert response.json == {}
     assert response.headers[SIMULATION_TIME_START_HEADER] == '0'
     assert response.headers[SIMULATION_TIME_END_HEADER] == '1'

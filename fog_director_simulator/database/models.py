@@ -181,13 +181,13 @@ class Device(Base):  # type: ignore
     isAlive = Column(Boolean, default=True)
     reservedCPU = Column(Float, default=0, nullable=False)
     totalCPU = Column(Integer, nullable=False)
-    _cpuMetricsDistributionMean = Column(Float)
-    _cpuMetricsDistributionStdDev = Column(Float)
+    _cpuMetricsDistributionMean = Column(Float, nullable=False)
+    _cpuMetricsDistributionStdDev = Column(Float, nullable=False)
     cpuMetricsDistribution = composite(Distribution, _cpuMetricsDistributionMean, _cpuMetricsDistributionStdDev)
     reservedMEM = Column(Float, default=0)
     totalMEM = Column(Integer, nullable=False)
-    _memMetricsDistributionMean = Column(Float)
-    _memMetricsDistributionStdDev = Column(Float)
+    _memMetricsDistributionMean = Column(Float, nullable=False)
+    _memMetricsDistributionStdDev = Column(Float, nullable=False)
     memMetricsDistribution = composite(Distribution, _memMetricsDistributionMean, _memMetricsDistributionStdDev)
     chaosDieProb = Column(Float, nullable=False)
     chaosReviveProb = Column(Float, nullable=False)
@@ -240,8 +240,8 @@ class JobDeviceAllocation(Base):  # type: ignore
     jobId = Column(Integer, ForeignKey(f'{Job.__tablename__}.jobId'), primary_key=True)
     job = relationship('Job')
     profile = cast(ApplicationProfile, Column(Enum(ApplicationProfile)))
-    cpu = Column(Integer)
-    memory = Column(Integer)
+    cpu = Column(Integer, nullable=False)
+    memory = Column(Integer, nullable=False)
 
 
 # Measured metrics

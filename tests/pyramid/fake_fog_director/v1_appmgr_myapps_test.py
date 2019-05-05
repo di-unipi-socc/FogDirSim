@@ -4,6 +4,8 @@ from unittest import mock
 from fog_director_simulator.database import DatabaseLogic
 from fog_director_simulator.database.models import Application
 from fog_director_simulator.database.models import MyApp
+from fog_director_simulator.pyramid.fake_fog_director.request_types import DeployMyApp
+
 if typing.TYPE_CHECKING:
     from webtest import TestApp
 
@@ -34,12 +36,12 @@ def test_post_v1_appmgr_myapps_with_invalid_application_parameters(testapp, data
 
 
 def test_post_v1_appmgr_myapps_with_already_created_name(testapp: 'TestApp', database_logic: DatabaseLogic, application: Application, my_app: MyApp) -> None:
-    params = {
-        'appSourceType': 'LOCAL_STORE',
-        'name': my_app.name,
-        'sourceAppName': f'{application.localAppId}:{application.version}',
-        'version': application.version,
-    }
+    params = DeployMyApp(
+        appSourceType='LOCAL_STORE',
+        name=my_app.name,
+        sourceAppName=f'{application.localAppId}:{application.version}',
+        version=application.version,
+    )
     database_logic.create(application, my_app)
     response = testapp.post_json(
         '/api/v1/appmgr/myapps',
@@ -53,12 +55,12 @@ def test_post_v1_appmgr_myapps_with_already_created_name(testapp: 'TestApp', dat
 
 
 def test_post_v1_appmgr_myapps_with_valid_application_parameters(testapp: 'TestApp', database_logic: DatabaseLogic, application: Application) -> None:
-    params = {
-        'appSourceType': 'LOCAL_STORE',
-        'name': 'new_app_name',
-        'sourceAppName': f'{application.localAppId}:{application.version}',
-        'version': application.version,
-    }
+    params = DeployMyApp(
+        appSourceType='LOCAL_STORE',
+        name='new_app_name',
+        sourceAppName=f'{application.localAppId}:{application.version}',
+        version=application.version,
+    )
     database_logic.create(application)
     response = testapp.post_json(
         '/api/v1/appmgr/myapps',

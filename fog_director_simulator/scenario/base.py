@@ -8,6 +8,7 @@ from typing import Type
 from typing import TypeVar
 
 from bravado.client import SwaggerClient
+from requests.auth import _basic_auth_str  # We should be importing a private function, but let's use this for now
 
 from fog_director_simulator.database import Config
 from fog_director_simulator.database.models import Device
@@ -30,6 +31,7 @@ class BaseScenario(ABC, ScenarioAPIUtilMixin):
     fog_director_client: SwaggerClient
     fog_director_username = 'username'
     fog_director_password = 'password'
+    fog_director_token: str
     scenario_devices: List[Device] = []
     verbose: bool
 
@@ -44,16 +46,6 @@ class BaseScenario(ABC, ScenarioAPIUtilMixin):
         self.max_simulation_iterations = max_simulation_iterations
         self.scenario_devices_in_fog_director = self.scenario_devices
         self.verbose = verbose
-
-    def create_devices(self) -> None:
-        """
-        Add devices to DB
-        """
-        if self.api_client is None:
-            return
-        self.api_client.simulator_management.post_devices_v1(
-            body={'devices': self.scenario_devices},
-        ).result()
 
     @abstractmethod
     def configure_infrastructure(self) -> None:
@@ -121,6 +113,10 @@ class BaseScenario(ABC, ScenarioAPIUtilMixin):
             fog_director_api_url=self.fog_director_api_url,
             verbose=self.verbose,
         ) as self.fog_director_client:
+            self.fog_director_token = self.fog_director_client.v1.post_v1_appmgr_tokenservice(
+                Authorization=_basic_auth_str(username=self.fog_director_username, password=self.fog_director_password),
+            ).result()['token']
+
             self.create_devices()
 
             with simulator_context(self.database_config, self.verbose):

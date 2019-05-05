@@ -64,13 +64,13 @@ def api_context(database_config: Optional[Config], verbose: bool = False) -> Gen
         return
 
     port = reserve()
-    url = f'http://{LOCALHOST}:{port}/api'
+    url = f'http://{LOCALHOST}:{port}'
 
     with background_process(
         args=[
             'uwsgi',
             '--http', f':{port}',
-            '--wsgi-file', os.path.abspath('simulator_api.wsgi'),
+            '--wsgi-file', os.path.join('uwsgi', 'simulator_api.wsgi'),
             '--master',
             '--processes', '4',
         ],
@@ -93,13 +93,13 @@ def fog_director_context(database_config: Optional[Config], fog_director_api_url
     assert database_config is not None
 
     port = reserve()
-    url = f'http://{LOCALHOST}:{port}/api'
+    url = f'http://{LOCALHOST}:{port}'
 
     with background_process(
         args=[
             'uwsgi',
             '--http', f':{port}',
-            '--wsgi-file', os.path.abspath('fake_fog_director.wsgi'),
+            '--wsgi-file', os.path.join('uwsgi', 'fake_fog_director.wsgi'),
             '--master',
             '--processes', '4',
         ],
@@ -168,11 +168,16 @@ def database_context(start_database: bool, verbose: bool = False) -> Generator[O
     ) as (_, container_ports):
         database_config = Config(host='0.0.0.0', port=container_ports['3306/tcp'])
         _wait_until_mysql_up(database_config)
+        print(f'Database up and running on {LOCALHOST}:{database_config.port}')
         yield database_config
 
 
 @contextmanager
-def simulator_context(database_config: Optional[Config], verbose: bool = False) -> Generator[None, None, None]:
+def simulator_context(
+    database_config: Optional[Config],
+    max_simulation_iteration: Optional[int] = None,
+    verbose: bool = False,
+) -> Generator[None, None, None]:
     if database_config is None:
         with noop_context():
             yield None
@@ -183,6 +188,9 @@ def simulator_context(database_config: Optional[Config], verbose: bool = False) 
             sys.executable,
             '-m',
             'fog_director_simulator.simulator.engine',
+            '--max-simulation-iterations',
+            str(sys.maxsize - 1 if max_simulation_iteration is None else max_simulation_iteration),
+            '--verbose' if verbose else '',
         ],
         env=database_config.to_environment_dict(),
         redirect_all_to_std_err=verbose,

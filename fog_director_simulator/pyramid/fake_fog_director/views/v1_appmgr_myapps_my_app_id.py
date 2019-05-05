@@ -14,13 +14,13 @@ def delete_v1_appmgr_myapps_my_app_id(request: Request) -> MyAppApi:
     try:
         my_app = request.database_logic.get_my_app(myAppId=request.swagger_data['my_app_id'])
     except NoResultFound:
-        raise HTTPNotFound
+        raise HTTPNotFound()
 
     if any(
         job.status != JobStatus.UNINSTALLED
         for job in my_app.jobs
     ):
-        raise HTTPForbidden
+        raise HTTPForbidden()
 
     my_app.destructionTime = request.simulation_time
 

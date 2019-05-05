@@ -161,7 +161,7 @@ definitions:
       ipAddress:
         type: string
       port:
-        type: integer
+        type: string
       totalCpu:
         type: integer
       totalMem:
@@ -182,16 +182,16 @@ definitions:
       properties:
         cpuMetricsDistributionMean:
           type: number
-          format: integer
+          format: float
         cpuMetricsDistributionStdDev:
           type: number
-          format: integer
+          format: float
         memMetricsDistributionMean:
           type: number
-          format: integer
+          format: float
         memMetricsDistributionStdDev:
           type: number
-          format: integer
+          format: float
         chaosDieProb:
           type: number
           format: float

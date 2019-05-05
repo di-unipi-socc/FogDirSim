@@ -73,6 +73,7 @@ class SmartResort(BaseScenario):
             Device(
                 deviceId=f'dev-{device_number}',
                 ipAddress=f'10.10.20.5{device_number}',
+                port='8443',
                 username='username',
                 password='password',
                 totalCPU=2500,
@@ -90,6 +91,7 @@ class SmartResort(BaseScenario):
             Device(
                 deviceId=f'dev-{device_number}',
                 ipAddress=f'10.10.20.5{device_number}',
+                port='8443',
                 username='username',
                 password='password',
                 totalCPU=1500,
@@ -107,6 +109,7 @@ class SmartResort(BaseScenario):
             Device(
                 deviceId=f'dev-{device_number}',
                 ipAddress=f'10.10.20.5{device_number}',
+                port='8443',
                 username='username',
                 password='password',
                 totalCPU=1200,
