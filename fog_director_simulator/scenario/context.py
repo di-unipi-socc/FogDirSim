@@ -64,13 +64,13 @@ def api_context(database_config: Optional[Config], verbose: bool = False) -> Gen
         return
 
     port = reserve()
-    url = f'http://{LOCALHOST}:{port}/api'
+    url = f'http://{LOCALHOST}:{port}'
 
     with background_process(
         args=[
             'uwsgi',
             '--http', f':{port}',
-            '--wsgi-file', os.path.abspath('simulator_api.wsgi'),
+            '--wsgi-file', os.path.join('uwsgi', 'simulator_api.wsgi'),
             '--master',
             '--processes', '4',
         ],
@@ -93,13 +93,13 @@ def fog_director_context(database_config: Optional[Config], fog_director_api_url
     assert database_config is not None
 
     port = reserve()
-    url = f'http://{LOCALHOST}:{port}/api'
+    url = f'http://{LOCALHOST}:{port}'
 
     with background_process(
         args=[
             'uwsgi',
             '--http', f':{port}',
-            '--wsgi-file', os.path.abspath('fake_fog_director.wsgi'),
+            '--wsgi-file', os.path.join('uwsgi', 'fake_fog_director.wsgi'),
             '--master',
             '--processes', '4',
         ],
