@@ -52,3 +52,11 @@ def simulator_statistics_format(
         totalEnergyConsumption=[value for value in total_energy_consumption.values()],
         alerts=alert_format(alert_statistics),
     )
+
+
+class IterationCountApi(TypedDict):
+    iteration_count: int
+
+
+def iteration_count_format(iteration_count: int) -> IterationCountApi:
+    return IterationCountApi(iteration_count=iteration_count)

@@ -318,18 +318,6 @@ paths:
     get:
       description: Retrieve the current iteration count of the simulation
       operationId: get_simulator_frontend_iteration_count_v1
-      parameters:
-      - in: query
-        name: iteration_count
-        required: false
-        type: integer
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        name: device_ids
-        required: false
-        type: array
       responses:
         '200':
           description: HTTP/200
