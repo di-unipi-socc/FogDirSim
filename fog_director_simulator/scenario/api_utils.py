@@ -141,6 +141,9 @@ class ScenarioAPIUtilMixin:
         ) as f:
             return self.fog_director_client.v1.post_v1_appmgr_localapps_upload(
                 file=f.read(),
+                **{
+                    'X-Publish-On-Upload': True,
+                },
                 _request_options=self._fog_director_authentication,
             ).result()
 
