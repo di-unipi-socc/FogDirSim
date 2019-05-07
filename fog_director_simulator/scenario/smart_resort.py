@@ -53,6 +53,7 @@ class SmartResort(BaseScenario):
 
     def __init__(
         self,
+        dump_file: Optional[str],
         fog_director_api_url: Optional[str],
         max_simulation_iterations: Optional[int],
         number_of_devices: int,
@@ -61,6 +62,7 @@ class SmartResort(BaseScenario):
         verbose: bool,
     ):
         super(SmartResort, self).__init__(
+            dump_file=dump_file,
             fog_director_api_url=fog_director_api_url,
             max_simulation_iterations=max_simulation_iterations,
             verbose=verbose,
@@ -156,6 +158,7 @@ class SmartResort(BaseScenario):
     @classmethod
     def _init_from_cli_args(cls, args: Namespace) -> 'SmartResort':
         return cls(
+            dump_file=args.dump_file,
             fog_director_api_url=args.fog_director_api_url,
             max_simulation_iterations=args.max_simulation_iterations,
             number_of_deployments=args.number_of_deployments,

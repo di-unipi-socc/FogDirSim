@@ -1,3 +1,4 @@
+import json
 from abc import ABC
 from abc import abstractmethod
 from argparse import ArgumentParser
@@ -34,13 +35,16 @@ class BaseScenario(ABC, ScenarioAPIUtilMixin):
     fog_director_token: str
     scenario_devices: List[Device] = []
     verbose: bool
+    dump_file: Optional[str]
 
     def __init__(
         self,
+        dump_file: Optional[str],
         fog_director_api_url: Optional[str],
         max_simulation_iterations: Optional[int],
         verbose: bool,
     ):
+        self.dump_file = dump_file
         self.fog_director_api_url = fog_director_api_url  # if None then the simulated fog_director is used
         self.is_alive = True
         self.max_simulation_iterations = max_simulation_iterations
@@ -85,15 +89,40 @@ class BaseScenario(ABC, ScenarioAPIUtilMixin):
             help='Run the scenario against a specific CISCO\'s Fog Director instance. '
                  'NOTE: if missing a complete emulated environment will be spawned.',
         )
+        parser.add_argument(
+            '--dump-file',
+            dest='dump_file',
+            type=str,
+            help='File path where to save similation statistics. NOTE: If missing then stdout will be used.',
+        )
         return parser
 
     @classmethod
     def _init_from_cli_args(cls, args: Namespace) -> 'BaseScenario':
         return cls(
+            dump_file=args.dump_file,
             fog_director_api_url=args.fog_director_api_url,
             max_simulation_iterations=args.max_simulation_iterations,
             verbose=args.verbose,
         )
+
+    def dump_statistics(self) -> None:
+        if self.api_client is None:
+            return
+
+        statistics = self.api_client.get_simulator_frontend_simulation_statistic_v1(totalNumberOfSamplings=200).result()
+        statistics_string = json.dumps(statistics, sort_keys=True, indent=2)
+
+        if self.verbose:
+            print('Simulation Statistics')
+            print(statistics_string)
+
+        if self.dump_file is not None:
+            with open(self.dump_file, 'w') as f:
+                f.write(statistics_string)
+        elif not self.verbose:
+            print('Simulation Statistics')
+            print(statistics_string)
 
     @classmethod
     def get_instance(cls: Type[T], argv: Optional[List[str]] = None) -> T:
@@ -129,3 +158,5 @@ class BaseScenario(ABC, ScenarioAPIUtilMixin):
                     )
                 ):
                     self.manage_iteration()
+
+            self.dump_statistics()
