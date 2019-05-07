@@ -282,7 +282,7 @@ class JobMetric(Base):  # type: ignore
     jobId = Column(Integer, ForeignKey(f'{Job.__tablename__}.jobId'), primary_key=True)
     job = relationship('Job')
     metricType = cast(JobMetricType, Column(Enum(JobMetricType), primary_key=True))
-    value = Column(Float)
+    value = Column(Float, nullable=False)
 
 
 class MyAppMetricType(enum.Enum):
@@ -299,7 +299,7 @@ class MyAppMetric(Base):  # type: ignore
     myAppId = Column(Integer, ForeignKey(f'{MyApp.__tablename__}.myAppId'), primary_key=True)
     myApp = relationship('MyApp')
     metricType = cast(MyAppMetricType, Column(Enum(MyAppMetricType)))
-    value = Column(Float)
+    value = Column(Float, nullable=False)
 
 
 # Pre-aggregate results of simulation (for frontend usage)
@@ -332,13 +332,13 @@ class Alert(Base):  # type: ignore
         UniqueConstraint('myAppId', 'deviceId', 'type', 'time'),
     )
 
-    alertId = Column(Integer, primary_key=True)
-    myAppId = Column(Integer, ForeignKey(f'{MyApp.__tablename__}.myAppId'), primary_key=True)
+    alertId = Column(Integer, primary_key=True, autoincrement=True)
+    myAppId = Column(Integer, ForeignKey(f'{MyApp.__tablename__}.myAppId'))
     myApp = relationship('MyApp')
-    deviceId = Column(String(255), ForeignKey(f'{Device.__tablename__}.deviceId'), primary_key=True)
+    deviceId = Column(String(255), ForeignKey(f'{Device.__tablename__}.deviceId'), nullable=False)
     device = relationship('Device')
-    type = cast(AlertType, Column(Enum(AlertType), primary_key=True))
-    time = Column(Integer, primary_key=True)
+    type = cast(AlertType, Column(Enum(AlertType)))
+    time = Column(Integer, nullable=False)
 
 
 class MyAppAlertStatistic(Base):  # type: ignore
@@ -348,6 +348,14 @@ class MyAppAlertStatistic(Base):  # type: ignore
     myApp = relationship('MyApp')
     type = cast(AlertType, Column(Enum(AlertType), primary_key=True))
     count = Column(Integer, nullable=False)
+
+
+class SimulationInformation(Base):  # type: ignore
+    __tablename__ = 'simulation_information'
+
+    # TODO: this is ugly, but it a dumb and easy way to share a flag between processes (not the fastest one for sure)
+    _id = Column(Integer, primary_key=True, autoincrement=True)
+    simulationTime = Column(Integer, nullable=False)
 
 
 configure_mappers()  # Force inter-table relations setup

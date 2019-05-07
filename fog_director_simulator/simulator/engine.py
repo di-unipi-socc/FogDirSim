@@ -1,6 +1,5 @@
 from argparse import ArgumentParser
 from argparse import ArgumentTypeError
-from functools import partial
 from sys import maxsize
 from typing import Callable
 from typing import Dict
@@ -8,6 +7,8 @@ from typing import List
 from typing import Mapping
 from typing import Optional
 from typing import Union
+
+from sqlalchemy.orm.exc import NoResultFound
 
 from fog_director_simulator import database
 from fog_director_simulator.database import Config
@@ -39,16 +40,17 @@ def positive_int(value: str) -> int:
 
 
 def _send_alert(db_logic: DatabaseLogic, iterationCount: int, job: Job, device: Device, alert_type: AlertType) -> None:
-    my_app_statistics = db_logic.get_my_app_alert_statistics(myApp=job.myApp, alert_type=alert_type)
-    alert_count = my_app_statistics.count if my_app_statistics else 0
-
-    alerts_to_create: List[Union[MyAppAlertStatistic, Alert]] = [
-        MyAppAlertStatistic(  # type: ignore
+    try:
+        my_app_statistics = db_logic.get_my_app_alert_statistics(myApp=job.myApp, alert_type=alert_type)
+    except NoResultFound:
+        my_app_statistics = MyAppAlertStatistic(  # type: ignore
             myApp=job.myApp,
             type=alert_type,
-            count=alert_count + 1,
-        ),
-    ]
+            count=0,
+        )
+    my_app_statistics.count += 1
+    alerts_to_create: List[Union[MyAppAlertStatistic, Alert]] = [my_app_statistics]
+
     if alert_type != AlertType.NO_ALERT:
         alerts_to_create.append(
             Alert(  # type: ignore
@@ -237,14 +239,17 @@ class Simulator:
                 continue
 
             for current_job_device_allocation in current_job.job_device_allocations:  # type: ignore
+                current_job = current_job_device_allocation.job
                 current_device = current_job_device_allocation.device
-                send_alert = partial(
-                    _send_alert,
-                    db_logic=self.database_logic,
-                    iterationCount=self.iteration_count,
-                    job=job,
-                    device=device,
-                )
+
+                def send_alert(alert_type: AlertType) -> None:
+                    _send_alert(
+                        db_logic=self.database_logic,
+                        iterationCount=self.iteration_count,
+                        job=current_job,
+                        device=current_device,
+                        alert_type=alert_type,
+                    )
 
                 if current_device.isAlive:
                     created_alert = _maybe_alert_alive_device(

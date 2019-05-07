@@ -10,7 +10,6 @@ from typing import Optional
 from typing import Tuple
 
 from sqlalchemy import create_engine
-from sqlalchemy import func
 from sqlalchemy.engine.url import URL
 from sqlalchemy.orm import Session
 from sqlalchemy.orm import sessionmaker
@@ -24,7 +23,6 @@ from fog_director_simulator.database.models import create_all_tables
 from fog_director_simulator.database.models import Device
 from fog_director_simulator.database.models import DeviceMetric
 from fog_director_simulator.database.models import DeviceMetricType
-from fog_director_simulator.database.models import DeviceSampling
 from fog_director_simulator.database.models import Job
 from fog_director_simulator.database.models import JobMetric
 from fog_director_simulator.database.models import JobMetricType
@@ -34,6 +32,7 @@ from fog_director_simulator.database.models import MyAppAlertStatistic
 from fog_director_simulator.database.models import MyAppMetric
 from fog_director_simulator.database.models import MyAppMetricType
 from fog_director_simulator.database.models import prune_all_tables
+from fog_director_simulator.database.models import SimulationInformation
 
 
 class Config(NamedTuple):
@@ -57,15 +56,31 @@ class Config(NamedTuple):
             verbose=os.environ.get('DB_VERBOSE', str(Config._field_defaults['verbose'])) == str(True),
         )
 
-    def to_environment_dict(self) -> Dict[str, str]:
+    def to_environment_dict(
+        self,
+        override_drivername: Optional[str] = None,
+        override_username: Optional[str] = None,
+        override_password: Optional[str] = None,
+        override_host: Optional[str] = None,
+        override_port: Optional[int] = None,
+        override_database_name: Optional[str] = None,
+        override_verbose: Optional[bool] = None,
+    ) -> Dict[str, str]:
+        drivername = self.drivername if override_drivername is None else override_drivername
+        username = (self.username or '') if override_username is None else override_username
+        password = (self.password or '') if override_password is None else override_password
+        host = (self.host or '') if override_host is None else override_host
+        port = str((self.port or '')if override_port is None else override_port)
+        database_name = (self.database_name or '') if override_database_name is None else override_database_name
+        verbose = str(self.verbose if override_verbose is None else override_verbose)
         return {
-            'DB_DRIVERNAME': self.drivername,
-            'DB_USERNAME': self.username or '',
-            'DB_PASSWORD': self.password or '',
-            'DB_HOST': self.host or '',
-            'DB_PORT': str(self.port if self.port is not None else ''),
-            'DB_DATABASE_NAME': self.database_name or '',
-            'DB_VERBOSE': str(self.verbose),
+            'DB_DRIVERNAME': drivername,
+            'DB_USERNAME': username,
+            'DB_PASSWORD': password,
+            'DB_HOST': host,
+            'DB_PORT': port,
+            'DB_DATABASE_NAME': database_name,
+            'DB_VERBOSE': verbose,
         }
 
 
@@ -201,7 +216,7 @@ class DatabaseLogic:
                 query = query.offset(offset)
 
             if currently_on_the_infrastructure:
-                query = query.filter(Device.timeOfRemoval is None)
+                query = query.filter(Device.timeOfRemoval.is_(None))
 
             return query.all()
 
@@ -316,14 +331,14 @@ class DatabaseLogic:
                 for (iteration_count, stat_value) in query
             }
 
-    def get_my_app_alert_statistics(self, myApp: MyApp, alert_type: AlertType) -> Optional[MyAppAlertStatistic]:
+    def get_my_app_alert_statistics(self, myApp: MyApp, alert_type: AlertType) -> MyAppAlertStatistic:
         with self as session:
             query = session.query(MyAppAlertStatistic).filter(
                 MyAppAlertStatistic.myApp == myApp,
                 MyAppAlertStatistic.type == alert_type,
             )
 
-            return query.one_or_none()
+            return query.one()
 
     def get_alerts(self, iterationCount: int) -> Iterable[MyAppAlertStatistic]:
         with self as session:
@@ -335,7 +350,17 @@ class DatabaseLogic:
 
     def get_simulation_time(self) -> int:
         with self as session:
-            return session.query(func.max(DeviceSampling.iterationCount)).scalar() or 0
+            return session.query(SimulationInformation.simulationTime).filter(
+                SimulationInformation._id == 0
+            ).scalar() or 0
+
+    def register_simulation_time(self, iterationCount: int) -> None:
+        with self as session:
+            simulation_information = session.query(SimulationInformation).get(0)
+            if simulation_information is None:
+                simulation_information = SimulationInformation(_id=0)
+            simulation_information.simulationTime = iterationCount
+            session.add(simulation_information)
 
     def delete_application(self, localAppId: str, version: int) -> None:
         with self as session:
