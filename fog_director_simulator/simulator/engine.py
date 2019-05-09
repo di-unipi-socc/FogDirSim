@@ -105,7 +105,7 @@ class Simulator:
         self.verbose = verbose
 
     def _evaluate_device_metrics(self) -> Dict[Device, Dict[DeviceMetricType, DeviceMetric]]:
-        metrics = {
+        return {
             current_device: {
                 device_metric.metricType: device_metric
                 for device_metric in device.collect(
@@ -116,15 +116,6 @@ class Simulator:
             }
             for current_device in self.database_logic.get_all_devices()
         }
-        # Save all the metrics on the db
-
-        self.database_logic.create(*[
-            metric
-            for metrics_mapping in metrics.values()
-            for metric in metrics_mapping.values()
-        ])
-
-        return metrics
 
     def _evaluate_job_metrics(self) -> Dict[Job, Dict[JobMetricType, JobMetric]]:
         metrics = {
