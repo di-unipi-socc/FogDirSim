@@ -6,12 +6,14 @@ from fog_director_simulator.metrics_collector.my_app import up_status
 
 
 def collect(db_logic: DatabaseLogic, iterationCount: int, myAppId: int) -> List[MyAppMetric]:
-    return [
+    result = [
         MyAppMetric(  # type: ignore
             iterationCount=iterationCount,
             myAppId=myAppId,
-            metricType=mod.METRIC_TYPE,  # type: ignore
-            value=mod.collect(db_logic=db_logic, iterationCount=iterationCount, myAppId=myAppId),  # type: ignore
+            metricType=up_status.METRIC_TYPE,  # type: ignore
+            value=up_status.collect(db_logic=db_logic, iterationCount=iterationCount, myAppId=myAppId),  # type: ignore
         )
-        for mod in (up_status, )
     ]
+    db_logic.create(*result)
+
+    return result

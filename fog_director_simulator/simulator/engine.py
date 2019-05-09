@@ -131,7 +131,7 @@ class Simulator:
         }
 
     def _evaluate_my_app_metrics(self) -> Dict[MyApp, Dict[MyAppMetricType, MyAppMetric]]:
-        metrics = {
+        return {
             current_my_apps: {
                 my_app_metric.metricType: my_app_metric
                 for my_app_metric in my_app.collect(
@@ -142,14 +142,6 @@ class Simulator:
             }
             for current_my_apps in self.database_logic.get_all_my_apps()
         }
-        # Save all the metrics on the db
-        self.database_logic.create(*[
-            metric
-            for metrics_mapping in metrics.values()
-            for metric in metrics_mapping.values()
-        ])
-
-        return metrics
 
     def _evaluate_device_sampling(
         self,

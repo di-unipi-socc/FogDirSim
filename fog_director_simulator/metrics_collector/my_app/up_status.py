@@ -6,7 +6,7 @@ from fog_director_simulator.database.models import MyAppMetricType
 METRIC_TYPE = MyAppMetricType.UP_STATUS
 
 
-def collect(db_logic: DatabaseLogic, iterationCount: int, myAppId: int) -> bool:
+def collect(db_logic: DatabaseLogic, iterationCount: int, myAppId: int) -> float:
     min_replicas = db_logic.get_my_app(myAppId=myAppId).minJobReplicas
     jobs = {
         job: (
@@ -17,4 +17,4 @@ def collect(db_logic: DatabaseLogic, iterationCount: int, myAppId: int) -> bool:
     }
 
     min_expected_replicas = len(jobs) if min_replicas is None else min_replicas
-    return sum(1 for job_has_resources in jobs.values() if job_has_resources) >= min_expected_replicas
+    return 1 if sum(1 for job_has_resources in jobs.values() if job_has_resources) >= min_expected_replicas else 0
