@@ -109,7 +109,7 @@ class BaseScenario(ABC, ScenarioAPIUtilMixin):
         if self.api_client is None:
             return
 
-        statistics = self.api_client.get_simulator_frontend_simulation_statistic_v1(totalNumberOfSamplings=200).result()
+        statistics = self.simulation_statistics(number_of_samplings=200)
         statistics_string = json.dumps(statistics, sort_keys=True, indent=2)
 
         if self.verbose:

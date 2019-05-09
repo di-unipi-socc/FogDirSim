@@ -270,3 +270,11 @@ class ScenarioAPIUtilMixin:
             ),
             _request_options=self._fog_director_authentication,
         ).result()
+
+    @retry(exceptions=(BravadoConnectionError, BravadoTimeoutError), max_retries=32)
+    def simulation_statistics(self, number_of_samplings: int) -> Dict[str, Any]:
+        if self.api_client is None:
+            return {}
+        return self.api_client.simulator_frontend.get_simulator_frontend_simulation_statistic_v1(
+            totalNumberOfSamplings=number_of_samplings,
+        ).response().incoming_response.json()
