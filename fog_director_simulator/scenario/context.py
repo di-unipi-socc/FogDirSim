@@ -1,4 +1,5 @@
 import os
+import subprocess
 import sys
 from contextlib import contextmanager
 from functools import lru_cache
@@ -13,7 +14,6 @@ from typing import Tuple
 from bravado.client import SwaggerClient
 from bravado.exception import BravadoConnectionError
 from bravado.requests_client import RequestsClient
-from bravado_asyncio.http_client import AsyncioClient
 from docker import DockerClient
 from ephemeral_port_reserve import LOCALHOST
 from ephemeral_port_reserve import reserve
@@ -32,7 +32,6 @@ def _api_client(swagger_spec_url: str) -> SwaggerClient:
         return SwaggerClient.from_spec(
             spec_dict=safe_load(f),
             origin_url=swagger_spec_url,
-            http_client=AsyncioClient(),
         )
 
 
@@ -42,7 +41,6 @@ def _fog_director_client(fog_director_api: str) -> SwaggerClient:  # TODO: provi
         return SwaggerClient.from_spec(
             spec_dict=safe_load(f),
             origin_url=fog_director_api,
-            http_client=AsyncioClient(),
         )
 
 
@@ -57,10 +55,13 @@ def _wait_until_is_up(status_url: str) -> None:
 
 
 @contextmanager
-def api_context(database_config: Optional[Config], verbose: bool = False) -> Generator[Optional[SwaggerClient], None, None]:
+def api_context(
+    database_config: Optional[Config],
+    verbose: bool = False,
+) -> Generator[Tuple[Optional[subprocess.Popen], Optional[SwaggerClient]], None, None]:
     if database_config is None:
         with noop_context():
-            yield None
+            yield None, None
         return
 
     port = reserve()
@@ -74,20 +75,23 @@ def api_context(database_config: Optional[Config], verbose: bool = False) -> Gen
             '--master',
             '--processes', '4',
         ],
-        env=database_config.to_environment_dict(),
+        env=database_config.to_environment_dict(override_verbose=False),
         redirect_all_to_std_err=verbose,
-    ):
+    ) as process:
         _wait_until_is_up(f'{url}/status')
         print(f'Simulator APIs are up and running on {url}')
-        yield _api_client(f'http://{LOCALHOST}:{port}/api/swagger.yaml')
+        yield process, _api_client(f'http://{LOCALHOST}:{port}/api/swagger.yaml')
 
 
 @contextmanager
-def fog_director_context(database_config: Optional[Config], fog_director_api_url: Optional[str], verbose: bool = False) -> Generator[SwaggerClient, None, None]:
-
+def fog_director_context(
+    database_config: Optional[Config],
+    fog_director_api_url: Optional[str],
+    verbose: bool = False,
+) -> Generator[Tuple[Optional[subprocess.Popen], SwaggerClient], None, None]:
     if fog_director_api_url is not None:
         with noop_context():
-            yield _fog_director_client(fog_director_api_url)
+            yield None, _fog_director_client(fog_director_api_url)
         return
 
     assert database_config is not None
@@ -103,12 +107,12 @@ def fog_director_context(database_config: Optional[Config], fog_director_api_url
             '--master',
             '--processes', '4',
         ],
-        env=database_config.to_environment_dict(),
+        env=database_config.to_environment_dict(override_verbose=False),
         redirect_all_to_std_err=verbose,
-    ):
+    ) as process:
         _wait_until_is_up(f'{url}/status')
         print(f'Fake Fog Director APIs are up and running on {url}')
-        yield _fog_director_client(f'http://{LOCALHOST}:{port}/api/swagger.yaml')
+        yield process, _fog_director_client(f'http://{LOCALHOST}:{port}/api/swagger.yaml')
 
 
 @contextmanager
@@ -183,9 +187,9 @@ def database_context(start_database: bool, verbose: bool = False) -> Generator[O
 @contextmanager
 def simulator_context(
     database_config: Optional[Config],
-    max_simulation_iteration: Optional[int] = None,
+    max_simulation_iterations: int,
     verbose: bool = False,
-) -> Generator[None, None, None]:
+) -> Generator[Optional[subprocess.Popen], None, None]:
     if database_config is None:
         with noop_context():
             yield None
@@ -197,10 +201,10 @@ def simulator_context(
             '-m',
             'fog_director_simulator.simulator.engine',
             '--max-simulation-iterations',
-            str(sys.maxsize - 1 if max_simulation_iteration is None else max_simulation_iteration),
+            str(max_simulation_iterations),
             '--verbose' if verbose else '',
         ],
-        env=database_config.to_environment_dict(),
+        env=database_config.to_environment_dict(override_verbose=False),
         redirect_all_to_std_err=verbose,
-    ):
-        yield
+    ) as process:
+        yield process

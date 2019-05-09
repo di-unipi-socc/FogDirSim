@@ -1,14 +1,17 @@
 import json
+import sys
 from abc import ABC
 from abc import abstractmethod
 from argparse import ArgumentParser
 from argparse import Namespace
+from subprocess import Popen
 from typing import List
 from typing import Optional
 from typing import Type
 from typing import TypeVar
 
 from bravado.client import SwaggerClient
+from tqdm import tqdm
 
 from fog_director_simulator.database import Config
 from fog_director_simulator.database.models import Device
@@ -27,28 +30,41 @@ class BaseScenario(ABC, ScenarioAPIUtilMixin):
     This class has a lot of code-duplication ... we should clean it up to make it presentable and more importantly usable
     """
     api_client: Optional[SwaggerClient]
+    api_process: Optional[Popen]
     database_config: Optional[Config]
+    dump_file: Optional[str]
     fog_director_client: SwaggerClient
     fog_director_username = 'username'
     fog_director_password = 'password'
+    fog_director_process: Optional[Popen]
     fog_director_token: str
+    progress_bar: tqdm
     scenario_devices: List[Device] = []
-    verbose: bool
-    dump_file: Optional[str]
+    simulator_process: Optional[Popen]
+    verbose_all: bool
+    verbose_fog_director_api: bool
+    verbose_simulator_api: bool
+    verbose_simulator_engine: bool
 
     def __init__(
         self,
         dump_file: Optional[str],
         fog_director_api_url: Optional[str],
         max_simulation_iterations: Optional[int],
-        verbose: bool,
+        verbose_all: bool,
+        verbose_fog_director_api: bool,
+        verbose_simulator_api: bool,
+        verbose_simulator_engine: bool,
     ):
+        assert fog_director_api_url is not None or max_simulation_iterations is not None
         self.dump_file = dump_file
         self.fog_director_api_url = fog_director_api_url  # if None then the simulated fog_director is used
-        self.is_alive = True
         self.max_simulation_iterations = max_simulation_iterations
         self.scenario_devices_in_fog_director = self.scenario_devices
-        self.verbose = verbose
+        self.verbose_all = verbose_all
+        self.verbose_fog_director_api = verbose_fog_director_api
+        self.verbose_simulator_api = verbose_simulator_api
+        self.verbose_simulator_engine = verbose_simulator_engine
 
     @abstractmethod
     def configure_infrastructure(self) -> None:
@@ -67,21 +83,14 @@ class BaseScenario(ABC, ScenarioAPIUtilMixin):
     @classmethod
     def _cli_parser(cls) -> ArgumentParser:
         parser = ArgumentParser(description=cls.__doc__)
-        parser.add_argument(
-            '--verbose',
-            dest='verbose',
-            action='store_true',
-            help='Run the scenario in verbose mode (all reporting and stdout/stderr '
-                 'of all processes will be redirected to stderr)',
-        )
-        parser.add_argument(
+        mutuex_group = parser.add_mutually_exclusive_group()
+        mutuex_group.add_argument(
             '--max-simulation-iterations',
             dest='max_simulation_iterations',
             type=int,
-            help='Maximum number of iterations that will be simulated in the scenario. '
-                 'NOTE: if the argument is not passed the simulation will never end',
+            help='Maximum number of iterations that will be simulated in the scenario (default %(default)s).',
         )
-        parser.add_argument(
+        mutuex_group.add_argument(
             '--fog-director-api-url',
             dest='fog_director_api_url',
             type=str,
@@ -94,6 +103,30 @@ class BaseScenario(ABC, ScenarioAPIUtilMixin):
             type=str,
             help='File path where to save similation statistics. NOTE: If missing then stdout will be used.',
         )
+        parser.add_argument(
+            '--verbose-all',
+            dest='verbose_all',
+            action='store_true',
+            help='Enable all the verbose flags',
+        )
+        parser.add_argument(
+            '--verbose-fog-director-api',
+            dest='verbose_fog_director_api',
+            action='store_true',
+            help='Fog Director API logs (database and requests logs) are redirected to stderr',
+        )
+        parser.add_argument(
+            '--verbose-simulator-api',
+            dest='verbose_simulator_api',
+            action='store_true',
+            help='Simulator API logs (database and requests logs) are redirected to stderr',
+        )
+        parser.add_argument(
+            '--verbose-simulator-engine',
+            dest='verbose_simulator_engine',
+            action='store_true',
+            help='Simulator Engine logs (database logs) are redirected to stderr',
+        )
         return parser
 
     @classmethod
@@ -102,7 +135,10 @@ class BaseScenario(ABC, ScenarioAPIUtilMixin):
             dump_file=args.dump_file,
             fog_director_api_url=args.fog_director_api_url,
             max_simulation_iterations=args.max_simulation_iterations,
-            verbose=args.verbose,
+            verbose_all=args.verbose_all,
+            verbose_fog_director_api=args.verbose_fog_director_api,
+            verbose_simulator_api=args.verbose_simulator_api,
+            verbose_simulator_engine=args.verbose_simulator_engine,
         )
 
     def dump_statistics(self) -> None:
@@ -112,48 +148,89 @@ class BaseScenario(ABC, ScenarioAPIUtilMixin):
         statistics = self.simulation_statistics(number_of_samplings=200)
         statistics_string = json.dumps(statistics, sort_keys=True, indent=2)
 
-        if self.verbose:
+        if self.verbose_all:
             print('Simulation Statistics')
             print(statistics_string)
 
         if self.dump_file is not None:
             with open(self.dump_file, 'w') as f:
                 f.write(statistics_string)
-        elif not self.verbose:
+        elif not self.verbose_all:
             print('Simulation Statistics')
             print(statistics_string)
 
     @classmethod
     def get_instance(cls: Type[T], argv: Optional[List[str]] = None) -> T:
         parser = cls._cli_parser()
-        instance = cls._init_from_cli_args(parser.parse_args(args=argv))
+        args = parser.parse_args(args=argv)
+        if args.verbose_all:
+            args.verbose_simulator_api = True
+            args.verbose_fog_director_api = True
+            args.verbose_simulator_engine = True
+        instance = cls._init_from_cli_args(args)
         return instance  # type: ignore
+
+    def _processes_alive(self) -> bool:
+        if self.api_process is not None:
+            return_code = self.api_process.poll()
+            if return_code is not None:
+                print(f'Simulator API terminated with status_code={return_code}')
+                return False
+
+        if self.fog_director_process is not None:
+            return_code = self.fog_director_process.poll()
+            if return_code is not None:
+                print(f'Simulator API terminated with status_code={return_code}')
+                return False
+
+        if self.simulator_process is not None:
+            return_code = self.simulator_process.poll()
+            if return_code is not None:
+                print(f'Simulator API terminated with status_code={return_code}')
+                return False
+
+        return True
 
     def run(self) -> None:
         with database_context(
             start_database=self.fog_director_api_url is None,
-            verbose=self.verbose,
+            verbose=self.verbose_all,
         ) as self.database_config, api_context(
             database_config=self.database_config,
-            verbose=self.verbose,
-        ) as self.api_client, fog_director_context(
+            verbose=self.verbose_simulator_api,
+        ) as (self.api_process, self.api_client), fog_director_context(
             database_config=self.database_config,
             fog_director_api_url=self.fog_director_api_url,
-            verbose=self.verbose,
-        ) as self.fog_director_client:
+            verbose=self.verbose_fog_director_api,
+        ) as (self.fog_director_process, self.fog_director_client), tqdm(
+            total=self.max_simulation_iterations,
+            desc=f'{self.__class__.__name__}',
+            ascii=True,
+        ) as self.progress_bar:
             self.fog_director_token = self.get_fog_director_token()
 
             self.create_devices()
 
-            with simulator_context(self.database_config, self.verbose):
+            with simulator_context(
+                database_config=self.database_config,
+                max_simulation_iterations=self.max_simulation_iterations if self.max_simulation_iterations is not None else sys.maxsize - 1,
+                verbose=self.verbose_simulator_engine,
+            ) as self.simulator_process:
                 self.configure_infrastructure()
-                while (
-                    self.is_alive and
-                    (
-                        self.max_simulation_iterations is None or
-                        self.iteration_count() <= self.max_simulation_iterations
-                    )
-                ):
+
+                while True:
+                    if not self._processes_alive():
+                        break
+
+                    iteration_count = None
+                    if self.max_simulation_iterations is not None:
+                        iteration_count = self.iteration_count()
+
+                    if iteration_count and iteration_count >= self.max_simulation_iterations:  # type: ignore
+                        break
+
+                    self.progress_bar.n = iteration_count or 0
+                    self.progress_bar.update(0)
                     self.manage_iteration()
 
             self.dump_statistics()

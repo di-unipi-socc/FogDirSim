@@ -57,13 +57,19 @@ class SmartResort(BaseScenario):
         number_of_devices: int,
         number_of_deployments: int,
         percentage_of_heavy_job: int,
-        verbose: bool,
+        verbose_all: bool,
+        verbose_fog_director_api: bool,
+        verbose_simulator_api: bool,
+        verbose_simulator_engine: bool,
     ):
         super(SmartResort, self).__init__(
             dump_file=dump_file,
             fog_director_api_url=fog_director_api_url,
             max_simulation_iterations=max_simulation_iterations,
-            verbose=verbose,
+            verbose_all=verbose_all,
+            verbose_fog_director_api=verbose_fog_director_api,
+            verbose_simulator_api=verbose_simulator_api,
+            verbose_simulator_engine=verbose_simulator_engine,
         )
         self.number_of_devices = number_of_devices
         self.number_of_deployments = number_of_deployments
@@ -162,7 +168,10 @@ class SmartResort(BaseScenario):
             number_of_deployments=args.number_of_deployments,
             number_of_devices=args.number_of_devices,
             percentage_of_heavy_job=args.percentage_of_heavy_job,
-            verbose=args.verbose,
+            verbose_all=args.verbose_all,
+            verbose_fog_director_api=args.verbose_fog_director_api,
+            verbose_simulator_api=args.verbose_simulator_api,
+            verbose_simulator_engine=args.verbose_simulator_engine,
         )
 
     def _get_best_fit_device(self, cpu_required: float, mem_required: float) -> Optional[Dict[str, Any]]:
