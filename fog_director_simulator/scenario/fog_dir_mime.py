@@ -3,8 +3,6 @@ from typing import Set
 from fog_director_simulator.database import Device
 from fog_director_simulator.database import MyApp
 from fog_director_simulator.database.models import AlertType
-from fog_director_simulator.database.models import ApplicationProfile
-from fog_director_simulator.database.models import JobDeviceAllocation
 from fog_director_simulator.scenario.base import BaseScenario
 
 
@@ -64,20 +62,6 @@ class FogDirMime(BaseScenario):
 
     scenario_devices = [fog_1, fog_2, fog_3]
 
-    def _install_my_app(self, my_app: MyApp, device: Device) -> None:
-        self.install_my_app(
-            my_app_id=my_app.myAppId,
-            device_allocations=[
-                JobDeviceAllocation(  # type: ignore
-                    deviceId=device.deviceId,
-                    profile=ApplicationProfile.Tiny,
-                    cpu=100,
-                    memory=32,
-                ),
-            ],
-            retry_on_failure=False,
-        )
-
     def configure_infrastructure(self) -> None:
         self.register_devices(*self.scenario_devices)
 
@@ -91,8 +75,16 @@ class FogDirMime(BaseScenario):
 
         self.register_my_apps(self.building_my_app, self.apartment_my_app)
 
-        self._install_my_app(my_app=self.building_my_app, device=self.fog_1)
-        self._install_my_app(my_app=self.apartment_my_app, device=self.fog_2)
+        self.install_my_app(
+            my_app_id=self.building_my_app.myAppId,
+            device_id=self.fog_1.deviceId,
+            retry_on_failure=True,
+        )
+        self.install_my_app(
+            my_app_id=self.apartment_my_app.myAppId,
+            device_id=self.fog_2.deviceId,
+            retry_on_failure=True,
+        )
         self.start_my_apps(self.building_my_app.myAppId, self.apartment_my_app.myAppId)
 
     def manage_iteration(self) -> None:
@@ -104,7 +96,11 @@ class FogDirMime(BaseScenario):
             if alert['appName'] == self.building_my_app.name and alert['appName'] not in moved_apps:
                 self.stop_my_apps(self.building_my_app.myAppId)
                 self.uninstall_my_app(self.building_my_app.myAppId, device_ids=[self.fog_1.deviceId])
-                self._install_my_app(my_app=self.building_my_app, device=self.fog_3)
+                self.install_my_app(
+                    my_app_id=self.building_my_app.myAppId,
+                    device_id=self.fog_3.deviceId,
+                    retry_on_failure=True,
+                )
                 self.start_my_apps(self.building_my_app.myAppId)
                 moved_apps.add(self.building_my_app.myAppId)
 
@@ -114,9 +110,13 @@ class FogDirMime(BaseScenario):
                 self.uninstall_my_app(self.apartment_my_app.myAppId, device_ids=[
                     self.fog_1.deviceId if isOnFog1 else self.fog_2.deviceId
                 ])
-                self._install_my_app(my_app=self.apartment_my_app, device=(
-                    self.fog_2 if isOnFog1 else self.fog_1
-                ))
+                self.install_my_app(
+                    my_app_id=self.apartment_my_app.myAppId,
+                    device_id=(
+                        self.fog_2.deviceId if isOnFog1 else self.fog_1.deviceId
+                    ),
+                    retry_on_failure=True,
+                )
                 self.start_my_apps(self.apartment_my_app.myAppId)
                 moved_apps.add(self.apartment_my_app.myAppId)
 

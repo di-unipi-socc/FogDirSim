@@ -12,8 +12,6 @@ from typing import Set
 from fog_director_simulator.database import Device
 from fog_director_simulator.database import MyApp
 from fog_director_simulator.database.models import AlertType
-from fog_director_simulator.database.models import ApplicationProfile
-from fog_director_simulator.database.models import JobDeviceAllocation
 from fog_director_simulator.pyramid.fake_fog_director.formatters import ApplicationApi
 from fog_director_simulator.scenario.base import BaseScenario
 
@@ -191,20 +189,6 @@ class SmartResort(BaseScenario):
                 return device['deviceId']
         raise RuntimeError('Too many iterations without finding a suitable device.')
 
-    def _install_my_app(self, my_app_name: str, device_id: str) -> None:
-        self.install_my_app(
-            my_app_id=self.my_apps_mapping[my_app_name].myAppId,
-            device_allocations=[
-                JobDeviceAllocation(  # type: ignore
-                    deviceId=device_id,
-                    profile=ApplicationProfile.Tiny,
-                    cpu=100,
-                    memory=32,
-                ),
-            ],
-            retry_on_failure=True,
-        )
-
     def configure_infrastructure(self) -> None:
         # Adding Devices to FogDirector
         self.register_devices(*self.scenario_devices)
@@ -224,11 +208,12 @@ class SmartResort(BaseScenario):
             self.my_apps_mapping[my_app.name] = my_app
             self.register_my_apps(my_app)
 
-            self._install_my_app(
-                my_app_name=my_app.name,
+            self.install_my_app(
+                my_app_id=my_app.myAppId,
                 device_id=self._get_best_fit_device_until_success(self.application['cpuUsage'], self.application['memoryUsage']),
+                retry_on_failure=True,
             )
-            self.start_my_apps()
+            self.start_my_apps(my_app.myAppId)
 
     def manage_iteration(self) -> None:
         already_migrated: Set[str] = set()
@@ -245,12 +230,13 @@ class SmartResort(BaseScenario):
                     my_app_id=self.my_apps_mapping[alert['appName']].myAppId,
                     device_ids=[alert['deviceId']],
                 )
-                self._install_my_app(
-                    my_app_name=alert['appName'],
+                self.install_my_app(
+                    my_app_id=self.my_apps_mapping[alert['appName']].myAppId,
                     device_id=self._get_best_fit_device_until_success(
                         cpu_required=self.application['cpuUsage'],
                         mem_required=self.application['memoryUsage'],
                     ),
+                    retry_on_failure=True,
                 )
                 self.stop_my_apps(self.my_apps_mapping[alert['appName']].myAppId)
 

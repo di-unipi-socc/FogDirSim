@@ -7,7 +7,9 @@ from typing import Tuple
 
 from bravado.client import SwaggerClient
 from bravado.exception import HTTPError
+from requests.auth import _basic_auth_str  # We should be importing a private function, but let's use this for now
 
+from fog_director_simulator.database.models import ApplicationProfile
 from fog_director_simulator.database.models import Device
 from fog_director_simulator.database.models import JobDeviceAllocation
 from fog_director_simulator.database.models import MyApp
@@ -29,6 +31,8 @@ from fog_director_simulator.pyramid.simulator_api.request_types import DeviceDes
 class ScenarioAPIUtilMixin:
     api_client: Optional[SwaggerClient]
     fog_director_client: SwaggerClient
+    fog_director_username = 'username'
+    fog_director_password = 'password'
     fog_director_token: str
     scenario_devices: List[Device]
 
@@ -69,7 +73,6 @@ class ScenarioAPIUtilMixin:
         for future in futures:
             future.result()
 
-    @property
     def iteration_count(self) -> int:
         raise NotImplementedError(self.api_client)  # TODO: connect the real endpoint
 
@@ -147,7 +150,12 @@ class ScenarioAPIUtilMixin:
                 _request_options=self._fog_director_authentication,
             ).result()
 
-    def install_my_app(self, my_app_id: int, device_allocations: Iterable[JobDeviceAllocation], retry_on_failure: bool = False) -> JobApi:
+    def get_fog_director_token(self) -> str:
+        return self.fog_director_client.v1.post_v1_appmgr_tokenservice(
+            Authorization=_basic_auth_str(username=self.fog_director_username, password=self.fog_director_password),
+        ).result()['token']
+
+    def install_my_app(self, my_app_id: int, device_id: str, retry_on_failure: bool) -> JobApi:
         def _build_action_deploy_item(device_allocation: JobDeviceAllocation) -> MyAppActionDeployItem:
             return MyAppActionDeployItem(
                 deviceId=device_allocation.deviceId,
@@ -165,6 +173,15 @@ class ScenarioAPIUtilMixin:
                     ),
                 ),
             )
+
+        device_allocations = [
+            JobDeviceAllocation(  # type: ignore
+                deviceId=device_id,
+                profile=ApplicationProfile.Tiny,
+                cpu=100,
+                memory=32,
+            ),
+        ]
 
         try:
             return self.fog_director_client.v1.post_v1_appmgr_myapps_my_app_id_action(
@@ -184,7 +201,7 @@ class ScenarioAPIUtilMixin:
             ).result()
         except HTTPError:
             if retry_on_failure:
-                return self.install_my_app(my_app_id, device_allocations, retry_on_failure)
+                return self.install_my_app(my_app_id, device_id, retry_on_failure)
             else:
                 raise
 

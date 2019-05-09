@@ -9,7 +9,6 @@ from typing import Type
 from typing import TypeVar
 
 from bravado.client import SwaggerClient
-from requests.auth import _basic_auth_str  # We should be importing a private function, but let's use this for now
 
 from fog_director_simulator.database import Config
 from fog_director_simulator.database.models import Device
@@ -142,9 +141,7 @@ class BaseScenario(ABC, ScenarioAPIUtilMixin):
             fog_director_api_url=self.fog_director_api_url,
             verbose=self.verbose,
         ) as self.fog_director_client:
-            self.fog_director_token = self.fog_director_client.v1.post_v1_appmgr_tokenservice(
-                Authorization=_basic_auth_str(username=self.fog_director_username, password=self.fog_director_password),
-            ).result()['token']
+            self.fog_director_token = self.get_fog_director_token()
 
             self.create_devices()
 
@@ -154,7 +151,7 @@ class BaseScenario(ABC, ScenarioAPIUtilMixin):
                     self.is_alive and
                     (
                         self.max_simulation_iterations is None or
-                        self.iteration_count <= self.max_simulation_iterations
+                        self.iteration_count() <= self.max_simulation_iterations
                     )
                 ):
                     self.manage_iteration()
