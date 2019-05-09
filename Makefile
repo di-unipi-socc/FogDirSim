@@ -13,6 +13,10 @@ venv: requirements-dev.txt setup.py tox.ini
 	@rm -rf venv
 	tox -e venv
 
+venv-pypy: requirements-dev.txt setup.py tox.ini
+	@rm -rf venv-pypy
+	tox -e venv-pypy
+
 .PHONY: dev
 dev: venv install-hooks
 	@true
