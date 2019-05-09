@@ -78,14 +78,13 @@ class FogDirMime(BaseScenario):
         self.install_my_app(
             my_app_id=self.building_my_app.myAppId,
             device_id=self.fog_1.deviceId,
-            retry_on_failure=True,
         )
         self.install_my_app(
             my_app_id=self.apartment_my_app.myAppId,
             device_id=self.fog_2.deviceId,
-            retry_on_failure=True,
         )
-        self.start_my_apps(self.building_my_app.myAppId, self.apartment_my_app.myAppId)
+        self.start_my_app(self.building_my_app.myAppId)
+        self.start_my_app(self.apartment_my_app.myAppId)
 
     def manage_iteration(self) -> None:
         moved_apps: Set[int] = set()
@@ -94,30 +93,31 @@ class FogDirMime(BaseScenario):
                 continue
 
             if alert['appName'] == self.building_my_app.name and alert['appName'] not in moved_apps:
-                self.stop_my_apps(self.building_my_app.myAppId)
+                self.stop_my_app(self.building_my_app.myAppId)
                 self.uninstall_my_app(self.building_my_app.myAppId, device_ids=[self.fog_1.deviceId])
                 self.install_my_app(
                     my_app_id=self.building_my_app.myAppId,
                     device_id=self.fog_3.deviceId,
-                    retry_on_failure=True,
                 )
-                self.start_my_apps(self.building_my_app.myAppId)
+                self.start_my_app(self.building_my_app.myAppId)
                 moved_apps.add(self.building_my_app.myAppId)
 
             elif alert['appName'] == self.apartment_my_app.name:
                 isOnFog1 = alert['deviceId'] == self.fog_1.deviceId
-                self.stop_my_apps(self.apartment_my_app.myAppId)
-                self.uninstall_my_app(self.apartment_my_app.myAppId, device_ids=[
-                    self.fog_1.deviceId if isOnFog1 else self.fog_2.deviceId
-                ])
+                self.stop_my_app(self.apartment_my_app.myAppId)
+                self.uninstall_my_app(
+                    my_app_id=self.apartment_my_app.myAppId,
+                    device_ids=[
+                        self.fog_1.deviceId if isOnFog1 else self.fog_2.deviceId
+                    ],
+                )
                 self.install_my_app(
                     my_app_id=self.apartment_my_app.myAppId,
                     device_id=(
                         self.fog_2.deviceId if isOnFog1 else self.fog_1.deviceId
                     ),
-                    retry_on_failure=True,
                 )
-                self.start_my_apps(self.apartment_my_app.myAppId)
+                self.start_my_app(self.apartment_my_app.myAppId)
                 moved_apps.add(self.apartment_my_app.myAppId)
 
 

@@ -211,9 +211,8 @@ class SmartResort(BaseScenario):
             self.install_my_app(
                 my_app_id=my_app.myAppId,
                 device_id=self._get_best_fit_device_until_success(self.application['cpuUsage'], self.application['memoryUsage']),
-                retry_on_failure=True,
             )
-            self.start_my_apps(my_app.myAppId)
+            self.start_my_app(my_app.myAppId)
 
     def manage_iteration(self) -> None:
         already_migrated: Set[str] = set()
@@ -225,7 +224,7 @@ class SmartResort(BaseScenario):
                     continue
 
                 already_migrated.add(alert['appName'])
-                self.stop_my_apps(self.my_apps_mapping[alert['appName']].myAppId)
+                self.stop_my_app(self.my_apps_mapping[alert['appName']].myAppId)
                 self.uninstall_my_app(
                     my_app_id=self.my_apps_mapping[alert['appName']].myAppId,
                     device_ids=[alert['deviceId']],
@@ -236,9 +235,8 @@ class SmartResort(BaseScenario):
                         cpu_required=self.application['cpuUsage'],
                         mem_required=self.application['memoryUsage'],
                     ),
-                    retry_on_failure=True,
                 )
-                self.stop_my_apps(self.my_apps_mapping[alert['appName']].myAppId)
+                self.stop_my_app(self.my_apps_mapping[alert['appName']].myAppId)
 
                 if alert['type'] == AlertType.DEVICE_REACHABILITY.value:
                     not_reachable_device_my_apps_mapping[alert['deviceId']].append(self.my_apps_mapping[alert['appName']])
