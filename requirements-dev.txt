@@ -1,5 +1,4 @@
 coverage
-docker-compose
 mypy
 pre-commit
 pytest

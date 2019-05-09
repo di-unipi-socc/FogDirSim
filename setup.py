@@ -54,6 +54,7 @@ setup(
         'bravado',
         'bravado-core',
         'bravado-asyncio[aiohttp_extras]',
+        'docker',
         'ephemeral-port-reserve',
         'pyramid',
         'pyramid-swagger',
