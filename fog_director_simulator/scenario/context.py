@@ -141,12 +141,12 @@ def _run_docker_container(
         container.stop()
 
 
-def _wait_until_mysql_up(database_config: Config) -> None:
+def _wait_until_database_is_up(database_config: Config) -> None:
     try:
         DatabaseClient(config=database_config)
     except OperationalError:
         sleep(0.1)  # Sleep a bit ot avoid busy waiting
-        _wait_until_mysql_up(database_config)
+        _wait_until_database_is_up(database_config)
 
 
 @contextmanager
@@ -157,17 +157,25 @@ def database_context(start_database: bool, verbose: bool = False) -> Generator[O
         return
 
     with _run_docker_container(
-        image_name='mysql:8.0.16',
+        image_name='postgres:11.2',
         environment={
-            'MYSQL_ROOT_PASSWORD': 'password',
-            'MYSQL_DATABASE': 'fog_director',
+            'POSTGRES_USER': 'user',
+            'POSTGRES_PASSWORD': 'password',
+            'POSTGRES_DB': 'fog_director',
         },
         ports={
-            '3306/tcp': None,
+            '5432/tcp': None,
         },
     ) as (_, container_ports):
-        database_config = Config(host='0.0.0.0', port=container_ports['3306/tcp'])
-        _wait_until_mysql_up(database_config)
+        database_config = Config(
+            drivername='postgresql+psycopg2',
+            username='user',
+            password='password',
+            host='0.0.0.0',
+            port=container_ports['5432/tcp'],
+            verbose=verbose,
+        )
+        _wait_until_database_is_up(database_config)
         print(f'Database up and running on {LOCALHOST}:{database_config.port}')
         yield database_config
 

@@ -58,7 +58,7 @@ setup(
         'pyramid',
         'pyramid-swagger',
         'pyyaml',
-        'sqlalchemy[mysql]',
+        'sqlalchemy[postgresql_psycopg2binary]',
         'uWSGI',
     ],
     extras_require={

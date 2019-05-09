@@ -36,11 +36,11 @@ from fog_director_simulator.database.models import SimulationInformation
 
 
 class Config(NamedTuple):
-    drivername: str = 'mysql+mysqldb'
-    username: Optional[str] = 'root'
+    drivername: str = 'postgresql+psycopg2'
+    username: Optional[str] = 'user'
     password: Optional[str] = 'password'
     host: Optional[str] = 'database'
-    port: Optional[int] = 3306
+    port: Optional[int] = 5432
     database_name: Optional[str] = 'fog_director'
     verbose: bool = False
 
