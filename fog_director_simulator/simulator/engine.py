@@ -118,7 +118,7 @@ class Simulator:
         }
 
     def _evaluate_job_metrics(self) -> Dict[Job, Dict[JobMetricType, JobMetric]]:
-        metrics = {
+        return {
             current_job: {
                 job_metric.metricType: job_metric
                 for job_metric in job.collect(
@@ -129,14 +129,6 @@ class Simulator:
             }
             for current_job in self.database_logic.get_all_jobs()
         }
-        # Save all the metrics on the db
-        self.database_logic.create(*[
-            metric
-            for metrics_mapping in metrics.values()
-            for metric in metrics_mapping.values()
-        ])
-
-        return metrics
 
     def _evaluate_my_app_metrics(self) -> Dict[MyApp, Dict[MyAppMetricType, MyAppMetric]]:
         metrics = {

@@ -6,7 +6,7 @@ from fog_director_simulator.database.models import JobStatus
 METRIC_TYPE = JobMetricType.ENOUGH_CPU
 
 
-def collect(db_logic: DatabaseLogic, job_id: int) -> bool:
+def collect(db_logic: DatabaseLogic, job_id: int) -> float:
     # Local import to prevent circular import
     from fog_director_simulator.metrics_collector.job import scaled_random_sample
 
@@ -25,6 +25,6 @@ def collect(db_logic: DatabaseLogic, job_id: int) -> bool:
         )
 
         if reserved_cpu < current_cpu_usage:
-            return False
+            return 0
 
-    return True
+    return 1
