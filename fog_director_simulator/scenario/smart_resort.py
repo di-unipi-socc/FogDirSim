@@ -175,10 +175,10 @@ class SmartResort(BaseScenario):
         )
 
     def _get_best_fit_device(self, cpu_required: float, mem_required: float) -> Optional[Dict[str, Any]]:
-        devices = self.fog_director_client.get_devices()
+        devices = self.get_all_devices()
         devices = [
             dev
-            for dev in devices['data']
+            for dev in devices
             if (
                 dev['capabilities']['nodes'][0]['cpu']['available'] >= cpu_required
                 and dev['capabilities']['nodes'][0]['memory']['available'] >= mem_required
