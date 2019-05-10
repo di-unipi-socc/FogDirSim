@@ -68,6 +68,7 @@ def api_context(
     url = f'http://{LOCALHOST}:{port}'
 
     with background_process(
+        name='api_context',
         args=[
             'uwsgi',
             '--http', f':{port}',
@@ -100,6 +101,7 @@ def fog_director_context(
     url = f'http://{LOCALHOST}:{port}'
 
     with background_process(
+        name='fog_director_context',
         args=[
             'uwsgi',
             '--http', f':{port}',
@@ -205,6 +207,7 @@ def simulator_context(
     if verbose:
         args.append('--verbose')
     with background_process(
+        name='simulator_context',
         args=args,
         env=database_config.to_environment_dict(override_verbose=False),
         redirect_all_to_std_err=verbose,
