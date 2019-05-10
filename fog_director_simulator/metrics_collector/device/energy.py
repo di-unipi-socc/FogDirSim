@@ -1,6 +1,7 @@
 from fog_director_simulator.database import DatabaseLogic
 from fog_director_simulator.database.models import DeviceMetricType
 from fog_director_simulator.database.models import EnergyConsumptionType
+from fog_director_simulator.metrics_collector import ignore_sqlalchemy_exceptions
 
 
 METRIC_TYPE = DeviceMetricType.ENERGY
@@ -46,6 +47,7 @@ _ENERGY_CONSUMPTION = {
 }
 
 
+@ignore_sqlalchemy_exceptions(default_return_value=0)
 def collect(db_logic: DatabaseLogic, iterationCount: int, device_id: str) -> float:
     device = db_logic.get_device(deviceId=device_id)
     cpu_usage = db_logic.get_device_metric(iterationCount=iterationCount, deviceId=device_id, metricType=DeviceMetricType.CPU).value

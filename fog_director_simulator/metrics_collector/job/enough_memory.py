@@ -1,11 +1,13 @@
 from fog_director_simulator.database import DatabaseLogic
 from fog_director_simulator.database.models import JobMetricType
 from fog_director_simulator.database.models import JobStatus
+from fog_director_simulator.metrics_collector import ignore_sqlalchemy_exceptions
 
 
 METRIC_TYPE = JobMetricType.ENOUGH_MEM
 
 
+@ignore_sqlalchemy_exceptions(default_return_value=0)
 def collect(db_logic: DatabaseLogic, job_id: int) -> float:
     # Local import to prevent circular import
     from fog_director_simulator.metrics_collector.job import scaled_random_sample

@@ -1,11 +1,13 @@
 from fog_director_simulator.database import DatabaseLogic
 from fog_director_simulator.database.models import JobMetricType
 from fog_director_simulator.database.models import MyAppMetricType
+from fog_director_simulator.metrics_collector import ignore_sqlalchemy_exceptions
 
 
 METRIC_TYPE = MyAppMetricType.UP_STATUS
 
 
+@ignore_sqlalchemy_exceptions(default_return_value=0)
 def collect(db_logic: DatabaseLogic, iterationCount: int, myAppId: int) -> float:
     min_replicas = db_logic.get_my_app(myAppId=myAppId).minJobReplicas
     jobs = {
