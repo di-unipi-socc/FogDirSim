@@ -7,8 +7,8 @@ from pyramid.view import view_config
 from sqlalchemy.orm.exc import NoResultFound
 
 from fog_director_simulator.pyramid.fake_fog_director.formatters import device_format
-from fog_director_simulator.pyramid.fake_fog_director.formatters import DeviceApi
 from fog_director_simulator.pyramid.fake_fog_director.formatters import DeviceResponse
+from fog_director_simulator.pyramid.fake_fog_director.formatters import DeviceResponseApi
 from fog_director_simulator.pyramid.fake_fog_director.request_types import DeviceMinimal
 
 
@@ -24,7 +24,7 @@ def get_v1_appmgr_devices(request: Request) -> DeviceResponse:
 
 
 @view_config(route_name='api.v1.appmgr.devices', request_method='POST')
-def post_v1_appmgr_devices(request: Request) -> DeviceApi:
+def post_v1_appmgr_devices(request: Request) -> DeviceResponseApi:
     body = cast(DeviceMinimal, request.swagger_data['body'])
 
     try:

@@ -12,7 +12,10 @@ from fog_director_simulator.database.models import Application
 from fog_director_simulator.database.models import MyApp
 from fog_director_simulator.pyramid.fake_fog_director.formatters import AlertApi
 from fog_director_simulator.pyramid.fake_fog_director.formatters import ApplicationApi
-from fog_director_simulator.pyramid.fake_fog_director.formatters import DeviceApi
+from fog_director_simulator.pyramid.fake_fog_director.formatters import DeviceCapabilityNodeApi
+from fog_director_simulator.pyramid.fake_fog_director.formatters import DeviceCapabilityNodeDetailApi
+from fog_director_simulator.pyramid.fake_fog_director.formatters import DeviceCapabilityNodesApi
+from fog_director_simulator.pyramid.fake_fog_director.formatters import DeviceResponseApi
 from fog_director_simulator.pyramid.fake_fog_director.formatters import MyAppApi
 from fog_director_simulator.pyramid.fake_fog_director.webapp import create_application
 
@@ -44,16 +47,23 @@ def formatted_alert(alert: Alert) -> AlertApi:
 
 
 @pytest.fixture
-def formatted_device(device: Device) -> DeviceApi:
-    return DeviceApi(
-        deviceId=device.deviceId,
-        port=device.port,
-        ipAddress=device.ipAddress,
-        password=device.password,
-        username=device.username,
-        usedCPU=0,
-        usedMEM=0,
+def formatted_device(device: Device) -> DeviceResponseApi:
+    return DeviceResponseApi(
         apps=[],
+        capabilities=DeviceCapabilityNodesApi(
+            nodes=[
+                DeviceCapabilityNodeApi(
+                    cpu=DeviceCapabilityNodeDetailApi(available=1, total=2),
+                    memory=DeviceCapabilityNodeDetailApi(available=1, total=6),
+                )
+            ],
+        ),
+        deviceId=device.deviceId,
+        ipAddress=device.ipAddress,
+        port=device.port,
+        usedCPU=1,
+        usedMEM=5,
+        username=device.username,
     )
 
 
