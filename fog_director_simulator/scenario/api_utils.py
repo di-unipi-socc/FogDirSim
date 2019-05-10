@@ -13,7 +13,7 @@ from fog_director_simulator.database.models import JobDeviceAllocation
 from fog_director_simulator.database.models import MyApp
 from fog_director_simulator.pyramid.fake_fog_director.formatters import AlertApi
 from fog_director_simulator.pyramid.fake_fog_director.formatters import ApplicationApi
-from fog_director_simulator.pyramid.fake_fog_director.formatters import DeviceApi
+from fog_director_simulator.pyramid.fake_fog_director.formatters import DeviceResponseApi
 from fog_director_simulator.pyramid.fake_fog_director.formatters import JobApi
 from fog_director_simulator.pyramid.fake_fog_director.request_types import ApplicationResourceAsk
 from fog_director_simulator.pyramid.fake_fog_director.request_types import DeployMyApp
@@ -73,7 +73,7 @@ class ScenarioAPIUtilMixin:
     def iteration_count(self) -> int:
         raise NotImplementedError(self.api_client)  # TODO: connect the real endpoint
 
-    def get_all_devices(self) -> List[DeviceApi]:
+    def get_all_devices(self) -> List[DeviceResponseApi]:
         return self.fog_director_client.v1.get_v1_appmgr_devices(
             _request_options=self._fog_director_authentication,
         ).result()["data"]

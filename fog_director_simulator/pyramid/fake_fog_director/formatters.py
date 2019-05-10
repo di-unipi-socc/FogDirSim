@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Any
 from typing import List
 
@@ -34,32 +35,78 @@ def alert_format(alert: Alert) -> AlertApi:
     )
 
 
-class DeviceApi(TypedDict):
+class DeviceCapabilityNodeDetailApi(TypedDict):
+    available: float
+    total: float
+
+
+class DeviceCapabilityNodeApi(TypedDict):
+    cpu: DeviceCapabilityNodeDetailApi
+    memory: DeviceCapabilityNodeDetailApi
+
+
+class DeviceCapabilityNodesApi(TypedDict):
+    nodes: List[DeviceCapabilityNodeApi]
+
+
+class DeviceResponseApi(TypedDict):
+    apps: List[Any]  # TODO: fix this
+    capabilities: DeviceCapabilityNodesApi
+    ipAddress: str
     deviceId: str
     port: str
-    ipAddress: str
+    usedCPU: float
+    usedMEM: float
     username: str
-    password: str
-    usedCPU: int
-    usedMEM: int
-    apps: List[Any]  # TODO: fix this
 
 
 class DeviceResponse(TypedDict):
-    data: List[DeviceApi]
+    data: List[DeviceResponseApi]
 
 
-def device_format(device: Device) -> DeviceApi:
-    return DeviceApi(
+class _DeviceCapabilityNodDetailType(Enum):
+    CPU = 1
+    MEM = 2
+
+
+def device_capability_node_detail_format(device: Device, detail_type: _DeviceCapabilityNodDetailType) -> DeviceCapabilityNodeDetailApi:
+    if detail_type == _DeviceCapabilityNodDetailType.CPU:
+        return DeviceCapabilityNodeDetailApi(
+            available=device.totalCPU - device.reservedCPU,
+            total=device.totalCPU,
+        )
+    elif detail_type == _DeviceCapabilityNodDetailType.MEM:
+        return DeviceCapabilityNodeDetailApi(
+            available=device.totalMEM - device.reservedMEM,
+            total=device.totalMEM,
+        )
+    else:
+        raise RuntimeError('Impossible getting here')
+
+
+def device_capability_node_format(device: Device) -> DeviceCapabilityNodeApi:
+    return DeviceCapabilityNodeApi(
+        cpu=device_capability_node_detail_format(device, _DeviceCapabilityNodDetailType.CPU),
+        memory=device_capability_node_detail_format(device, _DeviceCapabilityNodDetailType.MEM),
+    )
+
+
+def device_capability_nodes_format(device: Device) -> DeviceCapabilityNodesApi:
+    return DeviceCapabilityNodesApi(
+        nodes=[device_capability_node_format(device)],
+    )
+
+
+def device_format(device: Device) -> DeviceResponseApi:
+    return DeviceResponseApi(
+        apps=[],  # TODO: fix this
+        capabilities=device_capability_nodes_format(device),
         deviceId=device.deviceId,
-        port=device.port,
         ipAddress=device.ipAddress,
+        port=device.port,
+        usedCPU=device.reservedCPU,  # TODO: fix it with samplings
+        usedMEM=device.reservedMEM,  # TODO: fix it with samplings
         username=device.username,
-        password=device.password,
-        # TODO: Extract the fields
-        usedCPU=0,
-        usedMEM=0,
-        apps=[],
     )
 
 

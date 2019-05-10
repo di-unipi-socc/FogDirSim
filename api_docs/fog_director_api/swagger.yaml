@@ -73,30 +73,7 @@ definitions:
     type: object
     x-model: DeployMyApp
 
-  Device:
-    allOf:
-    - $ref: '#/definitions/DeviceMinimal'
-    - properties:
-        apps:
-          items:
-            type: integer
-          type: array
-        deviceId:
-          type: string
-        usedCPU:
-          type: integer
-        usedMEM:
-          type: integer
-      required:
-      - deviceId
-      - usedCPU
-      - usedMEM
-      - apps
-      type: object
-    type: object
-    x-model: Device
-
-  DeviceMinimal:
+  DeviceBody:
     properties:
       ipAddress:
         type: string
@@ -112,7 +89,80 @@ definitions:
     - username
     - password
     type: object
-    x-model: DeviceMinimal
+    x-model: DeviceBody
+
+  DeviceCapabilityNodeDetail:
+    properties:
+      available:
+        type: number
+        format: float  # NOTE: In the real world this is an integer, but the simulation uses gauss random numbers
+      total:
+        type: number
+        format: float  # NOTE: In the real world this is an integer, but the simulation uses gauss random numbers
+    required:
+    - available
+    - total
+    type: object
+    x-model: DeviceCapabilityNodeDetail
+
+  DeviceCapabilityNode:
+    properties:
+      # TODO: Add missing fields disk
+      cpu:
+        $ref: '#/definitions/DeviceCapabilityNodeDetail'
+      memory:
+        $ref: '#/definitions/DeviceCapabilityNodeDetail'
+    required:
+    - cpu
+    - memory
+    type: object
+    x-model: DeviceCapabilityNode
+
+  DeviceCapabilities:
+    properties:
+      # TODO: Add missing fields managementAPIVersion, supportedApps
+      nodes:
+        type: array
+        items:
+          $ref: '#/definitions/DeviceCapabilityNode'
+    required:
+    - nodes
+    type: object
+    x-model: DeviceCapabilities
+
+  DeviceResponse:
+    properties:
+      # TODO: Add missing fields contactDetails, ne_id, serialNumber, hostname, platformVersion, status
+      apps:
+        items:
+          type: integer
+        type: array
+      capabilities:
+        $ref: '#/definitions/DeviceCapabilities'
+      deviceId:
+        type: string
+      ipAddress:
+        type: string
+      port:
+        type: string
+      usedCPU:
+        type: number
+        format: float
+      usedMEM:
+        type: number
+        format: float
+      username:
+        type: string
+    required:
+    - apps
+    - deviceId
+    - ipAddress
+    - port
+    - usedCPU
+    - usedMEM
+    - username
+    type: object
+    x-model: DeviceResponse
 
   LocalApp:
     properties:
@@ -152,7 +202,6 @@ definitions:
     - sourceAppName
     type: object
     x-model: LocalApp
-
 
   MyAppAction:
     maxProperties: 1
@@ -274,7 +323,7 @@ paths:
             properties:
               data:
                 items:
-                  $ref: '#/definitions/Device'
+                  $ref: '#/definitions/DeviceResponse'
                 type: array
             required:
             - data
@@ -292,12 +341,12 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/DeviceMinimal'
+          $ref: '#/definitions/DeviceBody'
       responses:
         '200':
           description: HTTP/200
           schema:
-            $ref: '#/definitions/Device'
+            $ref: '#/definitions/DeviceResponse'
       security:
       - XTokenId: []
       tags:
@@ -316,7 +365,7 @@ paths:
         '200':
           description: Removed device
           schema:
-            $ref: '#/definitions/Device'
+            $ref: '#/definitions/DeviceResponse'
       security:
       - XTokenId: []
       tags:

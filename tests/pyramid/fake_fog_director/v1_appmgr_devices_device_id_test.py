@@ -2,7 +2,7 @@ import typing
 
 from fog_director_simulator.database import DatabaseLogic
 from fog_director_simulator.database.models import Device
-from fog_director_simulator.pyramid.fake_fog_director.formatters import DeviceApi
+from fog_director_simulator.pyramid.fake_fog_director.formatters import DeviceResponseApi
 if typing.TYPE_CHECKING:
     from webtest import TestApp
 
@@ -23,7 +23,7 @@ def test_delete_v1_appmgr_devices_device_id_not_registered_device(testapp: 'Test
     assert response.status_code == 404
 
 
-def test_delete_v1_appmgr_devices_device_id_with_registered_device(testapp: 'TestApp', database_logic: DatabaseLogic, device: Device, formatted_device: DeviceApi) -> None:
+def test_delete_v1_appmgr_devices_device_id_with_registered_device(testapp: 'TestApp', database_logic: DatabaseLogic, device: Device, formatted_device: DeviceResponseApi) -> None:
     device_id = device.deviceId
     database_logic.create(device)
 
