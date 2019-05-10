@@ -195,15 +195,17 @@ def simulator_context(
             yield None
         return
 
+    args = [
+        sys.executable,
+        '-m',
+        'fog_director_simulator.simulator.engine',
+        '--max-simulation-iterations',
+        str(max_simulation_iterations),
+    ]
+    if verbose:
+        args.append('--verbose')
     with background_process(
-        args=[
-            sys.executable,
-            '-m',
-            'fog_director_simulator.simulator.engine',
-            '--max-simulation-iterations',
-            str(max_simulation_iterations),
-            '--verbose' if verbose else '',
-        ],
+        args=args,
         env=database_config.to_environment_dict(override_verbose=False),
         redirect_all_to_std_err=verbose,
     ) as process:
