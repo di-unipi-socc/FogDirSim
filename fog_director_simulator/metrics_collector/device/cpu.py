@@ -9,10 +9,11 @@ METRIC_TYPE = DeviceMetricType.CPU
 
 @ignore_sqlalchemy_exceptions(default_return_value=0)
 def collect(db_logic: DatabaseLogic, device_id: str) -> float:
-    device = db_logic.get_device(deviceId=device_id)
-    return random_sample(
-        mean=device.cpuMetricsDistribution.mean,
-        std_deviation=device.cpuMetricsDistribution.std_deviation,
-        lower_bound=0,
-        upper_bound=device.totalCPU,
-    )
+    with db_logic:
+        device = db_logic.get_device(deviceId=device_id)
+        return random_sample(
+            mean=device.cpuMetricsDistribution.mean,
+            std_deviation=device.cpuMetricsDistribution.std_deviation,
+            lower_bound=0,
+            upper_bound=device.totalCPU,
+        )

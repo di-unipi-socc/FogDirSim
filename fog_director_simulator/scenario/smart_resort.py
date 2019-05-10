@@ -2,7 +2,6 @@ from argparse import ArgumentParser
 from argparse import ArgumentTypeError
 from argparse import Namespace
 from collections import defaultdict
-from typing import Any
 from typing import DefaultDict
 from typing import Dict
 from typing import List
@@ -13,6 +12,7 @@ from fog_director_simulator.database import Device
 from fog_director_simulator.database import MyApp
 from fog_director_simulator.database.models import AlertType
 from fog_director_simulator.pyramid.fake_fog_director.formatters import ApplicationApi
+from fog_director_simulator.pyramid.fake_fog_director.formatters import DeviceResponseApi
 from fog_director_simulator.scenario.base import BaseScenario
 
 
@@ -174,7 +174,7 @@ class SmartResort(BaseScenario):
             verbose_simulator_engine=args.verbose_simulator_engine,
         )
 
-    def _get_best_fit_device(self, cpu_required: float, mem_required: float) -> Optional[Dict[str, Any]]:
+    def _get_best_fit_device(self, cpu_required: float, mem_required: float) -> Optional[DeviceResponseApi]:
         devices = self.get_all_devices()
         devices = [
             dev
@@ -184,11 +184,13 @@ class SmartResort(BaseScenario):
                 and dev['capabilities']['nodes'][0]['memory']['available'] >= mem_required
             )
         ]
+        if not devices:
+            return None
         devices.sort(
             reverse=True,
             key=lambda dev: (dev['capabilities']['nodes'][0]['cpu']['available'], dev['capabilities']['nodes'][0]['memory']['available']),
         )
-        return next(iter(devices))
+        return devices[0]
 
     def _get_best_fit_device_until_success(self, cpu_required: float, mem_required: float, max_trial: int = 1000) -> str:
         count = 0

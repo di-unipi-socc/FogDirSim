@@ -9,5 +9,6 @@ METRIC_TYPE = JobMetricType.UP_STATUS
 
 @ignore_sqlalchemy_exceptions(default_return_value=0)
 def collect(db_logic: DatabaseLogic, job_id: int) -> float:
-    job = db_logic.get_job(jobId=job_id)
-    return 1 if job.status == JobStatus.START else 0
+    with db_logic:
+        job = db_logic.get_job(jobId=job_id)
+        return 1 if job.status == JobStatus.START else 0
