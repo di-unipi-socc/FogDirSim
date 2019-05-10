@@ -1,12 +1,14 @@
 from fog_director_simulator.database import DatabaseLogic
 from fog_director_simulator.database.models import JobMetricType
 from fog_director_simulator.database.models import JobStatus
+from fog_director_simulator.metrics_collector import ignore_sqlalchemy_exceptions
 
 
 METRIC_TYPE = JobMetricType.ENOUGH_MEM
 
 
-def collect(db_logic: DatabaseLogic, job_id: int) -> bool:
+@ignore_sqlalchemy_exceptions(default_return_value=0)
+def collect(db_logic: DatabaseLogic, job_id: int) -> float:
     # Local import to prevent circular import
     from fog_director_simulator.metrics_collector.job import scaled_random_sample
 
@@ -25,6 +27,6 @@ def collect(db_logic: DatabaseLogic, job_id: int) -> bool:
         )
 
         if reserved_mem < current_mem_usage:
-            return False
+            return 0
 
-    return True
+    return 1

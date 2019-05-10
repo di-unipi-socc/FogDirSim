@@ -32,12 +32,26 @@ def scaled_random_sample(job_intensivity: JobIntensivity, scale_factor: float, u
 
 
 def collect(db_logic: DatabaseLogic, iterationCount: int, jobId: int) -> List[JobMetric]:
-    return [
+    result = [
         JobMetric(  # type: ignore
             iterationCount=iterationCount,
             jobId=jobId,
-            metricType=mod.METRIC_TYPE,  # type: ignore
-            value=mod.collect(db_logic=db_logic, job_id=jobId),  # type: ignore
-        )
-        for mod in (enough_cpu, enough_memory, up_status)
+            metricType=enough_cpu.METRIC_TYPE,  # type: ignore
+            value=enough_cpu.collect(db_logic=db_logic, job_id=jobId),  # type: ignore
+        ),
+        JobMetric(  # type: ignore
+            iterationCount=iterationCount,
+            jobId=jobId,
+            metricType=enough_memory.METRIC_TYPE,  # type: ignore
+            value=enough_memory.collect(db_logic=db_logic, job_id=jobId),  # type: ignore
+        ),
+        JobMetric(  # type: ignore
+            iterationCount=iterationCount,
+            jobId=jobId,
+            metricType=up_status.METRIC_TYPE,  # type: ignore
+            value=up_status.collect(db_logic=db_logic, job_id=jobId),  # type: ignore
+        ),
     ]
+    db_logic.create(*result)
+
+    return result

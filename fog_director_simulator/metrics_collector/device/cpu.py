@@ -1,11 +1,13 @@
 from fog_director_simulator.database import DatabaseLogic
 from fog_director_simulator.database import DeviceMetricType
+from fog_director_simulator.metrics_collector import ignore_sqlalchemy_exceptions
 from fog_director_simulator.metrics_collector import random_sample
 
 
 METRIC_TYPE = DeviceMetricType.CPU
 
 
+@ignore_sqlalchemy_exceptions(default_return_value=0)
 def collect(db_logic: DatabaseLogic, device_id: str) -> float:
     device = db_logic.get_device(deviceId=device_id)
     return random_sample(
