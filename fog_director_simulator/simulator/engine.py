@@ -2,6 +2,7 @@ import sys
 from argparse import ArgumentParser
 from argparse import ArgumentTypeError
 from sys import maxsize
+from time import sleep
 from typing import Callable
 from typing import Dict
 from typing import List
@@ -264,7 +265,6 @@ class Simulator:
         while self.iteration_count < self.max_simulation_iterations:
             with self.database_logic:
                 self.iteration_count += 1
-                self.database_logic.register_simulation_time(self.iteration_count)
                 print(f'Iteration {self.iteration_count}/{self.max_simulation_iterations}', file=sys.stderr)
 
                 device_metrics = self._evaluate_device_metrics()
@@ -287,7 +287,14 @@ class Simulator:
                     my_app_metrics=my_app_metrics,
                 )
 
+                self.database_logic.register_simulation_time(self.iteration_count)
                 # FIXME: Update device status ... if the device is dead ... what has to be done on the db?
+
+        while True:
+            with self.database_logic:
+                self.iteration_count += 1
+                self.database_logic.register_simulation_time(self.iteration_count)
+                sleep(0.1)
 
 
 if __name__ == '__main__':
