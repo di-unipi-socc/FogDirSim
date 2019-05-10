@@ -18,11 +18,11 @@ from pyramid_swagger.exceptions import RequestValidationError
 from pyramid_swagger.exceptions import ResponseValidationError
 
 from fog_director_simulator import database
-from fog_director_simulator.database import DatabaseLogic
 
 
 SIMULATION_TIME_START_HEADER = 'X-Simulation-Time-Start'
 SIMULATION_TIME_END_HEADER = 'X-Simulation-Time-End'
+DATABASE_LOGIC_SETTING = 'database_logic'
 
 
 def slow_down_request(wrapped: Callable[[Any, Request], Response]) -> Callable[[Any, Request], Response]:
@@ -37,8 +37,8 @@ def slow_down_request(wrapped: Callable[[Any, Request], Response]) -> Callable[[
     return wrapper
 
 
-def _database_logic() -> DatabaseLogic:
-    return database.DatabaseClient(config=database.Config.from_environment()).logic
+def _database_logic(request: Request) -> database.DatabaseLogic:
+    return request.registry.settings[DATABASE_LOGIC_SETTING]
 
 
 def _add_simulation_time_response_header_factory(handler: Any, registry: Any) -> Callable[[Request], Response]:
@@ -107,8 +107,9 @@ def default_pyramid_configuration(
     # Set the default renderer to our JSON renderer
     config.add_renderer(None, PyramidSwaggerRendererFactory())
 
+    config.registry.settings[DATABASE_LOGIC_SETTING] = database.DatabaseClient(config=database.Config.from_environment()).logic
     config.add_request_method(
-        lambda request: _database_logic(),
+        lambda request: _database_logic(request),
         name='database_logic',
         property=True,
         reify=True,
