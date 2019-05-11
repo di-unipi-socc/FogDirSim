@@ -56,6 +56,7 @@ setup(
         'ephemeral-port-reserve',
         'docker',
         'mypy-extensions',
+        'numpy',
         'pyramid',
         'pyramid-swagger',
         'pyyaml',
