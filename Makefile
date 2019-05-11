@@ -1,6 +1,9 @@
 ifndef PORT
 	PORT := 8080
 endif
+ifndef PYTHON
+	PYTHON := $(shell which python3.7 || which python3.6)
+endif
 
 .git/hooks/pre-commit: venv .pre-commit-config.yaml
 	./venv/bin/pre-commit install -f --install-hooks
@@ -9,13 +12,15 @@ endif
 install-hooks: .git/hooks/pre-commit
 	@true
 
-venv: requirements-dev.txt setup.py tox.ini
-	@rm -rf venv
-	tox -e venv
+venv: requirements-dev.txt setup.py
+	virtualenv venv --python ${PYTHON}
+	./venv/bin/pip install -e .
+	./venv/bin/pip install -r requirements-dev.txt
 
 venv-pypy: requirements-dev.txt setup.py tox.ini
-	@rm -rf venv-pypy
-	tox -e venv-pypy
+	virtualenv venv-pypy --python pypy3
+	./venv-pypy/bin/pip install -e .
+	./venv-pypy/bin/pip install -r requirements-dev.txt
 
 .PHONY: dev
 dev: venv install-hooks
