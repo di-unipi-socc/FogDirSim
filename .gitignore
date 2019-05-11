@@ -67,3 +67,7 @@ docs/_build
 
 # Mypy Cache
 .mypy_cache/
+
+
+# Ignore logs
+.logs/

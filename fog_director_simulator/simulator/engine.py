@@ -1,6 +1,8 @@
+import sys
 from argparse import ArgumentParser
 from argparse import ArgumentTypeError
 from sys import maxsize
+from time import sleep
 from typing import Callable
 from typing import Dict
 from typing import List
@@ -261,31 +263,38 @@ class Simulator:
 
     def run(self) -> None:
         while self.iteration_count < self.max_simulation_iterations:
-            self.iteration_count += 1
-            if self.verbose:
-                print(f'Iteration {self.iteration_count}/{self.max_simulation_iterations}')
+            with self.database_logic:
+                self.iteration_count += 1
+                print(f'Iteration {self.iteration_count}/{self.max_simulation_iterations}', file=sys.stderr)
 
-            device_metrics = self._evaluate_device_metrics()
-            job_metrics = self._evaluate_job_metrics()
-            my_app_metrics = self._evaluate_my_app_metrics()
+                device_metrics = self._evaluate_device_metrics()
+                job_metrics = self._evaluate_job_metrics()
+                my_app_metrics = self._evaluate_my_app_metrics()
 
-            # Evaluate pre-aggregated metrics to simplify front-end efforts
-            # for data retrieval (no need to run a lot of queries all the time)
-            # and to provide information about the current state of the simulation
-            # (NOTE: this is an hack ... but we're ok-ish for now with this)
-            self._evaluate_samplings(
-                device_metrics=device_metrics,
-                job_metrics=job_metrics,
-                my_app_metrics=my_app_metrics,
-            )
+                # Evaluate pre-aggregated metrics to simplify front-end efforts
+                # for data retrieval (no need to run a lot of queries all the time)
+                # and to provide information about the current state of the simulation
+                # (NOTE: this is an hack ... but we're ok-ish for now with this)
+                self._evaluate_samplings(
+                    device_metrics=device_metrics,
+                    job_metrics=job_metrics,
+                    my_app_metrics=my_app_metrics,
+                )
 
-            self._handle_alerts(
-                device_metrics=device_metrics,
-                job_metrics=job_metrics,
-                my_app_metrics=my_app_metrics,
-            )
+                self._handle_alerts(
+                    device_metrics=device_metrics,
+                    job_metrics=job_metrics,
+                    my_app_metrics=my_app_metrics,
+                )
 
-            # FIXME: Update device status ... if the device is dead ... what has to be done on the db?
+                self.database_logic.register_simulation_time(self.iteration_count)
+                # FIXME: Update device status ... if the device is dead ... what has to be done on the db?
+
+        while True:
+            with self.database_logic:
+                self.iteration_count += 1
+                self.database_logic.register_simulation_time(self.iteration_count)
+                sleep(0.1)
 
 
 if __name__ == '__main__':

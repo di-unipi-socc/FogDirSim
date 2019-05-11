@@ -2,7 +2,6 @@ from argparse import ArgumentParser
 from argparse import ArgumentTypeError
 from argparse import Namespace
 from collections import defaultdict
-from typing import Any
 from typing import DefaultDict
 from typing import Dict
 from typing import List
@@ -13,6 +12,7 @@ from fog_director_simulator.database import Device
 from fog_director_simulator.database import MyApp
 from fog_director_simulator.database.models import AlertType
 from fog_director_simulator.pyramid.fake_fog_director.formatters import ApplicationApi
+from fog_director_simulator.pyramid.fake_fog_director.formatters import DeviceResponseApi
 from fog_director_simulator.scenario.base import BaseScenario
 
 
@@ -57,13 +57,19 @@ class SmartResort(BaseScenario):
         number_of_devices: int,
         number_of_deployments: int,
         percentage_of_heavy_job: int,
-        verbose: bool,
+        verbose_all: bool,
+        verbose_fog_director_api: bool,
+        verbose_simulator_api: bool,
+        verbose_simulator_engine: bool,
     ):
         super(SmartResort, self).__init__(
             dump_file=dump_file,
             fog_director_api_url=fog_director_api_url,
             max_simulation_iterations=max_simulation_iterations,
-            verbose=verbose,
+            verbose_all=verbose_all,
+            verbose_fog_director_api=verbose_fog_director_api,
+            verbose_simulator_api=verbose_simulator_api,
+            verbose_simulator_engine=verbose_simulator_engine,
         )
         self.number_of_devices = number_of_devices
         self.number_of_deployments = number_of_deployments
@@ -162,24 +168,29 @@ class SmartResort(BaseScenario):
             number_of_deployments=args.number_of_deployments,
             number_of_devices=args.number_of_devices,
             percentage_of_heavy_job=args.percentage_of_heavy_job,
-            verbose=args.verbose,
+            verbose_all=args.verbose_all,
+            verbose_fog_director_api=args.verbose_fog_director_api,
+            verbose_simulator_api=args.verbose_simulator_api,
+            verbose_simulator_engine=args.verbose_simulator_engine,
         )
 
-    def _get_best_fit_device(self, cpu_required: float, mem_required: float) -> Optional[Dict[str, Any]]:
-        devices = self.fog_director_client.get_devices()
+    def _get_best_fit_device(self, cpu_required: float, mem_required: float) -> Optional[DeviceResponseApi]:
+        devices = self.get_all_devices()
         devices = [
             dev
-            for dev in devices['data']
+            for dev in devices
             if (
                 dev['capabilities']['nodes'][0]['cpu']['available'] >= cpu_required
                 and dev['capabilities']['nodes'][0]['memory']['available'] >= mem_required
             )
         ]
+        if not devices:
+            return None
         devices.sort(
             reverse=True,
             key=lambda dev: (dev['capabilities']['nodes'][0]['cpu']['available'], dev['capabilities']['nodes'][0]['memory']['available']),
         )
-        return next(iter(devices))
+        return devices[0]
 
     def _get_best_fit_device_until_success(self, cpu_required: float, mem_required: float, max_trial: int = 1000) -> str:
         count = 0
