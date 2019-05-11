@@ -55,6 +55,7 @@ setup(
         'bravado-core',
         'ephemeral-port-reserve',
         'docker',
+        'mypy-extensions',
         'pyramid',
         'pyramid-swagger',
         'pyyaml',
