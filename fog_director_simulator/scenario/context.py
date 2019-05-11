@@ -44,14 +44,20 @@ def _fog_director_client(fog_director_api: str) -> SwaggerClient:  # TODO: provi
         )
 
 
-def _wait_until_is_up(status_url: str) -> None:
+def _wait_until_is_up(process_handle: subprocess.Popen, status_url: str) -> None:
     try:
+        if (process_handle.poll() or 0) != 0:
+            raise subprocess.CalledProcessError(
+                returncode=process_handle.returncode,
+                cmd=process_handle.args,
+                output=None,
+            )
         RequestsClient().request(request_params={
             'method': 'GET', 'url': status_url,
         }).result()
     except BravadoConnectionError:
         sleep(0.1)  # Sleep a bit ot avoid busy waiting
-        _wait_until_is_up(status_url)
+        _wait_until_is_up(process_handle, status_url)
 
 
 @contextmanager
@@ -79,7 +85,7 @@ def api_context(
         env=database_config.to_environment_dict(override_verbose=False),
         redirect_all_to_std_err=verbose,
     ) as process:
-        _wait_until_is_up(f'{url}/status')
+        _wait_until_is_up(process, f'{url}/status')
         print(f'Simulator APIs are up and running on {url}')
         yield process, _api_client(f'http://{LOCALHOST}:{port}/api/swagger.yaml')
 
@@ -112,7 +118,7 @@ def fog_director_context(
         env=database_config.to_environment_dict(override_verbose=False),
         redirect_all_to_std_err=verbose,
     ) as process:
-        _wait_until_is_up(f'{url}/status')
+        _wait_until_is_up(process, f'{url}/status')
         print(f'Fake Fog Director APIs are up and running on {url}')
         yield process, _fog_director_client(f'http://{LOCALHOST}:{port}/api/swagger.yaml')
 
