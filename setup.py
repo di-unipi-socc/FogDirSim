@@ -53,7 +53,6 @@ setup(
     install_requires=[
         'bravado',
         'bravado-core',
-        'bravado-asyncio[aiohttp_extras]',
         'ephemeral-port-reserve',
         'docker',
         'pyramid',
