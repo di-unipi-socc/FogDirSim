@@ -1,5 +1,4 @@
 import random
-
 from functools import wraps
 from typing import Any
 from typing import Callable
