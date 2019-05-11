@@ -83,7 +83,7 @@ class BaseScenario(ABC, ScenarioAPIUtilMixin):
     @classmethod
     def _cli_parser(cls) -> ArgumentParser:
         parser = ArgumentParser(description=cls.__doc__)
-        mutuex_group = parser.add_mutually_exclusive_group()
+        mutuex_group = parser.add_mutually_exclusive_group(required=True)
         mutuex_group.add_argument(
             '--max-simulation-iterations',
             dest='max_simulation_iterations',
