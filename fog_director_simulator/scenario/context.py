@@ -1,4 +1,5 @@
 import os
+import platform
 import subprocess
 import sys
 from contextlib import contextmanager
@@ -60,6 +61,26 @@ def _wait_until_is_up(process_handle: subprocess.Popen, status_url: str) -> None
         _wait_until_is_up(process_handle, status_url)
 
 
+def _run_wsgi_app_command(uwsgi_file: Path, port: int, number_of_processes: int) -> List[str]:
+    args = [
+        'uwsgi',
+        '--http', f':{port}',
+        '--master',
+        '--processes', f'{number_of_processes}',
+    ]
+    if platform.python_implementation() == 'PyPy':
+        args.extend([
+            '--pypy-wsgi-file', str(uwsgi_file.absolute()),
+            '--pypy-home', os.environ.get('VIRTUAL_ENV', str(Path(sys.executable).parent.parent)),
+        ])
+    else:
+        args.extend([
+            '--wsgi-file', str(uwsgi_file.absolute()),
+            '--virtualenv', os.environ.get('VIRTUAL_ENV', str(Path(sys.executable).parent.parent)),
+        ])
+    return args
+
+
 @contextmanager
 def api_context(
     database_config: Optional[Config],
@@ -75,14 +96,11 @@ def api_context(
 
     with background_process(
         name='api_context',
-        args=[
-            'uwsgi',
-            '--http', f':{port}',
-            '--wsgi-file', os.path.join('uwsgi', 'simulator_api.wsgi'),
-            '--master',
-            '--processes', '8',
-            '--virtualenv', os.environ.get('VIRTUAL_ENV', str(Path(sys.executable).parent.parent)),
-        ],
+        args=_run_wsgi_app_command(
+            uwsgi_file=Path('uwsgi') / 'simulator_api.py',
+            port=port,
+            number_of_processes=8,
+        ),
         env=database_config.to_environment_dict(override_verbose=False),
         redirect_all_to_std_err=verbose,
     ) as process:
@@ -109,14 +127,11 @@ def fog_director_context(
 
     with background_process(
         name='fog_director_context',
-        args=[
-            'uwsgi',
-            '--http', f':{port}',
-            '--wsgi-file', os.path.join('uwsgi', 'fake_fog_director.wsgi'),
-            '--master',
-            '--processes', '8',
-            '--virtualenv', os.environ.get('VIRTUAL_ENV', str(Path(sys.executable).parent.parent)),
-        ],
+        args=_run_wsgi_app_command(
+            uwsgi_file=Path('uwsgi') / 'fake_fog_director.py',
+            port=port,
+            number_of_processes=8,
+        ),
         env=database_config.to_environment_dict(override_verbose=False),
         redirect_all_to_std_err=verbose,
     ) as process:

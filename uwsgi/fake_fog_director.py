@@ -7,11 +7,13 @@ Anything that is specific to the WSGI server of your choice should be done
 here. If you need to pass something through, pass it through
 create_application.
 """
+from typing import Any
+
 from fog_director_simulator.pyramid.fake_fog_director.webapp import create_application
 
 
 _application = create_application()
 
 
-def application(environ, start_response):
+def application(environ: Any, start_response: Any) -> Any:
     return _application(environ, start_response)
