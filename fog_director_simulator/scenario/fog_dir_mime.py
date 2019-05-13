@@ -63,7 +63,8 @@ class FogDirMime(BaseScenario):
     scenario_devices = [fog_1, fog_2, fog_3]
 
     def configure_infrastructure(self) -> None:
-        self.register_devices(*self.scenario_devices)
+        for current_device in self.scenario_devices:
+            self.register_device(current_device)
 
         application = self.register_application('NettestApp2V1_lxc.tar.gz')
         # TODO: publish application
@@ -72,9 +73,8 @@ class FogDirMime(BaseScenario):
         self.building_my_app.applicationVersion = application['version']
         self.apartment_my_app.applicationLocalAppId = application['localAppId']
         self.apartment_my_app.applicationVersion = application['version']
-
-        self.register_my_apps(self.building_my_app, self.apartment_my_app)
-
+        self.register_my_app(self.building_my_app)
+        self.register_my_app(self.apartment_my_app)
         self.install_my_app(
             my_app_id=self.building_my_app.myAppId,
             device_id=self.fog_1.deviceId,

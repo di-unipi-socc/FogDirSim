@@ -201,8 +201,14 @@ class SmartResort(BaseScenario):
         raise RuntimeError('Too many iterations without finding a suitable device.')
 
     def configure_infrastructure(self) -> None:
+        print(
+            f'{self.__class__.__name__} running with '
+            f'number_of_deployments={self.number_of_deployments} '
+            f'number_of_devices={self.number_of_devices}',
+        )
         # Adding Devices to FogDirector
-        self.register_devices(*self.scenario_devices)
+        for current_device in self.scenario_devices:
+            self.register_device(current_device)
 
         # Uploading .tar.gz
         self.application = self.register_application('NettestApp2V1_lxc.tar.gz')
@@ -217,7 +223,7 @@ class SmartResort(BaseScenario):
                 applicationVersion=self.application['version'],
             )
             self.my_apps_mapping[my_app.name] = my_app
-            self.register_my_apps(my_app)
+            self.register_my_app(my_app)
 
             self.install_my_app(
                 my_app_id=my_app.myAppId,

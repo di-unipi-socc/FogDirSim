@@ -55,7 +55,7 @@ class retry:
                 try:
                     return fun(*args, **kwargs)
                 except self.exceptions as exc:
-                    print(f'{fun} failed, retry {idx} of {self.max_retries}')
+                    print(f'{fun} failed with exc={repr(exc)}, retry {idx} of {self.max_retries}')
                     last_exception = exc
             assert last_exception
             raise last_exception
@@ -78,34 +78,35 @@ class ScenarioAPIUtilMixin:
             },
         }
 
+    @retry(exceptions=(BravadoConnectionError, BravadoTimeoutError), max_retries=32)
+    def _create_device(self, device: Device) -> None:
+        if self.api_client is None:
+            return
+
+        self.api_client.simulator_management.post_simulator_management_device_v1(
+            body=DeviceDescription(
+                deviceId=device.deviceId,
+                ipAddress=device.ipAddress,
+                username=device.username,
+                password=device.password,
+                port=device.port,
+                totalCPU=device.totalCPU,
+                cpuMetricsDistributionMean=device._cpuMetricsDistributionMean,
+                cpuMetricsDistributionStdDev=device._cpuMetricsDistributionStdDev,
+                totalMEM=device.totalMEM,
+                memMetricsDistributionMean=device._memMetricsDistributionMean,
+                memMetricsDistributionStdDev=device._memMetricsDistributionStdDev,
+                chaosDieProb=device.chaosDieProb,
+                chaosReviveProb=device.chaosReviveProb,
+            ),
+        ).result()
+
     def create_devices(self) -> None:
         """
         Add devices to DB
         """
-        if self.api_client is None:
-            return
-        futures = [
-            self.api_client.simulator_management.post_simulator_management_device_v1(
-                body=DeviceDescription(
-                    deviceId=device.deviceId,
-                    ipAddress=device.ipAddress,
-                    username=device.username,
-                    password=device.password,
-                    port=device.port,
-                    totalCPU=device.totalCPU,
-                    cpuMetricsDistributionMean=device._cpuMetricsDistributionMean,
-                    cpuMetricsDistributionStdDev=device._cpuMetricsDistributionStdDev,
-                    totalMEM=device.totalMEM,
-                    memMetricsDistributionMean=device._memMetricsDistributionMean,
-                    memMetricsDistributionStdDev=device._memMetricsDistributionStdDev,
-                    chaosDieProb=device.chaosDieProb,
-                    chaosReviveProb=device.chaosReviveProb,
-                ),
-            )
-            for device in self.scenario_devices
-        ]
-        for future in futures:
-            future.result()
+        for device in self.scenario_devices:
+            self._create_device(device)
 
     @retry(exceptions=(BravadoConnectionError, BravadoTimeoutError), max_retries=32)
     def iteration_count(self) -> int:
@@ -125,56 +126,35 @@ class ScenarioAPIUtilMixin:
             _request_options=self._fog_director_authentication,
         ).result()['data']
 
-    # No need to retry as this is part of the infrastructure configuration process
-    def register_devices(self, *devices: Device) -> Tuple[Device, ...]:
-        futures = {
-            (device.ipAddress, device.port): self.fog_director_client.v1.post_v1_appmgr_devices(
-                body=DeviceMinimal(
-                    port=device.port,
-                    ipAddress=device.ipAddress,
-                    username=device.username,
-                    password=device.password,
-                ),
-                _request_options=self._fog_director_authentication,
-            )
-            for device in devices
-        }
+    @retry(exceptions=(BravadoConnectionError, BravadoTimeoutError), max_retries=32)
+    def register_device(self, device: Device) -> Device:
+        device_api = self.fog_director_client.v1.post_v1_appmgr_devices(
+            body=DeviceMinimal(
+                port=device.port,
+                ipAddress=device.ipAddress,
+                username=device.username,
+                password=device.password,
+            ),
+            _request_options=self._fog_director_authentication,
+        ).result()
+        device.deviceId = device_api['deviceId']
+        return device
 
-        device_ipAddress_port_deviceId_mapping = {
-            key: future.result().deviceId
-            for key, future in futures.items()
-        }
+    @retry(exceptions=(BravadoConnectionError, BravadoTimeoutError), max_retries=32)
+    def register_my_app(self, my_app: MyApp) -> MyApp:
+        my_app_api = self.fog_director_client.v1.post_v1_appmgr_myapps(
+            body=DeployMyApp(
+                name=my_app.name,
+                sourceAppName=f'{my_app.applicationLocalAppId}:{my_app.applicationVersion}',
+                version=my_app.applicationVersion,
+                appSourceType='LOCAL_STORE',
+            ),
+            _request_options=self._fog_director_authentication,
+        ).result()
+        my_app.myAppId = my_app_api['myAppId']
+        return my_app
 
-        for device in devices:
-            device.deviceId = device_ipAddress_port_deviceId_mapping[(device.ipAddress, device.port)]
-        return devices
-
-    # No need to retry as this is part of the infrastructure configuration process
-    def register_my_apps(self, *my_apps: MyApp) -> Tuple[MyApp, ...]:
-        futures = {
-            my_app.name: self.fog_director_client.v1.post_v1_appmgr_myapps(
-                body=DeployMyApp(
-                    name=my_app.name,
-                    sourceAppName=f'{my_app.applicationLocalAppId}:{my_app.applicationVersion}',
-                    version=my_app.applicationVersion,
-                    appSourceType='LOCAL_STORE',
-                ),
-                _request_options=self._fog_director_authentication,
-            )
-            for my_app in my_apps
-        }
-        # TODO: make it resilient to errors
-        my_app_name_id_mapping = {
-            name: future.result()['myAppId']
-            for name, future in futures.items()
-        }
-
-        for my_app in my_apps:
-            my_app.myAppId = my_app_name_id_mapping[my_app.name]
-
-        return my_apps
-
-    # No need to retry as this is part of the infrastructure configuration process
+    @retry(exceptions=(BravadoConnectionError, BravadoTimeoutError), max_retries=32)
     def register_application(self, application_name: str) -> ApplicationApi:
         with open(
             os.path.join(
