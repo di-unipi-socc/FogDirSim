@@ -13,7 +13,7 @@ def collect(db_logic: DatabaseLogic, iterationCount: int, myAppId: int) -> float
         min_replicas = db_logic.get_my_app(myAppId=myAppId).minJobReplicas
         jobs = {
             job: (
-                db_logic.get_job_metric(iterationCount=iterationCount, jobId=job.jobId, metricType=JobMetricType.ENOUGH_CPU).value or
+                db_logic.get_job_metric(iterationCount=iterationCount, jobId=job.jobId, metricType=JobMetricType.ENOUGH_CPU).value and
                 db_logic.get_job_metric(iterationCount=iterationCount, jobId=job.jobId, metricType=JobMetricType.ENOUGH_MEM).value
             )
             for job in db_logic.get_all_jobs(myAppId=myAppId)
