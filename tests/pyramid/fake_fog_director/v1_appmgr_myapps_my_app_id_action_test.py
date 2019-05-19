@@ -172,6 +172,8 @@ def test_post_v1_appmgr_myapps_my_app_id_action_deploy_with_not_enough_cpu(testa
         ),
     )
     assert response.status_code == 400
+    with database_logic:
+        assert database_logic.get_device(device_id).reservedCPU == 9
 
 
 def test_post_v1_appmgr_myapps_my_app_id_action_deploy_with_not_enough_mem(testapp: 'TestApp', database_logic: DatabaseLogic, my_app: MyApp, device: Device) -> None:
@@ -212,6 +214,8 @@ def test_post_v1_appmgr_myapps_my_app_id_action_deploy_with_not_enough_mem(testa
         ),
     )
     assert response.status_code == 400
+    with database_logic:
+        assert database_logic.get_device(device_id).reservedMEM == 9
 
 
 def test_post_v1_appmgr_myapps_my_app_id_action_deploy_with_success(testapp: 'TestApp', database_logic: DatabaseLogic, my_app: MyApp, device: Device) -> None:
@@ -256,6 +260,9 @@ def test_post_v1_appmgr_myapps_my_app_id_action_deploy_with_success(testapp: 'Te
     assert response.json == {
         'jobId': mock.ANY,
     }
+    with database_logic:
+        assert database_logic.get_device(device_id).reservedMEM == 2
+        assert database_logic.get_device(device_id).reservedMEM == 2
 
 
 def test_post_v1_appmgr_myapps_my_app_id_action_start_with_no_jobs(testapp: 'TestApp', database_logic: DatabaseLogic, my_app: MyApp, device: Device) -> None:
