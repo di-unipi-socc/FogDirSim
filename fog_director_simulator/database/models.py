@@ -229,7 +229,7 @@ class Job(Base):  # type: ignore
     myApp = relationship('MyApp')
     status = cast(JobStatus, Column(Enum(JobStatus)))
     profile = cast(JobIntensivity, Column(Enum(JobIntensivity)))
-    job_device_allocations = relationship('JobDeviceAllocation', back_populates='job')
+    job_device_allocations = relationship('JobDeviceAllocation', back_populates='job', cascade='all, delete-orphan')
 
 
 class JobDeviceAllocation(Base):  # type: ignore
