@@ -78,7 +78,6 @@ def pyramid_swagger_validation_context(request: Request, response: Optional[Resp
 def default_pyramid_configuration(
     root_swagger_spec_path: str,
     base_path_api_docs: str,
-    database_verbose: bool,
 ) -> Configurator:
     """Create the WSGI application, post-fork."""
     config = Configurator()
