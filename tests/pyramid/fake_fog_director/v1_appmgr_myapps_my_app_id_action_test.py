@@ -2,7 +2,7 @@ import typing
 from unittest import mock
 
 from fog_director_simulator.database import DatabaseLogic
-from fog_director_simulator.database.models import ApplicationProfile
+from fog_director_simulator.database.models import ApplicationProfile, JobDeviceAllocation
 from fog_director_simulator.database.models import Device
 from fog_director_simulator.database.models import Job
 from fog_director_simulator.database.models import JobStatus
@@ -408,7 +408,9 @@ def test_post_v1_appmgr_myapps_my_app_id_action_undeploy_with_a_undeployped_job(
     }
 
 
-def test_post_v1_appmgr_myapps_my_app_id_action_undeploy_with_success(testapp: 'TestApp', database_logic: DatabaseLogic, my_app: MyApp, device: Device, job: Job) -> None:
+def test_post_v1_appmgr_myapps_my_app_id_action_undeploy_with_success(
+    testapp: 'TestApp', database_logic: DatabaseLogic, my_app: MyApp, device: Device, job: Job, job_device_allocation: JobDeviceAllocation,
+) -> None:
     my_app_id = my_app.myAppId
     device_id = device.deviceId
 
@@ -420,7 +422,7 @@ def test_post_v1_appmgr_myapps_my_app_id_action_undeploy_with_success(testapp: '
     device.reservedMEM = 1
     job.status = JobStatus.START
 
-    database_logic.create(job, my_app, device)
+    database_logic.create(job, my_app, job_device_allocation, device)
     response = testapp.post_json(
         f'/api/v1/appmgr/myapps/{my_app_id}/action',
         headers={
@@ -432,3 +434,6 @@ def test_post_v1_appmgr_myapps_my_app_id_action_undeploy_with_success(testapp: '
     assert response.json == {
         'jobId': mock.ANY,
     }
+    with database_logic:
+        assert database_logic.get_device(device_id).reservedCPU == 0
+        assert database_logic.get_device(device_id).reservedMEM == 0
