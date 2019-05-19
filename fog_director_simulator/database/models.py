@@ -229,15 +229,19 @@ class Job(Base):  # type: ignore
     myApp = relationship('MyApp')
     status = cast(JobStatus, Column(Enum(JobStatus)))
     profile = cast(JobIntensivity, Column(Enum(JobIntensivity)))
-    job_device_allocations = relationship('JobDeviceAllocation', back_populates='job')
+    job_device_allocations = relationship('JobDeviceAllocation', back_populates='job', cascade='all, delete-orphan')
 
 
 class JobDeviceAllocation(Base):  # type: ignore
     __tablename__ = 'job_device_allocations'
+    __table_args__ = (
+        UniqueConstraint('deviceId', 'jobId'),
+    )
 
-    deviceId = Column(String(255), ForeignKey(f'{Device.__tablename__}.deviceId'), primary_key=True)
+    jobDeviceAllocationId = Column(Integer, primary_key=True, autoincrement=True)
+    deviceId = Column(String(255), ForeignKey(f'{Device.__tablename__}.deviceId'), nullable=False)
     device = relationship('Device')
-    jobId = Column(Integer, ForeignKey(f'{Job.__tablename__}.jobId'), primary_key=True)
+    jobId = Column(Integer, ForeignKey(f'{Job.__tablename__}.jobId'), nullable=False)
     job = relationship('Job')
     profile = cast(ApplicationProfile, Column(Enum(ApplicationProfile)))
     cpu = Column(Integer, nullable=False)

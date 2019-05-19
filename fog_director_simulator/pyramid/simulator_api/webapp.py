@@ -13,7 +13,6 @@ def create_application() -> Router:
     config = default_pyramid_configuration(
         root_swagger_spec_path=os.path.join('api_docs', 'simulator_api', 'swagger.yaml'),
         base_path_api_docs='/api/',
-        database_verbose=False,
     )
 
     # Add status metrics view with the internal_ip_only predicate

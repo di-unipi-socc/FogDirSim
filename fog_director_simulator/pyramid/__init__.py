@@ -53,8 +53,14 @@ def _add_simulation_time_response_header_factory(handler: Any, registry: Any) ->
 
 def _open_database_session_factory(handler: Any, registry: Any) -> Callable[[Request], Response]:
     def open_database_session(request: Request) -> Response:
-        with request.database_logic:
-            return handler(request)
+        with request.database_logic as session:
+            try:
+                response = handler(request)
+                return response
+            finally:
+                # Ensure that HTTP errors rollback the sessions
+                if response.status_code >= 400:
+                    session.rollback()
 
     return open_database_session
 
@@ -72,7 +78,6 @@ def pyramid_swagger_validation_context(request: Request, response: Optional[Resp
 def default_pyramid_configuration(
     root_swagger_spec_path: str,
     base_path_api_docs: str,
-    database_verbose: bool,
 ) -> Configurator:
     """Create the WSGI application, post-fork."""
     config = Configurator()

@@ -1,9 +1,10 @@
-import random
 from functools import wraps
 from typing import Any
 from typing import Callable
 from typing import TypeVar
 
+from numpy.random import choice
+from numpy.random import normal
 from sqlalchemy.exc import SQLAlchemyError
 
 
@@ -11,15 +12,14 @@ Func = TypeVar('Func', bound=Callable[..., Any])
 
 
 def random_sample(mean: float, std_deviation: float, lower_bound: float, upper_bound: float) -> float:
-    sample = random.gauss(mean, std_deviation)
+    sample = normal(mean, std_deviation)
     while not (lower_bound < sample < upper_bound):
-        sample = random.gauss(mean, std_deviation)
+        sample = normal(mean, std_deviation)
     return sample
 
 
 def random_flag(probability_of_true: float) -> bool:
-    random_value = random.randrange(start=0, stop=1)
-    return random_value <= probability_of_true
+    return choice((True, False), p=(probability_of_true, 1 - probability_of_true))
 
 
 class ignore_sqlalchemy_exceptions:

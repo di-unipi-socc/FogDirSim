@@ -5,6 +5,7 @@ from fog_director_simulator.database import DatabaseLogic
 from fog_director_simulator.database.models import ApplicationProfile
 from fog_director_simulator.database.models import Device
 from fog_director_simulator.database.models import Job
+from fog_director_simulator.database.models import JobDeviceAllocation
 from fog_director_simulator.database.models import JobStatus
 from fog_director_simulator.database.models import MyApp
 from fog_director_simulator.pyramid.fake_fog_director.request_types import ApplicationResourceAsk
@@ -172,6 +173,8 @@ def test_post_v1_appmgr_myapps_my_app_id_action_deploy_with_not_enough_cpu(testa
         ),
     )
     assert response.status_code == 400
+    with database_logic:
+        assert database_logic.get_device(device_id).reservedCPU == 9
 
 
 def test_post_v1_appmgr_myapps_my_app_id_action_deploy_with_not_enough_mem(testapp: 'TestApp', database_logic: DatabaseLogic, my_app: MyApp, device: Device) -> None:
@@ -212,6 +215,8 @@ def test_post_v1_appmgr_myapps_my_app_id_action_deploy_with_not_enough_mem(testa
         ),
     )
     assert response.status_code == 400
+    with database_logic:
+        assert database_logic.get_device(device_id).reservedMEM == 9
 
 
 def test_post_v1_appmgr_myapps_my_app_id_action_deploy_with_success(testapp: 'TestApp', database_logic: DatabaseLogic, my_app: MyApp, device: Device) -> None:
@@ -256,6 +261,9 @@ def test_post_v1_appmgr_myapps_my_app_id_action_deploy_with_success(testapp: 'Te
     assert response.json == {
         'jobId': mock.ANY,
     }
+    with database_logic:
+        assert database_logic.get_device(device_id).reservedMEM == 2
+        assert database_logic.get_device(device_id).reservedMEM == 2
 
 
 def test_post_v1_appmgr_myapps_my_app_id_action_start_with_no_jobs(testapp: 'TestApp', database_logic: DatabaseLogic, my_app: MyApp, device: Device) -> None:
@@ -269,29 +277,6 @@ def test_post_v1_appmgr_myapps_my_app_id_action_start_with_no_jobs(testapp: 'Tes
     device.reservedMEM = 1
 
     database_logic.create(my_app, device)
-    response = testapp.post_json(
-        f'/api/v1/appmgr/myapps/{my_app_id}/action',
-        expect_errors=True,
-        headers={
-            'X-Token-Id': 'token',
-        },
-        params=MyAppAction(start={}),
-    )
-    assert response.status_code == 400
-
-
-def test_post_v1_appmgr_myapps_my_app_id_action_start_with_a_stopped_job(testapp: 'TestApp', database_logic: DatabaseLogic, my_app: MyApp, device: Device, job: Job) -> None:
-    my_app_id = my_app.myAppId
-
-    my_app.application.isPublished = True
-    device.isAlive = True
-    device.totalCPU = 10
-    device.totalMEM = 10
-    device.reservedCPU = 1
-    device.reservedMEM = 1
-    job.status = JobStatus.STOP
-
-    database_logic.create(job, my_app, device)
     response = testapp.post_json(
         f'/api/v1/appmgr/myapps/{my_app_id}/action',
         expect_errors=True,
@@ -424,7 +409,9 @@ def test_post_v1_appmgr_myapps_my_app_id_action_undeploy_with_a_undeployped_job(
     }
 
 
-def test_post_v1_appmgr_myapps_my_app_id_action_undeploy_with_success(testapp: 'TestApp', database_logic: DatabaseLogic, my_app: MyApp, device: Device, job: Job) -> None:
+def test_post_v1_appmgr_myapps_my_app_id_action_undeploy_with_success(
+    testapp: 'TestApp', database_logic: DatabaseLogic, my_app: MyApp, device: Device, job: Job, job_device_allocation: JobDeviceAllocation,
+) -> None:
     my_app_id = my_app.myAppId
     device_id = device.deviceId
 
@@ -436,7 +423,7 @@ def test_post_v1_appmgr_myapps_my_app_id_action_undeploy_with_success(testapp: '
     device.reservedMEM = 1
     job.status = JobStatus.START
 
-    database_logic.create(job, my_app, device)
+    database_logic.create(job, my_app, job_device_allocation, device)
     response = testapp.post_json(
         f'/api/v1/appmgr/myapps/{my_app_id}/action',
         headers={
@@ -448,3 +435,6 @@ def test_post_v1_appmgr_myapps_my_app_id_action_undeploy_with_success(testapp: '
     assert response.json == {
         'jobId': mock.ANY,
     }
+    with database_logic:
+        assert database_logic.get_device(device_id).reservedCPU == 0
+        assert database_logic.get_device(device_id).reservedMEM == 0

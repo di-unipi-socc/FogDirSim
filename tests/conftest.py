@@ -132,6 +132,8 @@ def job_device_allocation(device: Device, job: Job) -> JobDeviceAllocation:
         device=device,
         job=job,
         profile=ApplicationProfile.Tiny,
+        cpu=1,
+        memory=1,
     )
 
 

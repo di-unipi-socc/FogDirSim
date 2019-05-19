@@ -25,8 +25,9 @@ def _do_start(my_app: MyApp) -> Job:
         raise HTTPBadRequest()
 
     for job in my_app.jobs:  # type: ignore
-        if job.status not in {JobStatus.DEPLOY, JobStatus.START}:
-            raise HTTPBadRequest()
+        if job.status is JobStatus.UNINSTALLED:
+            # Ignore uninstalled jobs, those are kept to maintain metrics
+            continue
         job.status = JobStatus.START
 
     return my_app.jobs[0]  # type: ignore # NOTE: the real fog-director does create a new job, we're not willing to do it for simulation proposes
@@ -37,6 +38,9 @@ def _do_stop(my_app: MyApp) -> Job:
         raise HTTPBadRequest()
 
     for job in my_app.jobs:  # type: ignore
+        if job.status is JobStatus.UNINSTALLED:
+            # Ignore uninstalled jobs, those are kept to maintain metrics
+            continue
         if job.status != JobStatus.START:
             raise HTTPBadRequest()
         job.status = JobStatus.STOP
@@ -87,20 +91,17 @@ def _do_undeploy(my_app: MyApp, devices: Dict[str, Device]) -> Job:
     for job in my_app.jobs:  # type: ignore
         if job.status == JobStatus.UNINSTALLED:
             continue
-        to_remove = []
+        jobs_to_remove = []
         for job_device_allocation in job.job_device_allocations:
             if job_device_allocation.deviceId not in devices:
                 continue
-            job_device_allocation.device.reservedCPU += job_device_allocation.cpu
-            job_device_allocation.device.reservedMEM += job_device_allocation.memory
-            to_remove.append(job_device_allocation)
+            job_device_allocation.device.reservedCPU -= job_device_allocation.cpu
+            job_device_allocation.device.reservedMEM -= job_device_allocation.memory
+            jobs_to_remove.append(job_device_allocation)
 
-        # This is ugly and requires some care :)
-        job.job_device_allocations = [
-            job_device_allocation
-            for job_device_allocation in job.job_device_allocations
-            if job_device_allocation not in to_remove
-        ]
+        for job_to_remove in jobs_to_remove:
+            job.job_device_allocations.remove(job_to_remove)
+
         job.status = JobStatus.UNINSTALLED
 
     return my_app.jobs[0]  # type: ignore # NOTE: the real fog-director does create a new job, we're not willing to do it for simulation proposes
