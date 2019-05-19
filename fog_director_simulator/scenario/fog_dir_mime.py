@@ -89,7 +89,7 @@ class FogDirMime(BaseScenario):
     def manage_iteration(self) -> None:
         moved_apps: Set[int] = set()
         for alert in self.get_all_alerts():
-            if alert['type'] != AlertType.APP_HEALTH:
+            if alert['type'] != AlertType.APP_HEALTH.name:
                 continue
 
             if alert['appName'] == self.building_my_app.name and alert['appName'] not in moved_apps:
