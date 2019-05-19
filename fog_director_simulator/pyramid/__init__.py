@@ -53,8 +53,14 @@ def _add_simulation_time_response_header_factory(handler: Any, registry: Any) ->
 
 def _open_database_session_factory(handler: Any, registry: Any) -> Callable[[Request], Response]:
     def open_database_session(request: Request) -> Response:
-        with request.database_logic:
-            return handler(request)
+        with request.database_logic as session:
+            try:
+                response = handler(request)
+                return response
+            finally:
+                # Ensure that HTTP errors rollback the sessions
+                if response.status_code >= 400:
+                    session.rollback()
 
     return open_database_session
 
