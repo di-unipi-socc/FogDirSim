@@ -1,4 +1,4 @@
-from typing import Set
+from typing import Optional
 
 from fog_director_simulator.database import Device
 from fog_director_simulator.database import MyApp
@@ -62,6 +62,27 @@ class FogDirMime(BaseScenario):
 
     scenario_devices = [fog_1, fog_2, fog_3]
 
+    def __init__(
+        self,
+        dump_file: Optional[str],
+        fog_director_api_url: Optional[str],
+        max_simulation_iterations: Optional[int],
+        verbose_all: bool,
+        verbose_fog_director_api: bool,
+        verbose_simulator_api: bool,
+        verbose_simulator_engine: bool,
+    ):
+        super(FogDirMime, self).__init__(
+            dump_file=dump_file,
+            fog_director_api_url=fog_director_api_url,
+            max_simulation_iterations=max_simulation_iterations,
+            verbose_all=verbose_all,
+            verbose_fog_director_api=verbose_fog_director_api,
+            verbose_simulator_api=verbose_simulator_api,
+            verbose_simulator_engine=verbose_simulator_engine,
+        )
+        self.is_building_my_app_ever_moved = False
+
     def configure_infrastructure(self) -> None:
         for current_device in self.scenario_devices:
             self.register_device(current_device)
@@ -87,12 +108,11 @@ class FogDirMime(BaseScenario):
         self.start_my_app(self.apartment_my_app.myAppId)
 
     def manage_iteration(self) -> None:
-        moved_apps: Set[int] = set()
         for alert in self.get_all_alerts():
             if alert['type'] != AlertType.APP_HEALTH.name:
                 continue
 
-            if alert['appName'] == self.building_my_app.name and alert['appName'] not in moved_apps:
+            if alert['appName'] == self.building_my_app.name and not self.is_building_my_app_ever_moved:
                 self.stop_my_app(self.building_my_app.myAppId)
                 self.uninstall_my_app(self.building_my_app.myAppId, device_ids=[self.fog_1.deviceId])
                 self.install_my_app(
@@ -100,7 +120,7 @@ class FogDirMime(BaseScenario):
                     device_id=self.fog_3.deviceId,
                 )
                 self.start_my_app(self.building_my_app.myAppId)
-                moved_apps.add(self.building_my_app.myAppId)
+                self.is_building_my_app_ever_moved = True
 
             elif alert['appName'] == self.apartment_my_app.name:
                 isOnFog1 = alert['deviceId'] == self.fog_1.deviceId
@@ -118,7 +138,6 @@ class FogDirMime(BaseScenario):
                     ),
                 )
                 self.start_my_app(self.apartment_my_app.myAppId)
-                moved_apps.add(self.apartment_my_app.myAppId)
 
 
 if __name__ == '__main__':
