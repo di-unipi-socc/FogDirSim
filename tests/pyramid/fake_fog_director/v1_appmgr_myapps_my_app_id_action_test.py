@@ -287,29 +287,6 @@ def test_post_v1_appmgr_myapps_my_app_id_action_start_with_no_jobs(testapp: 'Tes
     assert response.status_code == 400
 
 
-def test_post_v1_appmgr_myapps_my_app_id_action_start_with_a_stopped_job(testapp: 'TestApp', database_logic: DatabaseLogic, my_app: MyApp, device: Device, job: Job) -> None:
-    my_app_id = my_app.myAppId
-
-    my_app.application.isPublished = True
-    device.isAlive = True
-    device.totalCPU = 10
-    device.totalMEM = 10
-    device.reservedCPU = 1
-    device.reservedMEM = 1
-    job.status = JobStatus.STOP
-
-    database_logic.create(job, my_app, device)
-    response = testapp.post_json(
-        f'/api/v1/appmgr/myapps/{my_app_id}/action',
-        expect_errors=True,
-        headers={
-            'X-Token-Id': 'token',
-        },
-        params=MyAppAction(start={}),
-    )
-    assert response.status_code == 400
-
-
 def test_post_v1_appmgr_myapps_my_app_id_action_start_with_success(testapp: 'TestApp', database_logic: DatabaseLogic, my_app: MyApp, device: Device, job: Job) -> None:
     my_app_id = my_app.myAppId
 

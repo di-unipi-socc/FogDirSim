@@ -25,8 +25,9 @@ def _do_start(my_app: MyApp) -> Job:
         raise HTTPBadRequest()
 
     for job in my_app.jobs:  # type: ignore
-        if job.status not in {JobStatus.DEPLOY, JobStatus.START}:
-            raise HTTPBadRequest()
+        if job.status is JobStatus.UNINSTALLED:
+            # Ignore uninstalled jobs, those are kept to maintain metrics
+            continue
         job.status = JobStatus.START
 
     return my_app.jobs[0]  # type: ignore # NOTE: the real fog-director does create a new job, we're not willing to do it for simulation proposes
@@ -37,6 +38,9 @@ def _do_stop(my_app: MyApp) -> Job:
         raise HTTPBadRequest()
 
     for job in my_app.jobs:  # type: ignore
+        if job.status is JobStatus.UNINSTALLED:
+            # Ignore uninstalled jobs, those are kept to maintain metrics
+            continue
         if job.status != JobStatus.START:
             raise HTTPBadRequest()
         job.status = JobStatus.STOP
