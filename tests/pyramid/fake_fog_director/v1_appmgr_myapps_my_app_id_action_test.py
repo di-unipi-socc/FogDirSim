@@ -2,9 +2,10 @@ import typing
 from unittest import mock
 
 from fog_director_simulator.database import DatabaseLogic
-from fog_director_simulator.database.models import ApplicationProfile, JobDeviceAllocation
+from fog_director_simulator.database.models import ApplicationProfile
 from fog_director_simulator.database.models import Device
 from fog_director_simulator.database.models import Job
+from fog_director_simulator.database.models import JobDeviceAllocation
 from fog_director_simulator.database.models import JobStatus
 from fog_director_simulator.database.models import MyApp
 from fog_director_simulator.pyramid.fake_fog_director.request_types import ApplicationResourceAsk
