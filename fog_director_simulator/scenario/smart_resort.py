@@ -253,7 +253,7 @@ class SmartResort(BaseScenario):
                         mem_required=self.application['memoryUsage'],
                     ),
                 )
-                self.stop_my_app(self.my_apps_mapping[alert['appName']].myAppId)
+                self.start_my_app(self.my_apps_mapping[alert['appName']].myAppId)
 
                 if alert['type'] == AlertType.DEVICE_REACHABILITY.value:
                     not_reachable_device_my_apps_mapping[alert['deviceId']].append(self.my_apps_mapping[alert['appName']])

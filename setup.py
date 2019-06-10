@@ -4,7 +4,7 @@ from setuptools import find_packages
 from setuptools import setup
 
 
-repo_url = 'https://github.com/macisamuele/fog_director_simulator'
+repo_url = 'https://github.com/di-unipi-socc/FogDirSim'
 
 
 def read(file_path):
@@ -56,7 +56,6 @@ setup(
         'ephemeral-port-reserve',
         'docker',
         'mypy-extensions',
-        'numpy',
         'pyramid',
         'pyramid-swagger',
         'pyyaml',
