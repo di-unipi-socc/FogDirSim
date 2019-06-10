@@ -55,9 +55,9 @@ class retry:
                 try:
                     return fun(*args, **kwargs)
                 except self.exceptions as exc:
-                    print(f'{fun} failed with exc={repr(exc)}, retry {idx} of {self.max_retries}')
                     last_exception = exc
             assert last_exception
+            print(f'{fun} failed with exc={repr(last_exception)}, after {self.max_retries} retries')
             raise last_exception
         return wrapper  # type: ignore
 
