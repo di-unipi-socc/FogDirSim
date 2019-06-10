@@ -79,7 +79,6 @@ def _maybe_alert_alive_device(
     device_metrics: Dict[DeviceMetricType, DeviceMetric],
 ) -> bool:
 
-    # TODO: is this correct?
     if device.reservedCPU > device_metrics[DeviceMetricType.CPU].value:
         send_alert(AlertType.APP_HEALTH)
         return True
@@ -88,7 +87,6 @@ def _maybe_alert_alive_device(
         send_alert(AlertType.CPU_CRITICAL_CONSUMPTION)
         return True
 
-    # TODO: is this correct?
     if device.reservedMEM > device_metrics[DeviceMetricType.MEM].value:
         send_alert(AlertType.APP_HEALTH)
         return True
