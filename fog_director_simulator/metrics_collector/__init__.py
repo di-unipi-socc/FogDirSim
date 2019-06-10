@@ -46,7 +46,7 @@ class ignore_sqlalchemy_exceptions:
             try:
                 return fun(*args, **kwargs)
             except SQLAlchemyError as exc:
-                print(f'{fun.__module__}.{fun.__name__} failed with {exc}, returning default_value={self.default_return_value}')
+                print(f'{fun.__module__}.{fun.__name__} failed with {repr(exc)}, returning default_value={self.default_return_value}')
                 return self.default_return_value
 
         return wrapper  # type: ignore
