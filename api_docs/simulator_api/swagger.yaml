@@ -251,6 +251,9 @@ definitions:
         type: array
       totalNumberOfSamplings:
         type: integer
+      numberOfRunningApps:
+        type: integer
+
     required:
     - totalNumberOfSamplings
     - minIterationCount

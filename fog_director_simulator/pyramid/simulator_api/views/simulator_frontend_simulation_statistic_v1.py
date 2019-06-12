@@ -36,6 +36,8 @@ def get_simulator_statistics(request: Request) -> SimulatorStatisticsApi:
         simulationTime=request.simulation_time,
     )
 
+    number_of_running_apps = len(request.database_logic.get_all_my_apps())
+
     return simulator_statistics_format(
         totalNumberOfSamplings=totalNumberOfSamplings,
         minIterationCount=minIterationCount,
@@ -43,4 +45,5 @@ def get_simulator_statistics(request: Request) -> SimulatorStatisticsApi:
         up_status_statistics=up_status_statistics,
         total_energy_consumption=total_energy_consumption,
         alert_statistics=alert_statistics,
+        number_of_running_apps=number_of_running_apps,
     )

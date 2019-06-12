@@ -21,6 +21,7 @@ class SimulatorStatisticsApi(TypedDict):
     averageUptime: List[float]
     totalEnergyConsumption: List[float]
     alerts: AlertApi
+    numberOfRunningApps: int
 
 
 def alert_format(
@@ -42,6 +43,7 @@ def simulator_statistics_format(
     up_status_statistics: Mapping[int, float],
     total_energy_consumption: Mapping[int, float],
     alert_statistics: Mapping[AlertType, float],
+    number_of_running_apps: int,
 ) -> SimulatorStatisticsApi:
     # TODO: we do not care of totalNumberOfSamplings for now
     return SimulatorStatisticsApi(
@@ -51,6 +53,7 @@ def simulator_statistics_format(
         averageUptime=[value for value in up_status_statistics.values()],
         totalEnergyConsumption=[value for value in total_energy_consumption.values()],
         alerts=alert_format(alert_statistics),
+        numberOfRunningApps=number_of_running_apps,
     )
 
 
