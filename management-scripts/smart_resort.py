@@ -89,8 +89,8 @@ reset_simulation(write_file=False)
 for COUNTER_SIM in range(0, 5):
     file  = open("simulation_results_paper.txt", "a")
     file.write("# STARTING NEW SIMULATION EPOCH: "+str(COUNTER_SIM)+"\n")
-    for DEVICE_NUMBER in range(30, 151, 10):
-        for APP_EXTRA in range(0, 151, 10):
+    for DEVICE_NUMBER in range(100, 151, 10):
+        for APP_EXTRA in range(150, 151, 10): # APP_EXTRA = 150
             print("DevNumber", DEVICE_NUMBER, "APP_EXTRA", APP_EXTRA)
             add_devices()
             dev_list = fog_torch()
@@ -105,7 +105,11 @@ for COUNTER_SIM in range(0, 5):
                 _, myappId = fd.create_myapp(localapp["localAppId"], dep, minjobs=1)
                 
                 deviceId = dev_list[0][0]
-                code, res = fd.fast_install_app(myappId, [deviceId])
+                profile = "normal"
+                r = random.random()
+                if r < 0.2:
+                    profile = "angry"
+                code, res = fd.fast_install_app(myappId, [deviceId], profile=profile)
 
                 device_notReachable = 0
                 current_device = 0
@@ -130,7 +134,11 @@ for COUNTER_SIM in range(0, 5):
 
                 if myapp_index < APP_EXTRA:
                     deviceId = dev_list[0][0]
-                    code, res = fd.fast_install_app(myappId, [deviceId])
+                    profile = "normal"
+                    r = random.random()
+                    if r < 0.2:
+                        profile = "angry"
+                    code, res = fd.fast_install_app(myappId, [deviceId], profile=profile)
 
                     device_notReachable = 0
                     current_device = 0
@@ -144,7 +152,10 @@ for COUNTER_SIM in range(0, 5):
                                 current_device += 1
                                 device_notReachable = 0
                                 deviceId = dev_list[current_device][0]
-                        code, res = fd.fast_install_app(myappId, [deviceId])
+                        r = random.random()
+                        if r < 0.2:
+                            profile = "angry"
+                        code, res = fd.fast_install_app(myappId, [deviceId], profile=profile)
                         if code != 400:
                             dev_list[current_device][1] -= 100
                             dev_list[current_device][2] -= 32
@@ -170,12 +181,20 @@ for COUNTER_SIM in range(0, 5):
                         fd.fast_stop_app(myappId)
                         fd.fast_uninstall_app(myappId, alert["deviceId"])
                         deviceIp, deviceId = bestFit(100, 32)
-                        code, _ = fd.fast_install_app(myappId, [deviceId])
+                        r = random.random()
+                        profile = "normal"
+                        if r < 0.2:
+                            profile = "angry"
+                        code, _ = fd.fast_install_app(myappId, [deviceId], profile=profile)
                         while code == 400:
                             if check_termination():
                                 break
                             deviceIp, deviceId = bestFit(100, 32)
-                            code, _ = fd.fast_install_app(myappId, [deviceId]) 
+                            r = random.random()
+                            profile = "normal"
+                            if r < 0.2:
+                                profile = "angry"
+                            code, _ = fd.fast_install_app(myappId, [deviceId], profile=profile)
                         fd.fast_start_app(myappId)
                     elif "DEVICE_REACHABILITY" == alert["type"]:
                         dep = alert["appName"]
