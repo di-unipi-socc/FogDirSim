@@ -11,4 +11,4 @@ pytz==2018.9
 PyYAML==3.13
 scipy==1.2.0
 six==1.12.0
-Werkzeug==0.14.1
+Werkzeug==0.15.3
