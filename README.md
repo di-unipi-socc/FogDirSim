@@ -2,7 +2,15 @@
 
 Fog computing supports the deployment of IoT applications closer to their (human or machine) end-users. CISCO FogDirector is a tool that can be used to manage the entire life-cycle of IoT applications over Fog infrastructures by relying on RESTful APIs. FogDirSim is a prototype simulation environment, which is compliant to FogDirector APIs. 
 
-It permits comparing different application management policies according to a set of well-defined performance indicators (viz., uptime, energy consumption, resource usage, type of alerts) and by considering probabilistic variations and failures in the underlying infrastructure. 
+FogDirSim is described in the following journal paper:
+
+> [Stefano Forti](http://pages.di.unipi.it/forti), [Alessandro Pagiaro](http://https://apagiaro.it/), [Antonio Brogi](http://pages.di.unipi.it/brogi)<br>
+> [**Simulating FogDirector Application Management**](https://doi.org/10.1016/j.simpat.2019.102021), <br>	
+> Simulation Modelling Practice and Theory, 2019. 
+
+If you wish to reuse source code in this repo, please consider citing the above mentioned article.
+
+FogDirSim permits comparing different application management policies according to a set of well-defined performance indicators (viz., uptime, energy consumption, resource usage, type of alerts) and by considering probabilistic variations and failures in the underlying infrastructure. 
 
 <center>
 <img src="https://github.com/alessandro308/FogDirSimulator/blob/master/docs/img/home_screen_video.gif?raw=true" alt="Home Screen" />
